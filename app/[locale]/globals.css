@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-cream: #fcf5df;
+  --color-green: #4affd7;
+  --color-orange: #d99d00;
+  --color-gray: #7e7b71;
+  --color-chino: #ccc3a6;
+  --color-gold: #fcb913;
+  --color-emperor: #535353;
+  --color-blue: #0957c3;
+  --color-crimson: #d91a17;
+  --color-choco: #d6a461;
+  --color-violet: #9b59ff;
+  --color-pink: #ff3d81;
+  --color-chocolate: #201405;
+}
+
+@layer utilities {
+  .center {
+    @apply flex items-center justify-center;
+  }
+  .title {
+    @apply text-gold dark:text-cream;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.primary {
+  font-family: var(--font-teko);
+}
+
+.secondary {
+  font-family: var(--font-jost);
+}
