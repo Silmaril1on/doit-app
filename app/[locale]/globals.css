@@ -23,6 +23,14 @@
   --color-chocolate: #201405;
 }
 
+.primary {
+  font-family: var(--font-teko);
+}
+
+.secondary {
+  font-family: var(--font-jost);
+}
+
 @layer utilities {
   .center {
     @apply flex items-center justify-center;
@@ -30,17 +38,23 @@
   .title {
     @apply text-gold dark:text-cream;
   }
+
+  input,
+  select,
+  textarea {
+    @apply border text-xs lg:text-sm border-teal-500/30 px-2 lg:px-3 py-2 text-teal-500 bg-black placeholder:text-teal-500/50 rounded-md outline-none focus:border-teal-500 duration-300 focus:ring-2 focus:ring-teal-400/40 w-full;
+    font-family: var(--font-jost);
+  }
+}
+
+@layer base {
+  label {
+    @apply text-[10px] lg:text-sm text-cream;
+    font-family: var(--font-jost);
+  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-}
-
-.primary {
-  font-family: var(--font-teko);
-}
-
-.secondary {
-  font-family: var(--font-jost);
 }

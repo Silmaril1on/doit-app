@@ -570,7 +570,7 @@ const TaskCard = ({
           {formatDateTime(task.created_at)}
         </span>
         <div className="flex gap-2">
-          <button className="active:cursor-grabbing cursor-grab text-gold-500 center">
+          <button className="active:cursor-grabbing text-gold cursor-grab text-gold-500 center">
             <MdDragIndicator size={21} />
           </button>
           <button className="text-gold cursor-pointer center" onClick={onEdit}>
@@ -609,8 +609,10 @@ const TaskCard = ({
                     <div className="group w-full flex items-center justify-between gap-2 hover:bg-gold/10 px-1 py-0.5 duration-200">
                       <button
                         type="button"
-                        onClick={() => onToggleSubtask(subtask.id)}
-                        className="flex-1 *:capitalize flex items-center gap-2 text-xs secondary text-chino cursor-pointer text-left hover:pl-3 duration-300"
+                        onClick={() =>
+                          task.status !== "tasks" && onToggleSubtask(subtask.id)
+                        }
+                        className={`flex-1 *:capitalize flex items-center gap-2 text-xs secondary text-chino text-left duration-300 ${task.status !== "tasks" ? "cursor-pointer hover:pl-3" : "cursor-default"}`}
                       >
                         <span
                           aria-hidden="true"

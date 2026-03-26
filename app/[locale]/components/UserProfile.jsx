@@ -1,6 +1,8 @@
 "use client";
 
 import Button from "@/app/[locale]/components/buttons/Button";
+import ImageTag from "@/app/[locale]/components/elements/ImageTag";
+import ArrowUpDown from "@/app/[locale]/components/elements/ArrowUpDown";
 import React, { useEffect, useRef, useState } from "react";
 import {
   clearUser,
@@ -9,7 +11,7 @@ import {
 import { useParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
-import { MdArrowDropUp, MdOutlineArrowDropDown } from "react-icons/md";
+import { getUserInitials } from "@/app/[locale]/lib/utils/utils";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -56,6 +58,8 @@ const UserProfile = () => {
     return null;
   }
 
+  const fallbackText = getUserInitials(user);
+
   return (
     <div ref={menuRef} className="relative flex items-center gap-2 ">
       <div
@@ -64,16 +68,25 @@ const UserProfile = () => {
       >
         <button
           type="button"
-          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-teal-500 text-sm font-bold uppercase text-black "
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full overflow-hidden"
           aria-expanded={isMenuOpen}
         >
-          {String(user.display_name || user.email || "U").slice(0, 1)}
+          {user.image_url ? (
+            <ImageTag
+              src={user.image_url}
+              alt="User avatar"
+              width={32}
+              height={32}
+              containerClassName="w-full h-full"
+              imageClassName="w-full h-full"
+            />
+          ) : (
+            <span className=" bg-teal-500 text-sm font-bold uppercase text-black">
+              {fallbackText}
+            </span>
+          )}
         </button>
-        {isMenuOpen ? (
-          <MdArrowDropUp size={20} className="text-white" />
-        ) : (
-          <MdOutlineArrowDropDown size={20} className="text-white" />
-        )}
+        <ArrowUpDown isOpen={isMenuOpen} size={20} className="text-white" />
       </div>
 
       {isMenuOpen ? (
@@ -89,7 +102,7 @@ const UserProfile = () => {
           <div className="flex flex-col gap-2">
             <Button
               text="My Profile"
-              href={`/${locale}/profile`}
+              href={`/${locale}/profile/basic-information`}
               className="w-full"
             />
             <Button

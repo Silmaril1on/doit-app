@@ -20,18 +20,47 @@ const StoreHydrator = ({ children }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const serializedUser = getCookieValue("doit-user");
+    let isMounted = true;
 
-    if (!serializedUser) {
-      dispatch(clearUser());
-      return;
-    }
+    const syncUser = async () => {
+      const serializedUser = getCookieValue("doit-user");
 
-    try {
-      dispatch(setUser(JSON.parse(serializedUser)));
-    } catch {
-      dispatch(clearUser());
-    }
+      if (!serializedUser) {
+        dispatch(clearUser());
+        return;
+      }
+
+      try {
+        const cookieUser = JSON.parse(serializedUser);
+        dispatch(setUser(cookieUser));
+
+        // Pull latest profile so Redux includes image_url and fresh profile fields.
+        const response = await fetch("/api/user/profile/single-profile", {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (!isMounted) return;
+
+        if (data?.profile) {
+          dispatch(
+            setUser({
+              ...cookieUser,
+              ...data.profile,
+            }),
+          );
+        }
+      } catch {
+        dispatch(clearUser());
+      }
+    };
+
+    syncUser();
+
+    return () => {
+      isMounted = false;
+    };
   }, [dispatch]);
 
   return children;

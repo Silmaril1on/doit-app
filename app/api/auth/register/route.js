@@ -90,6 +90,9 @@ export async function POST(request) {
       id: userId,
       email,
       display_name: displayName,
+      first_name: null,
+      last_name: null,
+      image_url: null,
     };
 
     const response = NextResponse.json(

@@ -9,6 +9,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import DarkModeProvider from "./lib/providers/DarkModeProvider";
 import { StoreProvider } from "./lib/store/StoreProvider";
+import GlobalModal from "./components/modals/GlobalModal";
 
 const josh = Jost({
   variable: "--font-jost",
@@ -49,6 +50,7 @@ export default async function RootLayout({ children, params }) {
               <div className="center w-full flex-col *:w-full grow *:grow ">
                 {children}
               </div>
+              <GlobalModal />
               <FloatingNavigation />
               <Footer />
             </DarkModeProvider>

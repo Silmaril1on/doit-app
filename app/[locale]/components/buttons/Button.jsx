@@ -1,11 +1,11 @@
 "use client";
 import Link from "next/link";
 import React from "react";
+import BorderSvg from "../elements/BorderSvg";
 
 const variantClassMap = {
-  fill: "bg-teal-500 hover:bg-teal-600 text-black",
-  outline:
-    "bg-teal-500/20 hover:bg-teal-500/40 border border-teal-500/50 text-white",
+  fill: "bg-teal-500  text-black",
+  outline: "bg-teal-500/20 hover:bg-teal-500/40 text-white",
 };
 
 const Button = ({
@@ -16,9 +16,10 @@ const Button = ({
   type = "button",
   disabled = false,
   className = "",
+  form,
 }) => {
   const variantClasses = variantClassMap[variant] ?? variantClassMap.fill;
-  const sharedClassName = `inline-flex items-center justify-center cursor-pointer px-4 py-0.5 rounded-sm font-bold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses} ${className}`;
+  const sharedClassName = `inline-flex relative items-center justify-center cursor-pointer px-4 py-0.5 rounded-sm font-bold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses} ${className}`;
 
   if (href) {
     return (
@@ -31,10 +32,12 @@ const Button = ({
   return (
     <button
       type={type}
+      form={form}
       disabled={disabled}
       className={sharedClassName}
       onClick={onClick}
     >
+      <BorderSvg strokeWidth={0.8} radius={4} />
       {text}
     </button>
   );

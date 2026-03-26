@@ -13,7 +13,10 @@ export default function HomePage() {
 
   return (
     <div className="flex grow flex-col gap-5 items-center bg-cream dark:bg-black p-8">
-      <h1>hello home page</h1>
+      <ItemCard className="w-98">
+        <h1 className="text-cream text-2xl">hello home page</h1>
+      </ItemCard>
+      <ActionButton icon={<FaHouseUser size={20} />} />
     </div>
   );
 }
