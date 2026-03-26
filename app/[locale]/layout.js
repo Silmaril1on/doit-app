@@ -41,7 +41,7 @@ export default async function RootLayout({ children, params }) {
       lang={locale}
       className={`${josh.variable} ${teko.variable} h-full antialiased primary`}
     >
-      <body className="min-h-full flex flex-col items-center relative  overflow-hidden">
+      <body className="min-h-full flex flex-col items-center relative overflow-x-hidden">
         <NextIntlClientProvider>
           <StoreProvider>
             <DarkModeProvider>
