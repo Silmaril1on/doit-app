@@ -17,6 +17,7 @@ const FromContainer = ({
   fields = [],
   values = {},
   onFieldChange,
+  formExtras,
   fieldsWrapperClassName = "space-y-5",
   maxWidthClass = "max-w-xl",
 }) => {
@@ -33,7 +34,11 @@ const FromContainer = ({
         <p className="secondary mt-4 text-sm text-chino/75">{subtitle}</p>
       ) : null}
 
-      <form className="mt-8 space-y-5 relative z-10" onSubmit={onSubmit}>
+      <form
+        className="mt-8 space-y-5 relative z-10"
+        onSubmit={onSubmit}
+        noValidate
+      >
         <div className={fieldsWrapperClassName}>
           {fields.map((field) => (
             <div key={field.id} className={field.wrapperClassName || ""}>
@@ -46,6 +51,8 @@ const FromContainer = ({
             </div>
           ))}
         </div>
+
+        {formExtras ? formExtras : null}
 
         {error ? (
           <div className="rounded-2xl border border-crimson/40 bg-crimson/10 px-4 py-3 text-sm text-red-300">

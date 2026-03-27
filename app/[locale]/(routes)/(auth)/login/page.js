@@ -1,6 +1,8 @@
 "use client";
 
 import FromContainer from "@/app/[locale]/components/container/FromContainer";
+import Logo from "@/app/[locale]/components/elements/Logo";
+import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setUser } from "@/app/[locale]/lib/features/userSlice";
 import { useParams, useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -36,7 +38,6 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
-  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (field) => (event) => {
@@ -51,10 +52,12 @@ const LoginPage = () => {
 
     const email = form.email.trim().toLowerCase();
 
-    setError("");
+    dispatch(clearToast());
 
     if (!email || !form.password) {
-      setError("Email and password are required.");
+      dispatch(
+        setToast({ type: "error", msg: "Email and password are required." }),
+      );
       return;
     }
 
@@ -78,18 +81,18 @@ const LoginPage = () => {
         throw new Error(data.error || "Login failed");
       }
 
-      dispatch(
-        setUser({
-          id: data.user.id,
-          display_name: data.user.display_name,
-          email: data.user.email,
-        }),
-      );
+      dispatch(setToast({ type: "success", msg: "Logged in successfully." }));
+
+      dispatch(setUser(data.user));
 
       router.push(`/${locale}`);
     } catch (submitError) {
-      setError(
-        submitError instanceof Error ? submitError.message : "Login failed",
+      dispatch(
+        setToast({
+          type: "error",
+          msg:
+            submitError instanceof Error ? submitError.message : "Login failed",
+        }),
       );
     } finally {
       setIsSubmitting(false);
@@ -97,19 +100,19 @@ const LoginPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-black px-4 center pb-20">
+    <main className="min-h-screen bg-black px-4 center flex-col space-y-10 pb-20">
+      <Logo size="large" />
       <FromContainer
         title="Login"
         onSubmit={handleSubmit}
         submitLabel="Login"
         submittingLabel="Signing In"
         isSubmitting={isSubmitting}
-        error={error}
         fields={userFormConfig}
         values={form}
         onFieldChange={handleChange}
         fieldsWrapperClassName="grid gap-5 sm:grid-cols-2"
-        maxWidthClass="w-full max-w-xl"
+        maxWidthClass="w-full max-w-lg"
         footerText="Don't have an account?"
         footerLinkLabel="Register"
         footerLinkHref={`/${locale}/register`}

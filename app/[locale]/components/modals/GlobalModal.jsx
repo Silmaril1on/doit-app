@@ -7,8 +7,9 @@ import {
   closeModal,
   selectModal,
 } from "@/app/[locale]/lib/features/modalSlice";
-import { MdClose } from "react-icons/md";
+
 import ProfileForm from "@/app/[locale]/(routes)/profile/basic-information/ProfileForm";
+import ObjectiveSubmissionForm from "@/app/[locale]/(routes)/(tasks)/tasks/objectives/ObjectiveSubmissionForm";
 import ItemCard from "../container/ItemCard";
 import ActionButton from "../buttons/ActionButton";
 import Button from "../buttons/Button";
@@ -20,6 +21,16 @@ const MODAL_REGISTRY = {
   editProfile: {
     component: ProfileForm,
     title: "Edit Profile",
+    submitLabel: "Save Changes",
+  },
+  createObjective: {
+    component: ObjectiveSubmissionForm,
+    title: "Create Objective",
+    submitLabel: "Create Objective",
+  },
+  editObjective: {
+    component: ObjectiveSubmissionForm,
+    title: "Edit Objective",
     submitLabel: "Save Changes",
   },
 };
@@ -62,7 +73,7 @@ const GlobalModal = () => {
               {/* Header */}
               <div className="flex items-center justify-between">
                 <h2 className="text-cream font-bold text-xl">{entry.title}</h2>
-                <ActionButton icon={<MdClose />} onClick={handleClose} />
+                <ActionButton variant="close" onClick={handleClose} />
               </div>
 
               {/* Content */}

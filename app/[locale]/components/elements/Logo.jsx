@@ -13,8 +13,8 @@ const Logo = ({ size = "sm", className }) => {
     <Link href="/">
       <div className={`${className} ${sizeClasses[size]}  `}>
         <Image
-          src="/assets/elivagar-logo.png"
-          alt="DJDB Logo"
+          src="/assets/doit-logo.jpg"
+          alt="DOIT Logo"
           width={150}
           height={150}
         />

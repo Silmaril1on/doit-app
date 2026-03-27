@@ -1,6 +1,5 @@
 "use client";
 import { FaHouseUser } from "react-icons/fa";
-import ActionButton from "./components/buttons/ActionButton";
 import Button from "./components/buttons/Button";
 import ToggleButton from "./components/buttons/ToggleButton";
 import { useState } from "react";
@@ -16,7 +15,6 @@ export default function HomePage() {
       <ItemCard className="w-98">
         <h1 className="text-cream text-2xl">hello home page</h1>
       </ItemCard>
-      <ActionButton icon={<FaHouseUser size={20} />} />
     </div>
   );
 }

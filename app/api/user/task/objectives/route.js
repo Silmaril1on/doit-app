@@ -1,0 +1,135 @@
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import {
+  createObjective,
+  deleteObjective,
+  getAllObjectives,
+  updateObjective,
+} from "@/app/[locale]/lib/services/tasks/objectives/myObjectives";
+
+async function getUserId() {
+  const cookieStore = await cookies();
+  return cookieStore.get("doit-user-id")?.value ?? null;
+}
+
+function getObjectiveId(request) {
+  const searchParams = request.nextUrl.searchParams;
+  return (
+    searchParams.get("id") ||
+    searchParams.get("objectiveId") ||
+    searchParams.get("objective_id")
+  );
+}
+
+export async function GET() {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const objectives = await getAllObjectives(userId);
+    return NextResponse.json({ objectives }, { status: 200 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err.message || "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function POST(request) {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = await request.json();
+    const objective = await createObjective(userId, payload);
+
+    return NextResponse.json({ objective }, { status: 201 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err.message || "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const objectiveId = getObjectiveId(request);
+    if (!objectiveId) {
+      return NextResponse.json(
+        { error: "objectiveId is required" },
+        { status: 400 },
+      );
+    }
+
+    const payload = await request.json();
+    const objective = await updateObjective(userId, objectiveId, payload);
+    return NextResponse.json({ objective }, { status: 200 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err.message || "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request) {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const objectiveId = getObjectiveId(request);
+    if (!objectiveId) {
+      return NextResponse.json(
+        { error: "objectiveId is required" },
+        { status: 400 },
+      );
+    }
+
+    const payload = await request.json();
+    const objective = await updateObjective(userId, objectiveId, payload);
+    return NextResponse.json({ objective }, { status: 200 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err.message || "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const objectiveId = getObjectiveId(request);
+    if (!objectiveId) {
+      return NextResponse.json(
+        { error: "objectiveId is required" },
+        { status: 400 },
+      );
+    }
+
+    const objective = await deleteObjective(userId, objectiveId);
+    return NextResponse.json({ objective }, { status: 200 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err.message || "Internal server error" },
+      { status: 500 },
+    );
+  }
+}

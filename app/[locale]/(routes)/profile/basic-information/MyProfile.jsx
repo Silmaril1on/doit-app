@@ -5,7 +5,7 @@ import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline"
 import { useUserProfile } from "@/app/[locale]/lib/hooks/userProfileHook";
 import { useModal } from "@/app/[locale]/lib/hooks/useModal";
 import { formatDate } from "@/app/[locale]/lib/utils/utils";
-import { MdEdit } from "react-icons/md";
+
 import ImageTag from "@/app/[locale]/components/elements/ImageTag";
 
 const FIELD_LABELS = {
@@ -62,12 +62,12 @@ const MyProfile = ({ user }) => {
           <h1 className="">{profile.email}</h1>
           <h1 className="text-xs opacity-80">
             <i className="secondary pr-1"> Member Since</i>{" "}
-            <b>{formatDate("created_at", profile.created_at)}</b>
+            <b>{formatDate(profile.created_at)}</b>
           </h1>
         </div>
         <ActionButton
+          variant="edit"
           className="absolute top-3 right-3"
-          icon={<MdEdit />}
           onClick={() => open("editProfile", { profile })}
         />
       </ItemCard>
@@ -86,7 +86,9 @@ const MyProfile = ({ user }) => {
                 {label}
               </p>
               <p className="text-cream text-sm font-medium secondary">
-                {formatDate(key, profile[key])}
+                {key.endsWith("_at")
+                  ? formatDate(profile[key])
+                  : profile[key] || "—"}
               </p>
             </div>
           ))}

@@ -1,13 +1,32 @@
 import React, { useId } from "react";
 
+const BORDER_COLORS = {
+  teal: [
+    "rgba(45, 212, 191, 0.95)",
+    "rgba(45, 212, 191, 0.5)",
+    "rgba(45, 212, 191, 0)",
+    "rgba(45, 212, 191, 0.55)",
+    "rgba(45, 212, 191, 0.2)",
+  ],
+  red: [
+    "rgba(248, 113, 113, 0.95)",
+    "rgba(248, 113, 113, 0.5)",
+    "rgba(248, 113, 113, 0)",
+    "rgba(248, 113, 113, 0.55)",
+    "rgba(248, 113, 113, 0.2)",
+  ],
+};
+
 const BorderSvg = ({
   className = "",
   radius = 8,
   strokeWidth = 1.4,
   fadeAt = null,
+  color = "teal",
 }) => {
   const id = useId().replace(/:/g, "");
   const gradientId = `gradient-${id}`;
+  const [c0, c1, c2, c3, c4] = BORDER_COLORS[color] ?? BORDER_COLORS.teal;
 
   return (
     <svg
@@ -28,20 +47,17 @@ const BorderSvg = ({
       />
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="100%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="rgba(45, 212, 191, 0.95)" />
+          <stop offset="0%" stopColor={c0} />
           {fadeAt !== null ? (
             <>
-              <stop offset={`${fadeAt}%`} stopColor="rgba(45, 212, 191, 0.5)" />
-              <stop
-                offset={`${fadeAt + 20}%`}
-                stopColor="rgba(45, 212, 191, 0)"
-              />
-              <stop offset="100%" stopColor="rgba(45, 212, 191, 0)" />
+              <stop offset={`${fadeAt}%`} stopColor={c1} />
+              <stop offset={`${fadeAt + 20}%`} stopColor={c2} />
+              <stop offset="100%" stopColor={c2} />
             </>
           ) : (
             <>
-              <stop offset="45%" stopColor="rgba(45, 212, 191, 0.55)" />
-              <stop offset="100%" stopColor="rgba(45, 212, 191, 0.2)" />
+              <stop offset="45%" stopColor={c3} />
+              <stop offset="100%" stopColor={c4} />
             </>
           )}
         </linearGradient>

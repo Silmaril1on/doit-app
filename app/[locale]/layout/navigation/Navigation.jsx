@@ -5,12 +5,12 @@ import { useDarkMode } from "@/app/[locale]/lib/providers/DarkModeProvider";
 import ToggleButton from "@/app/[locale]/components/buttons/ToggleButton";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { FaMoon, FaSun } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import Button from "../../components/buttons/Button";
 
 const Navigation = () => {
   const { isDark, toggle } = useDarkMode();
-  const activeModeLabel = isDark ? "Dark mode" : "Light mode";
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
   const currentUser = useSelector(selectCurrentUser);
@@ -18,13 +18,29 @@ const Navigation = () => {
   return (
     <nav className="p-3 flex w-full items-center justify-between bg-black">
       <Logo size="sm" />
-      <div className="flex items-center gap-3">
-        <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold secondary">
-          {activeModeLabel}
-        </span>
-        <ToggleButton checked={isDark} onChange={toggle} size="md" />
-      </div>
+      <DarkModeSection isDark={isDark} toggle={toggle} />
+      <LoginButtonSection locale={locale} currentUser={currentUser} />
+    </nav>
+  );
+};
 
+const DarkModeSection = ({ isDark, toggle }) => {
+  return (
+    <div className="flex items-center gap-3">
+      <span
+        aria-hidden="true"
+        className="text-pink text-lg flex h-6 w-6 items-center justify-center"
+      >
+        {isDark ? <FaMoon /> : <FaSun />}
+      </span>
+      <ToggleButton checked={isDark} onChange={toggle} size="md" />
+    </div>
+  );
+};
+
+const LoginButtonSection = ({ locale, currentUser }) => {
+  return (
+    <>
       {!currentUser && (
         <div className="flex space-x-4">
           <Link href={`/${locale}/login`}>
@@ -35,7 +51,7 @@ const Navigation = () => {
           </Link>
         </div>
       )}
-    </nav>
+    </>
   );
 };
 

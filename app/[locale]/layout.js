@@ -2,7 +2,7 @@ import { Teko, Jost } from "next/font/google";
 import "./globals.css";
 import Navigation from "./layout/navigation/Navigation";
 import Footer from "./layout/footer/Footer";
-import FloatingNavigation from "./layout/navigation/FloatingNavigation";
+import FloatingNavigation from "./layout/navigation/floating-navigation/FloatingNavigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -10,6 +10,8 @@ import { routing } from "@/i18n/routing";
 import DarkModeProvider from "./lib/providers/DarkModeProvider";
 import { StoreProvider } from "./lib/store/StoreProvider";
 import GlobalModal from "./components/modals/GlobalModal";
+import Toast from "./components/elements/Toast";
+import NavigationWrapper from "./layout/NavigationWrapper";
 
 const josh = Jost({
   variable: "--font-jost",
@@ -46,11 +48,13 @@ export default async function RootLayout({ children, params }) {
         <NextIntlClientProvider>
           <StoreProvider>
             <DarkModeProvider>
-              <Navigation />
+              {/* <Navigation /> */}
+              <NavigationWrapper />
               <div className="center w-full flex-col *:w-full grow *:grow ">
                 {children}
               </div>
               <GlobalModal />
+              <Toast />
               <FloatingNavigation />
               <Footer />
             </DarkModeProvider>

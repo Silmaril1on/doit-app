@@ -8,7 +8,7 @@ import {
   clearUser,
   selectCurrentUser,
 } from "@/app/[locale]/lib/features/userSlice";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { getUserInitials } from "@/app/[locale]/lib/utils/utils";
@@ -20,6 +20,7 @@ const UserProfile = () => {
   const locale = typeof params?.locale === "string" ? params.locale : "en";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -51,6 +52,7 @@ const UserProfile = () => {
     } finally {
       setIsMenuOpen(false);
       dispatch(clearUser());
+      router.push(`/${locale}/`);
     }
   };
 

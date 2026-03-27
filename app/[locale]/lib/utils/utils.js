@@ -1,13 +1,11 @@
-export const formatDate = (key, value) => {
+export const formatDate = (value) => {
   if (!value) return "—";
-  if (key === "created_at" || key === "updated_at") {
-    return new Date(value).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  }
-  return value;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 };
 
 export const getUserInitials = (user) => {

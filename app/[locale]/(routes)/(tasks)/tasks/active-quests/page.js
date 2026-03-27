@@ -1,7 +1,8 @@
 import React from "react";
+import Objectives from "../objectives/Objectives";
 
 const ActiveQuestsPage = () => {
-  return <div className="bg-neutral-500 flex grow">ActiveQuestsPage</div>;
+  return <Objectives />;
 };
 
 export default ActiveQuestsPage;

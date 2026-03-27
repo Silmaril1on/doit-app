@@ -2,14 +2,20 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import React, { useState } from "react";
-import ActionButton from "../../components/buttons/ActionButton";
-import { FaHouseDamage, FaUser } from "react-icons/fa";
-import { MdHeartBroken } from "react-icons/md";
-import ArrowUpDown from "../../components/elements/ArrowUpDown";
-import UserProfile from "../../components/UserProfile";
+import ActionButton from "../../../components/buttons/ActionButton";
+
+import ArrowUpDown from "../../../components/elements/ArrowUpDown";
+import UserProfile from "./UserProfile";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../lib/features/userSlice";
 
 const FloatingNavigation = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const user = useSelector(selectCurrentUser);
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <motion.div
@@ -23,14 +29,14 @@ const FloatingNavigation = () => {
         onClick={() => setIsOpen((current) => !current)}
       />
       <div className="relative w-full center space-x-4">
-        <Link href="/objectives">
-          <ActionButton icon={<FaHouseDamage />} />
+        <Link href="/tasks/objectives">
+          <ActionButton variant="home" />
         </Link>
-        <Link href="/active-quests">
-          <ActionButton icon={<FaUser />} />
+        <Link href="/tasks/active-quests">
+          <ActionButton variant="profile" />
         </Link>
-        <Link href="/achievements">
-          <ActionButton icon={<MdHeartBroken />} />
+        <Link href="/tasks/achievements">
+          <ActionButton variant="achievements" />
         </Link>
       </div>
       <UserProfile />

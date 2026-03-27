@@ -11,7 +11,7 @@ const Input = ({ data, value, onChange, disabled = false }) => {
   } = data;
 
   return (
-    <div className="flex flex-col gap-1 lg:gap-2">
+    <div>
       <label htmlFor={id}>{label}</label>
       <input
         id={id}
