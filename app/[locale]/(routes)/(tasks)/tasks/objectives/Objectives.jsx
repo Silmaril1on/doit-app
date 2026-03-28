@@ -1,9 +1,10 @@
 "use client";
 
-import TasksHeader from "../(componets)/TasksHeader";
+import TasksHeader from "../(componets)/ObjectivesHeader";
+import ObjectivesSideBar from "../(componets)/ObjectivesSideBar";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
+import Button from "@/app/[locale]/components/buttons/Button";
 import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
-import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { useModal } from "@/app/[locale]/lib/hooks/useModal";
 import { selectModal } from "@/app/[locale]/lib/features/modalSlice";
 import ObjectiveCard from "../(componets)/ObjectiveCard";
@@ -13,65 +14,46 @@ import {
   searchItems,
   OBJECTIVE_SEARCH_FIELDS,
 } from "@/app/[locale]/lib/utils/filterConfig";
+import { useObjectives } from "@/app/[locale]/lib/hooks/useObjectives";
+import { ACTIVE_QUESTS_PAGE1_KEY } from "@/app/[locale]/lib/hooks/useActiveQuests";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { mutate as globalMutate } from "swr";
 
-const Objectives = () => {
+const Objectives = ({ initialData = null }) => {
   const dispatch = useDispatch();
   const { open } = useModal();
-  const currentUser = useSelector(selectCurrentUser);
   const { modalType } = useSelector(selectModal);
-  const [objectives, setObjectives] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [searchQuery, setSearchQuery] = useState("");
   const lastModalTypeRef = useRef(modalType);
 
-  const loadObjectives = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch("/api/user/task/objectives?status=todo", {
-        cache: "no-store",
-      });
-      const data = await response.json();
+  const {
+    objectives: swrObjectives,
+    total,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    loadMore,
+    mutate,
+  } = useObjectives(initialData);
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to load objectives");
-      }
-
-      setObjectives(Array.isArray(data.objectives) ? data.objectives : []);
-    } catch (error) {
-      dispatch(
-        setToast({
-          type: "error",
-          msg:
-            error instanceof Error
-              ? error.message
-              : "Failed to load objectives",
-        }),
-      );
-    } finally {
-      setIsLoading(false);
-      setHasLoaded(true);
-    }
-  }, [dispatch]);
-
+  // Local copy for optimistic updates — stays in sync when SWR revalidates
+  const [objectives, setObjectives] = useState(swrObjectives);
   useEffect(() => {
-    loadObjectives();
-  }, [loadObjectives]);
+    setObjectives(swrObjectives);
+  }, [swrObjectives]);
 
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Revalidate when an objective modal closes
   useEffect(() => {
-    const wasObjectiveModalOpen = ["createObjective", "editObjective"].includes(
+    const wasOpen = ["createObjective", "editObjective"].includes(
       lastModalTypeRef.current,
     );
-
-    if (wasObjectiveModalOpen && modalType === null) {
-      loadObjectives();
-    }
-
+    if (wasOpen && modalType === null) mutate();
     lastModalTypeRef.current = modalType;
-  }, [modalType, loadObjectives]);
+  }, [modalType, mutate]);
 
   const handleOpenCreate = () => {
     dispatch(clearToast());
@@ -101,33 +83,62 @@ const Objectives = () => {
           const data = await response.json();
           throw new Error(data.error || "Failed to start task");
         }
+        dispatch(
+          setToast({
+            type: "success",
+            msg: "You have started your task",
+          }),
+        );
+        mutate(); // invalidate objectives SWR cache
+        globalMutate(ACTIVE_QUESTS_PAGE1_KEY); // immediately populate active-quests cache
       } catch (error) {
-        loadObjectives();
+        mutate();
         dispatch(
           setToast({
             type: "error",
-            msg: error instanceof Error ? error.message : "Failed to start task",
+            msg:
+              error instanceof Error ? error.message : "Failed to start task",
           }),
         );
       }
     },
-    [dispatch, loadObjectives],
+    [dispatch, mutate],
   );
 
-  const searched = searchItems(objectives, searchQuery, OBJECTIVE_SEARCH_FIELDS);
-  const filteredObjectives = applyObjectivesFilters(searched, filters);
+  const handleDeleteTask = useCallback(
+    async (objective) => {
+      setObjectives((prev) => prev.filter((o) => o.id !== objective.id));
+      try {
+        const response = await fetch(
+          `/api/user/task/objectives?id=${encodeURIComponent(objective.id)}`,
+          { method: "DELETE" },
+        );
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to delete task");
+        }
+        mutate(); // invalidate SWR cache
+      } catch (error) {
+        mutate(); // rollback via server revalidation
+        dispatch(
+          setToast({
+            type: "error",
+            msg:
+              error instanceof Error ? error.message : "Failed to delete task",
+          }),
+        );
+      }
+    },
+    [dispatch, mutate],
+  );
 
   const handleRemoveSubtask = async (objective, subtaskIndex) => {
     const currentSubtasks = Array.isArray(objective?.subtasks)
       ? objective.subtasks
       : [];
-    if (currentSubtasks.length === 0 || subtaskIndex < 0) {
-      return;
-    }
+    if (currentSubtasks.length === 0 || subtaskIndex < 0) return;
 
-    const nextSubtasks = currentSubtasks.filter(
-      (_, index) => index !== subtaskIndex,
-    );
+    const nextSubtasks = currentSubtasks.filter((_, i) => i !== subtaskIndex);
 
     setObjectives((prev) =>
       prev.map((item) =>
@@ -140,17 +151,13 @@ const Objectives = () => {
         `/api/user/task/objectives?id=${encodeURIComponent(objective.id)}`,
         {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ subtasks: nextSubtasks }),
         },
       );
-
       const data = await response.json();
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(data.error || "Failed to update subtasks");
-      }
     } catch (error) {
       setObjectives((prev) =>
         prev.map((item) =>
@@ -159,7 +166,6 @@ const Objectives = () => {
             : item,
         ),
       );
-
       dispatch(
         setToast({
           type: "error",
@@ -172,6 +178,12 @@ const Objectives = () => {
     }
   };
 
+  const searched = searchItems(
+    objectives,
+    searchQuery,
+    OBJECTIVE_SEARCH_FIELDS,
+  );
+  const filteredObjectives = applyObjectivesFilters(searched, filters);
   const buttonLabel =
     objectives.length > 0 ? "Create Objective" : "Create First Objective";
 
@@ -181,16 +193,25 @@ const Objectives = () => {
         objectives={objectives}
         buttonLabel={buttonLabel}
         onCreateClick={handleOpenCreate}
+        onOpenSidebar={() => setSidebarOpen(true)}
         filters={filters}
-        onFiltersApply={handleFiltersApply}
+        onClearFilters={() => setFilters(EMPTY_FILTERS)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
+      <ObjectivesSideBar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        objectives={objectives}
+        filters={filters}
+        onFiltersApply={handleFiltersApply}
+      />
+
       {isLoading ? (
         <p className="secondary text-sm text-chino/70">Loading objectives...</p>
       ) : null}
 
-      {!isLoading && hasLoaded && objectives.length === 0 ? (
+      {!isLoading && objectives.length === 0 ? (
         <div className="rounded-xl border border-dashed border-teal-500/25 bg-black/35 p-6 text-center">
           <p className="secondary text-sm text-chino/80">
             No objectives yet. Create your first objective to get started.
@@ -198,7 +219,9 @@ const Objectives = () => {
         </div>
       ) : null}
 
-      {!isLoading && hasLoaded && objectives.length > 0 && filteredObjectives.length === 0 ? (
+      {!isLoading &&
+      objectives.length > 0 &&
+      filteredObjectives.length === 0 ? (
         <ItemCard className="p-6 text-center">
           <p className="secondary text-sm text-chino/80">
             No objectives match the current filters.
@@ -213,10 +236,22 @@ const Objectives = () => {
               key={objective.id}
               objective={objective}
               onEdit={handleOpenEdit}
+              onDelete={handleDeleteTask}
               onRemoveSubtask={handleRemoveSubtask}
               onStart={handleStartTask}
             />
           ))}
+        </div>
+      ) : null}
+
+      {!isLoading && hasMore ? (
+        <div className="flex justify-center pt-2">
+          <Button
+            text={isLoadingMore ? "Loading..." : "Load More"}
+            variant="outline"
+            onClick={loadMore}
+            disabled={isLoadingMore}
+          />
         </div>
       ) : null}
     </section>

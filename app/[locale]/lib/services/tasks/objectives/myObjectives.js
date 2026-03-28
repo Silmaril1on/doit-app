@@ -27,13 +27,17 @@ const normalizePriority = (value) => {
 };
 
 const normalizeSubtasks = (value) => {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
+  if (!Array.isArray(value)) return [];
   return value
-    .map((subtask) => normalizeText(subtask))
-    .filter((subtask) => Boolean(subtask));
+    .map((item) => {
+      if (typeof item === "string") {
+        const label = normalizeText(item);
+        return label ? { label, completed: false } : null;
+      }
+      const label = normalizeText(item?.label);
+      return label ? { label, completed: Boolean(item?.completed) } : null;
+    })
+    .filter(Boolean);
 };
 
 const normalizeOptionalTimestamp = (value) => {
@@ -50,21 +54,25 @@ const normalizeOptionalTimestamp = (value) => {
   return parsedDate.toISOString();
 };
 
-export async function getAllObjectives(userId, { status } = {}) {
+export async function getAllObjectives(
+  userId,
+  { status, limit, offset = 0 } = {},
+) {
   if (!userId) throw new Error("userId is required");
 
   let query = supabaseAdmin
     .from(TABLE_NAME)
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
   if (status) query = query.eq("status", status);
+  if (limit != null) query = query.range(offset, offset + limit - 1);
 
-  const { data, error } = await query;
+  const { data, count, error } = await query;
 
   if (error) throw new Error(error.message);
-  return data;
+  return { objectives: data ?? [], total: count ?? 0 };
 }
 
 export async function getObjectiveById(userId, objectiveId) {

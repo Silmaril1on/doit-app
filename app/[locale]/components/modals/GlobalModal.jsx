@@ -9,7 +9,7 @@ import {
 } from "@/app/[locale]/lib/features/modalSlice";
 
 import ProfileForm from "@/app/[locale]/(routes)/profile/basic-information/ProfileForm";
-import ObjectiveSubmissionForm from "@/app/[locale]/(routes)/(tasks)/tasks/objectives/ObjectiveSubmissionForm";
+import ObjectiveSubmissionForm from "@/app/[locale]/(routes)/(tasks)/tasks/(componets)/ObjectiveSubmissionForm";
 import ItemCard from "../container/ItemCard";
 import ActionButton from "../buttons/ActionButton";
 import Button from "../buttons/Button";

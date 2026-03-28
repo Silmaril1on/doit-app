@@ -86,6 +86,8 @@ const FIELDS = [
   },
 ];
 
+const EMPTY_SUBTASK = { label: "", completed: false };
+
 const initialForm = {
   task_title: "",
   task_description: "",
@@ -94,7 +96,7 @@ const initialForm = {
   task_category: "",
   priority: "medium",
   task_deadline: "",
-  subtasks: [""],
+  subtasks: [{ ...EMPTY_SUBTASK }],
 };
 
 const formatForDateTimeLocal = (value) => {
@@ -127,7 +129,7 @@ const createFormFromObjective = (objective) => {
     subtasks:
       Array.isArray(objective.subtasks) && objective.subtasks.length > 0
         ? objective.subtasks
-        : [""],
+        : [{ ...EMPTY_SUBTASK }],
   };
 };
 
@@ -170,12 +172,7 @@ const ObjectiveSubmissionForm = ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          ...form,
-          subtasks: form.subtasks
-            .map((subtask) => String(subtask || "").trim())
-            .filter(Boolean),
-        }),
+        body: JSON.stringify({ ...form }),
       });
 
       const data = await response.json();

@@ -4,8 +4,9 @@ import Button from "@/app/[locale]/components/buttons/Button";
 import Tablet from "@/app/[locale]/components/elements/Tablet";
 import { CountryFlags } from "@/app/[locale]/components/elements/CountryFlags";
 import { formatDate } from "@/app/[locale]/lib/utils/utils";
+import ProgressBar from "@/app/[locale]/components/elements/ProgressBar";
 import React, { useRef, useState, useEffect } from "react";
-import { IoMdClose } from "react-icons/io";
+import { IoMdClose, IoMdArrowDropright, IoIosCheckmark } from "react-icons/io";
 
 const priorityColorMap = {
   low: "blue",
@@ -24,7 +25,15 @@ const formatLabel = (value) =>
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
-const ObjectiveCard = ({ objective, onEdit, onRemoveSubtask, onStart }) => {
+const ObjectiveCard = ({
+  objective,
+  onEdit,
+  onDelete,
+  onRemoveSubtask,
+  onToggleSubtask,
+  onComplete,
+  onStart,
+}) => {
   const status = objective.status || "todo";
   const priority = objective.priority || "medium";
   const category = objective.task_category || "General";
@@ -58,15 +67,10 @@ const ObjectiveCard = ({ objective, onEdit, onRemoveSubtask, onStart }) => {
             {objective.task_description}
           </p>
         </div>
-        <div ref={menuRef} className="relative shrink-0 flex items-center gap-2">
-          {onStart && (
-            <Button
-              text="Start Task"
-              variant="outline"
-              onClick={() => onStart(objective)}
-              className="text-xs px-2 py-0.5 whitespace-nowrap"
-            />
-          )}
+        <div
+          ref={menuRef}
+          className="relative shrink-0 flex items-center gap-2"
+        >
           <ActionButton
             variant="expand"
             onClick={() => setMenuOpen((prev) => !prev)}
@@ -86,6 +90,7 @@ const ObjectiveCard = ({ objective, onEdit, onRemoveSubtask, onStart }) => {
                 variant="delete"
                 onClick={() => {
                   setMenuOpen(false);
+                  onDelete?.(objective);
                 }}
                 ariaLabel="Delete objective"
               />
@@ -105,42 +110,113 @@ const ObjectiveCard = ({ objective, onEdit, onRemoveSubtask, onStart }) => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Tablet text={formatLabel(status)} color={statusColorMap[status] || "sky"} />
+          <Tablet
+            text={formatLabel(status)}
+            color={statusColorMap[status] || "sky"}
+          />
           <Tablet
             text={formatLabel(priority)}
             color={priorityColorMap[priority] || priorityColorMap.medium}
           />
         </div>
       </div>
-      {/* Card Subtasks */}
+      <SubTasksSection
+        objective={objective}
+        subtasks={subtasks}
+        onToggleSubtask={onToggleSubtask}
+        onRemoveSubtask={onRemoveSubtask}
+      />
+      <CardFooter
+        objective={objective}
+        onStart={onStart}
+        onComplete={onComplete}
+      />
+    </ItemCard>
+  );
+};
+
+const SubTasksSection = ({
+  objective,
+  subtasks,
+  onToggleSubtask,
+  onRemoveSubtask,
+}) => {
+  const completedCount = subtasks.filter(
+    (st) => typeof st === "object" && st.completed,
+  ).length;
+  const showProgress = Boolean(onToggleSubtask) && subtasks.length > 0;
+
+  return (
+    <>
       {subtasks.length > 0 && (
         <div className="rounded-lg border border-teal-500/20 bg-black/35 p-3">
           <p className="secondary text-xs uppercase tracking-[0.14em] text-white/80">
             Subtasks
           </p>
-          <ul className="mt-2 space-y-1 text-xs text-chino/85 secondary">
-            {subtasks.map((subtask, index) => (
-              <li
-                key={`${objective.id}-subtask-${index}`}
-                className="group flex items-center justify-between gap-2"
-              >
-                <span className="duration-300 group-hover:pl-3 cursor-pointer">
-                  • {subtask}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onRemoveSubtask?.(objective, index)}
-                  aria-label={`Remove subtask ${index + 1}`}
-                  className="cursor-pointer text-red-300 opacity-0 duration-300 group-hover:opacity-100 hover:text-red-200"
+          <ul className="mt-2 space-y-1 text-xs secondary ">
+            {subtasks.map((subtask, index) => {
+              const label =
+                typeof subtask === "object" ? subtask.label : subtask;
+              const isCompleted =
+                typeof subtask === "object"
+                  ? Boolean(subtask.completed)
+                  : false;
+              return (
+                <div
+                  key={`${objective.id}-subtask-${index}`}
+                  className="group hover:pl-3 flex items-center justify-between gap-2 rounded-md px-1 duration-300"
                 >
-                  <IoMdClose size={16} />
-                </button>
-              </li>
-            ))}
+                  {onToggleSubtask ? (
+                    <button
+                      type="button"
+                      onClick={() => onToggleSubtask(objective, index)}
+                      aria-label={`Toggle subtask ${index + 1}`}
+                      className={`flex items-center gap-0.5 text-left font-medium cursor-pointer duration-300 ${
+                        isCompleted ? "text-green-500" : "text-chino/85"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <IoIosCheckmark size={18} className="shrink-0" />
+                      ) : (
+                        <IoMdArrowDropright size={18} className="shrink-0" />
+                      )}
+                      <span className="capitalize">{label}</span>
+                    </button>
+                  ) : (
+                    <span className="flex items-center gap-0.5 text-chino/85">
+                      <IoMdArrowDropright size={16} className="shrink-0" />
+                      <span className="capitalize font-bold">{label}</span>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => onRemoveSubtask?.(objective, index)}
+                    aria-label={`Remove subtask ${index + 1}`}
+                    className="cursor-pointer text-red-500 opacity-0 duration-300 group-hover:opacity-100"
+                  >
+                    <IoMdClose size={16} />
+                  </button>
+                </div>
+              );
+            })}
           </ul>
+          {showProgress && (
+            <ProgressBar
+              value={completedCount}
+              max={subtasks.length}
+              label="Task Progress"
+              className="mt-3"
+            />
+          )}
         </div>
       )}
-      {/* Card Footer */}
+    </>
+  );
+};
+
+const CardFooter = ({ objective, onStart, onComplete }) => {
+  return (
+    <div className="grid grid-cols-[3.5fr_1fr]">
       <div className="grid grid-cols-2 gap-1 text-xs text-cream secondary">
         {formatDate(objective.update_at) !== "—" && (
           <div className="flex items-center gap-1">
@@ -155,7 +231,25 @@ const ObjectiveCard = ({ objective, onEdit, onRemoveSubtask, onStart }) => {
           </div>
         )}
       </div>
-    </ItemCard>
+      <div className="flex justify-end">
+        {onStart && (
+          <Button
+            text="Start Task"
+            variant="outline"
+            onClick={() => onStart(objective)}
+            className="text-xs px-2 py-0.5 whitespace-nowrap"
+          />
+        )}
+        {onComplete && (
+          <Button
+            text="Complete"
+            variant="outline"
+            onClick={() => onComplete(objective)}
+            className="text-xs px-2 py-0.5 whitespace-nowrap text-green-400 border-green-500/40 hover:bg-green-500/10"
+          />
+        )}
+      </div>
+    </div>
   );
 };
 

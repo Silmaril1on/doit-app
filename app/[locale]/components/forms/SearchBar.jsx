@@ -4,16 +4,6 @@ import React, { useRef } from "react";
 import { IoSearch } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
 
-/**
- * Reusable controlled search input.
- *
- * Props:
- *   value        {string}            - Controlled value
- *   onChange     {(string) => void}  - Called with the new string on every keystroke
- *   placeholder  {string}            - Input placeholder  (default: "Search…")
- *   className    {string}            - Extra classes applied to the wrapper div
- *   ariaLabel    {string}            - Accessible label (falls back to placeholder)
- */
 const SearchBar = ({
   value = "",
   onChange,

@@ -20,7 +20,8 @@ const FilterSection = ({ config, selected, onChange }) => {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between py-3 cursor-pointer">
+        className="flex w-full items-center justify-between py-3 cursor-pointer"
+      >
         <span className="primary text-sm text-teal-300">{config.label}</span>
         <div className="flex items-center gap-2">
           {selected.length > 0 && (
@@ -63,7 +64,9 @@ const FilterSection = ({ config, selected, onChange }) => {
                     )}
                   </span>
                   {count !== undefined && (
-                    <span className="secondary text-xs text-chino/50">{count}</span>
+                    <span className="secondary text-xs text-chino/50">
+                      {count}
+                    </span>
                   )}
                 </button>
               </li>
@@ -75,16 +78,11 @@ const FilterSection = ({ config, selected, onChange }) => {
   );
 };
 
-// ── main component ────────────────────────────────────────────────────────────
-//
-// configs  — [{ key, label, options: [{ label, value, count? }] }]
-// values   — { [key]: string[] }
-// onChange — (key: string, values: string[]) => void
-// onReset  — () => void
-
 const FilterBar = ({ configs = [], values = {}, onChange, onReset }) => {
   const activeConfigs = configs.filter((cfg) => cfg.options.length > 0);
-  const hasActive = activeConfigs.some((cfg) => (values[cfg.key] ?? []).length > 0);
+  const hasActive = activeConfigs.some(
+    (cfg) => (values[cfg.key] ?? []).length > 0,
+  );
 
   if (activeConfigs.length === 0) {
     return (
@@ -96,7 +94,7 @@ const FilterBar = ({ configs = [], values = {}, onChange, onReset }) => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-1 mr-3">
         <p className="secondary text-xs uppercase tracking-[0.14em] text-teal-200/60">
           Filters
         </p>

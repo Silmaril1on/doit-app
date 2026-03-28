@@ -29,8 +29,15 @@ export async function GET(request) {
     }
 
     const status = request.nextUrl.searchParams.get("status") || undefined;
-    const objectives = await getAllObjectives(userId, { status });
-    return NextResponse.json({ objectives }, { status: 200 });
+    const limit =
+      Number(request.nextUrl.searchParams.get("limit") ?? 0) || undefined;
+    const offset = Number(request.nextUrl.searchParams.get("offset") ?? 0);
+    const { objectives, total } = await getAllObjectives(userId, {
+      status,
+      limit,
+      offset,
+    });
+    return NextResponse.json({ objectives, total }, { status: 200 });
   } catch (err) {
     return NextResponse.json(
       { error: err.message || "Internal server error" },

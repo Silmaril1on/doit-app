@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import Button from "@/app/[locale]/components/buttons/Button";
 import DonutChart from "@/app/[locale]/components/elements/DonutChart";
@@ -8,10 +8,9 @@ import { useUserProfile } from "@/app/[locale]/lib/hooks/userProfileHook";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { IoIosAdd } from "react-icons/io";
-import TasksSideBar from "@/app/[locale]/layout/navigation/side-navigation/TasksSideBar";
+import { MdFilterAltOff } from "react-icons/md";
 import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
-import ObjectivesFilter from "./ObjectivesFilter";
-import SearchBar from "@/app/[locale]/components/filters/SearchBar";
+import SearchBar from "@/app/[locale]/components/forms/SearchBar";
 
 const PRIORITY_CONFIG = [
   { key: "low", label: "Low", color: "#0ea5e9" },
@@ -20,33 +19,19 @@ const PRIORITY_CONFIG = [
 ];
 
 const GAP = 3;
-const EMPTY_FILTERS = { country: [], city: [], priority: [] };
 
 const TasksHeader = ({
   objectives = [],
   buttonLabel,
   onCreateClick,
-  filters,
-  onFiltersApply,
+  onOpenSidebar,
+  filters = {},
+  onClearFilters,
   searchQuery = "",
   onSearchChange,
 }) => {
   const total = objectives.length;
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pendingFilters, setPendingFilters] = useState(filters ?? EMPTY_FILTERS);
-
-  useEffect(() => {
-    if (sidebarOpen) setPendingFilters(filters ?? EMPTY_FILTERS);
-  }, [sidebarOpen]);
-
-  const handlePendingChange = (key, values) => {
-    setPendingFilters((prev) => ({ ...prev, [key]: values }));
-  };
-
-  const handleDone = () => {
-    onFiltersApply?.(pendingFilters);
-    setSidebarOpen(false);
-  };
+  const hasActiveFilters = Object.values(filters).some((v) => v?.length > 0);
 
   const segments = PRIORITY_CONFIG.map((cfg) => {
     const value = objectives.filter(
@@ -58,24 +43,7 @@ const TasksHeader = ({
 
   return (
     <div className="w-full space-y-2">
-      <TasksSideBar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        footer={
-          <Button
-            text="Done"
-            variant="fill"
-            onClick={handleDone}
-          />
-        }
-      >
-        <ObjectivesFilter
-          objectives={objectives}
-          filters={pendingFilters}
-          onFiltersChange={handlePendingChange}
-          onReset={() => setPendingFilters(EMPTY_FILTERS)}
-        />
-      </TasksSideBar>
+      {/* User tasks statistics header section */}
       <ItemCard className="w-full grid gap-3">
         <div className="grid grid-cols-2 gap-3">
           <AvatarSide buttonLabel={buttonLabel} onCreateClick={onCreateClick} />
@@ -86,8 +54,16 @@ const TasksHeader = ({
           <DonutChart segments={segments} gap={GAP} showLegend />
         </div>
       </ItemCard>
+      {/* Filter and Search bar section */}
       <div className="flex items-center gap-2">
-        <ActionButton variant="menu" onClick={() => setSidebarOpen(true)} />
+        <ActionButton variant="menu" onClick={onOpenSidebar} />
+        {hasActiveFilters && (
+          <ActionButton
+            icon={<MdFilterAltOff />}
+            onClick={onClearFilters}
+            ariaLabel="Clear filters"
+          />
+        )}
         <SearchBar
           value={searchQuery}
           onChange={onSearchChange}

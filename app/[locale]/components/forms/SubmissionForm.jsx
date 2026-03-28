@@ -99,25 +99,28 @@ const TextareaField = ({ field, value, onChange, disabled }) => (
   </div>
 );
 
+const EMPTY_SUBTASK = { label: "", completed: false };
+
 const SubtasksField = ({ field, value, onChange, disabled }) => {
-  const subtasks = Array.isArray(value) && value.length > 0 ? value : [""];
+  const subtasks =
+    Array.isArray(value) && value.length > 0 ? value : [EMPTY_SUBTASK];
 
   const handleSubtaskChange = (index, nextValue) => {
-    const nextSubtasks = [...subtasks];
-    nextSubtasks[index] = nextValue;
+    const nextSubtasks = subtasks.map((st, i) =>
+      i === index ? { ...st, label: nextValue } : st,
+    );
     onChange(field.key, nextSubtasks);
   };
 
   const handleAddSubtask = () => {
-    onChange(field.key, [...subtasks, ""]);
+    onChange(field.key, [...subtasks, { ...EMPTY_SUBTASK }]);
   };
 
   const handleRemoveSubtask = (index) => {
     if (subtasks.length <= 1) {
-      onChange(field.key, [""]);
+      onChange(field.key, [{ ...EMPTY_SUBTASK }]);
       return;
     }
-
     onChange(
       field.key,
       subtasks.filter((_, currentIndex) => currentIndex !== index),
@@ -147,9 +150,13 @@ const SubtasksField = ({ field, value, onChange, disabled }) => {
           >
             <input
               type="text"
-              value={subtask}
               disabled={disabled || field.disabled}
               placeholder={field.placeholder || `Subtask ${index + 1}`}
+              value={
+                typeof subtask === "object"
+                  ? (subtask.label ?? "")
+                  : (subtask ?? "")
+              }
               onChange={(event) =>
                 handleSubtaskChange(index, event.target.value)
               }
