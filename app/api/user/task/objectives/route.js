@@ -21,14 +21,15 @@ function getObjectiveId(request) {
   );
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
     const userId = await getUserId();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const objectives = await getAllObjectives(userId);
+    const status = request.nextUrl.searchParams.get("status") || undefined;
+    const objectives = await getAllObjectives(userId, { status });
     return NextResponse.json({ objectives }, { status: 200 });
   } catch (err) {
     return NextResponse.json(

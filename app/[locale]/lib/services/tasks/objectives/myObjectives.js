@@ -50,14 +50,18 @@ const normalizeOptionalTimestamp = (value) => {
   return parsedDate.toISOString();
 };
 
-export async function getAllObjectives(userId) {
+export async function getAllObjectives(userId, { status } = {}) {
   if (!userId) throw new Error("userId is required");
 
-  const { data, error } = await supabaseAdmin
+  let query = supabaseAdmin
     .from(TABLE_NAME)
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
+
+  if (status) query = query.eq("status", status);
+
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
   return data;
