@@ -1,8 +1,7 @@
-import React from "react";
-import Objectives from "../objectives/Objectives";
+import ActiveQuests from "./ActiveQuests";
 
 const ActiveQuestsPage = () => {
-  return <Objectives />;
+  return <ActiveQuests />;
 };
 
 export default ActiveQuestsPage;

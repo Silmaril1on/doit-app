@@ -1,5 +1,6 @@
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
+import Button from "@/app/[locale]/components/buttons/Button";
 import Tablet from "@/app/[locale]/components/elements/Tablet";
 import { CountryFlags } from "@/app/[locale]/components/elements/CountryFlags";
 import { formatDate } from "@/app/[locale]/lib/utils/utils";
@@ -12,12 +13,18 @@ const priorityColorMap = {
   high: "red",
 };
 
+const statusColorMap = {
+  todo: "sky",
+  in_progress: "green",
+  completed: "gold",
+};
+
 const formatLabel = (value) =>
   String(value || "")
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
-const ObjectiveCard = ({ objective, onEdit, onRemoveSubtask }) => {
+const ObjectiveCard = ({ objective, onEdit, onRemoveSubtask, onStart }) => {
   const status = objective.status || "todo";
   const priority = objective.priority || "medium";
   const category = objective.task_category || "General";
@@ -51,7 +58,15 @@ const ObjectiveCard = ({ objective, onEdit, onRemoveSubtask }) => {
             {objective.task_description}
           </p>
         </div>
-        <div ref={menuRef} className="relative shrink-0">
+        <div ref={menuRef} className="relative shrink-0 flex items-center gap-2">
+          {onStart && (
+            <Button
+              text="Start Task"
+              variant="outline"
+              onClick={() => onStart(objective)}
+              className="text-xs px-2 py-0.5 whitespace-nowrap"
+            />
+          )}
           <ActionButton
             variant="expand"
             onClick={() => setMenuOpen((prev) => !prev)}
@@ -90,7 +105,7 @@ const ObjectiveCard = ({ objective, onEdit, onRemoveSubtask }) => {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Tablet text={formatLabel(status)} color="sky" />
+          <Tablet text={formatLabel(status)} color={statusColorMap[status] || "sky"} />
           <Tablet
             text={formatLabel(priority)}
             color={priorityColorMap[priority] || priorityColorMap.medium}
