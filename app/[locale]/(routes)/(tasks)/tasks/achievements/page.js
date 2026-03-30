@@ -1,12 +1,21 @@
-import React from "react";
+import { cookies } from "next/headers";
+import { getAllAchievements } from "@/app/[locale]/lib/services/tasks/achivements/myAchievements";
+import Achievements from "./Achievements";
 
-// add COMPLETED_AT state in the footer
-// Render status: completed tasks
-// when user visists all three tasks pages it should have ObjectivesHeader component with proper donut progress statistics
-// if subtasks are not on 100% throw error when clicking COMPLETED Task button
+const AchievementsPage = async () => {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get("doit-user-id")?.value ?? null;
 
-const AchievementsPage = () => {
-  return <div className=" bg-neutral-500 flex grow">AchievementsPage</div>;
+  let initialData = null;
+  if (userId) {
+    try {
+      initialData = await getAllAchievements(userId, { limit: 20, offset: 0 });
+    } catch {
+      // silently fall through — client SWR will fetch on mount
+    }
+  }
+
+  return <Achievements initialData={initialData} />;
 };
 
 export default AchievementsPage;

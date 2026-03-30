@@ -22,7 +22,12 @@ const GAP = 3;
 
 const TasksHeader = ({
   objectives = [],
+  items,
+  title = "Objectives",
+  subtitle = "Build clear goals, track progress, and keep momentum.",
   buttonLabel,
+  showCreateButton = true,
+  showControls = true,
   onCreateClick,
   onOpenSidebar,
   filters = {},
@@ -30,11 +35,12 @@ const TasksHeader = ({
   searchQuery = "",
   onSearchChange,
 }) => {
-  const total = objectives.length;
+  const sourceItems = Array.isArray(items) ? items : objectives;
+  const total = sourceItems.length;
   const hasActiveFilters = Object.values(filters).some((v) => v?.length > 0);
 
   const segments = PRIORITY_CONFIG.map((cfg) => {
-    const value = objectives.filter(
+    const value = sourceItems.filter(
       (o) => (o.priority || "medium") === cfg.key,
     ).length;
     const percent = total > 0 ? Math.round((value / total) * 100) : 0;
@@ -46,7 +52,13 @@ const TasksHeader = ({
       {/* User tasks statistics header section */}
       <ItemCard className="w-full grid gap-3">
         <div className="grid grid-cols-2 gap-3">
-          <AvatarSide buttonLabel={buttonLabel} onCreateClick={onCreateClick} />
+          <AvatarSide
+            title={title}
+            subtitle={subtitle}
+            buttonLabel={buttonLabel}
+            showCreateButton={showCreateButton}
+            onCreateClick={onCreateClick}
+          />
           <div className="w-full *:w-full"></div>
         </div>
         <div className="grid grid-cols-2 *:h-full gap-3 items-center">
@@ -55,37 +67,43 @@ const TasksHeader = ({
         </div>
       </ItemCard>
       {/* Filter and Search bar section */}
-      <div className="flex items-center gap-2">
-        <ActionButton variant="menu" onClick={onOpenSidebar} />
-        {hasActiveFilters && (
-          <ActionButton
-            icon={<MdFilterAltOff />}
-            onClick={onClearFilters}
-            ariaLabel="Clear filters"
+      {showControls ? (
+        <div className="flex items-center gap-2">
+          <ActionButton variant="menu" onClick={onOpenSidebar} />
+          {hasActiveFilters && (
+            <ActionButton
+              icon={<MdFilterAltOff />}
+              onClick={onClearFilters}
+              ariaLabel="Clear filters"
+            />
+          )}
+          <SearchBar
+            value={searchQuery}
+            onChange={onSearchChange}
+            placeholder="Search objectives…"
+            className="flex-1"
           />
-        )}
-        <SearchBar
-          value={searchQuery}
-          onChange={onSearchChange}
-          placeholder="Search objectives…"
-          className="flex-1"
-        />
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 };
 
-const AvatarSide = ({ buttonLabel, onCreateClick }) => {
+const AvatarSide = ({
+  title,
+  subtitle,
+  buttonLabel,
+  showCreateButton,
+  onCreateClick,
+}) => {
   const currentUser = useSelector(selectCurrentUser);
   const { profile } = useUserProfile(currentUser);
 
   return (
     <div className="flex flex-col justify-center gap-3">
       <div className="*:leading-none">
-        <h1 className="text-3xl text-teal-300">Objectives</h1>
-        <p className="secondary text-sm text-chino">
-          Build clear goals, track progress, and keep momentum.
-        </p>
+        <h1 className="text-3xl text-teal-300">{title}</h1>
+        <p className="secondary text-sm text-chino">{subtitle}</p>
       </div>
       {profile && (
         <div className="flex items-center gap-3 ">
@@ -111,12 +129,14 @@ const AvatarSide = ({ buttonLabel, onCreateClick }) => {
                 Verified Account
               </h1>
             </div>
-            <Button
-              className="w-full"
-              icon={<IoIosAdd size={20} />}
-              text={buttonLabel}
-              onClick={onCreateClick}
-            />
+            {showCreateButton ? (
+              <Button
+                className="w-full"
+                icon={<IoIosAdd size={20} />}
+                text={buttonLabel}
+                onClick={onCreateClick}
+              />
+            ) : null}
           </div>
         </div>
       )}

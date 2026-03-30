@@ -2,12 +2,23 @@
 
 import Button from "@/app/[locale]/components/buttons/Button";
 import ObjectiveCard from "../(componets)/ObjectiveCard";
+import TasksHeader from "../(componets)/ObjectivesHeader";
+import ObjectivesSideBar from "../(componets)/ObjectivesSideBar";
+import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import { setToast, clearToast } from "@/app/[locale]/lib/features/toastSlice";
 import { selectModal } from "@/app/[locale]/lib/features/modalSlice";
 import { useModal } from "@/app/[locale]/lib/hooks/useModal";
 import { useActiveQuests } from "@/app/[locale]/lib/hooks/useActiveQuests";
+import { ACHIEVEMENTS_PAGE1_KEY } from "@/app/[locale]/lib/hooks/useAchievements";
+import {
+  EMPTY_FILTERS,
+  applyObjectivesFilters,
+  searchItems,
+  OBJECTIVE_SEARCH_FIELDS,
+} from "@/app/[locale]/lib/utils/filterConfig";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { mutate as globalMutate } from "swr";
 
 const ActiveQuests = ({ initialData = null }) => {
   const dispatch = useDispatch();
@@ -30,6 +41,10 @@ const ActiveQuests = ({ initialData = null }) => {
     setQuests(swrQuests);
   }, [swrQuests]);
 
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // Revalidate when the edit modal closes so changes are reflected
   useEffect(() => {
     const wasEditOpen = lastModalTypeRef.current === "editObjective";
@@ -41,6 +56,8 @@ const ActiveQuests = ({ initialData = null }) => {
     dispatch(clearToast());
     open("editObjective", { objective: quest });
   };
+
+  const handleFiltersApply = (allFilters) => setFilters(allFilters);
 
   const handleToggleSubtask = useCallback(
     async (quest, subtaskIndex) => {
@@ -85,7 +102,8 @@ const ActiveQuests = ({ initialData = null }) => {
               msg: "All subtasks done! Task completed.",
             }),
           );
-          mutate();
+          mutate(); // revalidate active quests
+          globalMutate(ACHIEVEMENTS_PAGE1_KEY); // revalidate achievements
         }
       } catch (error) {
         setQuests((prev) =>
@@ -156,6 +174,22 @@ const ActiveQuests = ({ initialData = null }) => {
 
   const handleCompleteQuest = useCallback(
     async (quest) => {
+      const subtasks = Array.isArray(quest?.subtasks) ? quest.subtasks : [];
+      const hasSubtasks = subtasks.length > 0;
+      const allSubtasksCompleted = subtasks.every(
+        (st) => typeof st === "object" && st.completed,
+      );
+
+      if (hasSubtasks && !allSubtasksCompleted) {
+        dispatch(
+          setToast({
+            type: "error",
+            msg: "Please, complete all the subtasks",
+          }),
+        );
+        return;
+      }
+
       setQuests((prev) => prev.filter((q) => q.id !== quest.id));
       try {
         const response = await fetch(
@@ -173,7 +207,8 @@ const ActiveQuests = ({ initialData = null }) => {
         dispatch(
           setToast({ type: "success", msg: "Task completed! Well done." }),
         );
-        mutate();
+        mutate(); // revalidate active quests
+        globalMutate(ACHIEVEMENTS_PAGE1_KEY); // revalidate achievements
       } catch (error) {
         mutate(); // rollback
         dispatch(
@@ -217,14 +252,34 @@ const ActiveQuests = ({ initialData = null }) => {
     [dispatch, mutate],
   );
 
+  const searched = searchItems(
+    quests,
+    searchQuery,
+    OBJECTIVE_SEARCH_FIELDS,
+  );
+  const filteredQuests = applyObjectivesFilters(searched, filters);
+
   return (
     <section className="w-full grow p-4 lg:p-8 flex flex-col gap-3">
-      <div className="space-y-1">
-        <h1 className="text-3xl text-teal-300">Active Quests</h1>
-        <p className="secondary text-sm text-chino">
-          Tasks you have started and are currently working on.
-        </p>
-      </div>
+      <TasksHeader
+        items={quests}
+        title="Active Quests"
+        subtitle="Tasks you have started and are currently working on."
+        showCreateButton={false}
+        showControls={true}
+        onOpenSidebar={() => setSidebarOpen(true)}
+        filters={filters}
+        onClearFilters={() => setFilters(EMPTY_FILTERS)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
+      <ObjectivesSideBar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        objectives={quests}
+        filters={filters}
+        onFiltersApply={handleFiltersApply}
+      />
 
       {isLoading ? (
         <p className="secondary text-sm text-chino/70">
@@ -241,9 +296,19 @@ const ActiveQuests = ({ initialData = null }) => {
         </div>
       ) : null}
 
-      {!isLoading && quests.length > 0 ? (
+      {!isLoading &&
+      quests.length > 0 &&
+      filteredQuests.length === 0 ? (
+        <ItemCard className="p-6 text-center">
+          <p className="secondary text-sm text-chino/80">
+            No quests match the current filters.
+          </p>
+        </ItemCard>
+      ) : null}
+
+      {!isLoading && filteredQuests.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {quests.map((quest) => (
+          {filteredQuests.map((quest) => (
             <ObjectiveCard
               key={quest.id}
               objective={quest}

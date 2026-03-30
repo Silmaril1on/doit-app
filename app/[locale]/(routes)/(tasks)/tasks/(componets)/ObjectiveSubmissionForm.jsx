@@ -167,12 +167,34 @@ const ObjectiveSubmissionForm = ({
         ? `/api/user/task/objectives?id=${encodeURIComponent(objective.id)}`
         : "/api/user/task/objectives";
 
+      const submitData = { ...form };
+
+      // If editing a completed achievement and subtasks are being added,
+      // automatically reactivate it to in_progress status
+      if (isEditMode && objective?.status === "completed") {
+        const originalSubtasks = Array.isArray(objective.subtasks)
+          ? objective.subtasks.filter(
+              (st) => typeof st === "object" && st.label?.trim(),
+            )
+          : [];
+        const newSubtasks = Array.isArray(submitData.subtasks)
+          ? submitData.subtasks.filter(
+              (st) => typeof st === "object" && st.label?.trim(),
+            )
+          : [];
+
+        // If subtasks are being added to a completed task, reactivate it
+        if (newSubtasks.length > originalSubtasks.length) {
+          submitData.status = "in_progress";
+        }
+      }
+
       const response = await fetch(endpoint, {
         method: isEditMode ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ...form }),
+        body: JSON.stringify(submitData),
       });
 
       const data = await response.json();
