@@ -1,6 +1,5 @@
 import { Teko, Jost } from "next/font/google";
 import "./globals.css";
-import Navigation from "./layout/navigation/Navigation";
 import Footer from "./layout/footer/Footer";
 import FloatingNavigation from "./layout/navigation/floating-navigation/FloatingNavigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
@@ -54,8 +53,8 @@ export default async function RootLayout({ children, params }) {
                 {children}
               </div>
               <GlobalModal />
-              <Toast />
               <FloatingNavigation />
+              <Toast />
               <Footer />
             </DarkModeProvider>
           </StoreProvider>

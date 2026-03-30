@@ -5,6 +5,8 @@ import {
   updateActiveQuest,
   deleteActiveQuest,
 } from "@/app/[locale]/lib/services/tasks/active-quests/myActiveQuests";
+import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
+import { createTaskCompletedNotification } from "@/app/[locale]/lib/services/notifications/notificationsTypes";
 
 async function getUserId() {
   const cookieStore = await cookies();
@@ -25,7 +27,10 @@ export async function GET(request) {
 
     const limit = Number(request.nextUrl.searchParams.get("limit") ?? 20);
     const offset = Number(request.nextUrl.searchParams.get("offset") ?? 0);
-    const { quests, total } = await getAllActiveQuests(userId, { limit, offset });
+    const { quests, total } = await getAllActiveQuests(userId, {
+      limit,
+      offset,
+    });
     return NextResponse.json({ quests, total }, { status: 200 });
   } catch (err) {
     return NextResponse.json(
@@ -44,11 +49,26 @@ export async function PATCH(request) {
 
     const questId = getQuestId(request);
     if (!questId) {
-      return NextResponse.json({ error: "questId is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "questId is required" },
+        { status: 400 },
+      );
     }
 
     const payload = await request.json();
     const quest = await updateActiveQuest(userId, questId, payload);
+
+    // Fire notification when a task is marked completed
+    if (payload?.status === "completed") {
+      try {
+        const user = await getUserById(userId);
+        const displayName = user?.display_name ?? user?.first_name ?? "User";
+        await createTaskCompletedNotification(userId, displayName);
+      } catch {
+        // Notification failure must never break the main response
+      }
+    }
+
     return NextResponse.json({ quest }, { status: 200 });
   } catch (err) {
     return NextResponse.json(
@@ -67,7 +87,10 @@ export async function DELETE(request) {
 
     const questId = getQuestId(request);
     if (!questId) {
-      return NextResponse.json({ error: "questId is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "questId is required" },
+        { status: 400 },
+      );
     }
 
     const quest = await deleteActiveQuest(userId, questId);

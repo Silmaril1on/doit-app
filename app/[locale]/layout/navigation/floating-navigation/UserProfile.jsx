@@ -12,6 +12,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { getUserInitials } from "@/app/[locale]/lib/utils/utils";
+import Link from "next/link";
+import { AnimatePresence } from "framer-motion";
+import Motion from "../../../components/motion/Motion";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -91,31 +94,38 @@ const UserProfile = () => {
         <ArrowUpDown isOpen={isMenuOpen} size={20} className="text-white" />
       </div>
 
-      {isMenuOpen ? (
-        <div className="absolute right-0 overflow-hidden -top-42 z-30 min-w-40 rounded-lg border border-teal-500/20 bg-teal-400/10 p-3">
-          <div className="absolute left-0 top-0 w-[40%] h-[30%] rounded-full bg-teal-400 blur-[80px]" />
-          <div className="mb-3 border-b border-teal-500/15 pb-3">
-            <p className="secondary text-sm font-semibold text-white">
-              {user.display_name}
-            </p>
-            <p className="secondary text-xs text-chino/70">{user.email}</p>
-          </div>
+      <AnimatePresence>
+        {isMenuOpen && (
+          <Motion
+            animation="right"
+            className="absolute bottom-[calc(100%+15px)] -right-3 z-30 min-w-40 backdrop-blur-2xl overflow-hidden rounded-2xl border border-teal-500/20 bg-black/80"
+          >
+            <div className=" p-2">
+              <div className="mb-3 border-b border-teal-500/15 pb-3">
+                <p className="secondary text-sm font-semibold text-white">
+                  {user.display_name}
+                </p>
+                <p className="secondary text-xs text-chino/70">{user.email}</p>
+              </div>
 
-          <div className="flex flex-col gap-2">
-            <Button
-              text="My Profile"
-              href={`/${locale}/profile/basic-information`}
-              className="w-full"
-            />
-            <Button
-              text="Logout"
-              variant="outline"
-              onClick={handleLogout}
-              className="w-full"
-            />
-          </div>
-        </div>
-      ) : null}
+              <div className="flex flex-col gap-2  duration-300 *:w-fit">
+                <Link
+                  className="text-teal-500 hover:text-teal-300"
+                  href={`/${locale}/profile/basic-information`}
+                >
+                  My Profile
+                </Link>
+                <Button
+                  text="Logout"
+                  variant="outline"
+                  onClick={handleLogout}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </Motion>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

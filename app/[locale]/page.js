@@ -12,9 +12,11 @@ export default function HomePage() {
 
   return (
     <div className="flex grow flex-col gap-5 items-center bg-cream dark:bg-black p-8">
-      <ItemCard className="w-98">
+      <ItemCard className="w-98 ">
         <h1 className="text-cream text-2xl">hello home page</h1>
       </ItemCard>
+
+      <div className="h-20 w-28 border border-white relative "></div>
     </div>
   );
 }

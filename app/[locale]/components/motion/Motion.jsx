@@ -1,14 +1,13 @@
 "use client";
 import { motion } from "framer-motion";
-
-const {
+import {
   fadeVariant,
   slideLeftVariant,
   slideRightVariant,
   slideTopVariant,
   slideBottomVariant,
   scaleVariant,
-} = require("../../lib/framer-motion/motionValues");
+} from "./animations";
 
 const Motion = ({
   children,

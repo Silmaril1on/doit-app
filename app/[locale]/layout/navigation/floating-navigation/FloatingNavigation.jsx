@@ -6,6 +6,7 @@ import ActionButton from "../../../components/buttons/ActionButton";
 
 import ArrowUpDown from "../../../components/elements/ArrowUpDown";
 import UserProfile from "./UserProfile";
+import NotificationsBadge from "./NotificationsBadge";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../lib/features/userSlice";
 
@@ -20,10 +21,12 @@ const FloatingNavigation = () => {
   return (
     <motion.div
       initial={false}
-      animate={{ bottom: isOpen ? 12 : -50 }}
+      animate={{ bottom: isOpen ? 10 : -50 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed left-1/2 z-20 flex w-[95%] -translate-x-1/2 rounded-full border border-teal-500/20 bg-teal-700/20 p-2 shadow-[2px_2px_10px_rgba(0,0,0,0.3)] backdrop-blur-xl lg:hidden"
+      className="fixed left-1/2 z-20 flex w-[95%] -translate-x-1/2 rounded-full border border-teal-500/20 bg-teal-700/20 p-2 shadow-[2px_2px_10px_rgba(0,0,0,1)] lg:hidden"
     >
+      {/* Blur lives on its own layer so child popups can use their own backdrop-blur freely */}
+      <div className="absolute inset-0 -z-10 rounded-full backdrop-blur-xl pointer-events-none" />
       <EdgeButton
         isOpen={isOpen}
         onClick={() => setIsOpen((current) => !current)}
@@ -39,7 +42,10 @@ const FloatingNavigation = () => {
           <ActionButton variant="achievements" />
         </Link>
       </div>
-      <UserProfile />
+      <div className="flex items-center gap-4">
+        <NotificationsBadge />
+        <UserProfile />
+      </div>
     </motion.div>
   );
 };

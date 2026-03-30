@@ -20,7 +20,7 @@ const PRIORITY_CONFIG = [
 
 const GAP = 3;
 
-const TasksHeader = ({
+const ObjectivesHeader = ({
   objectives = [],
   items,
   title = "Objectives",
@@ -144,4 +144,4 @@ const AvatarSide = ({
   );
 };
 
-export default TasksHeader;
+export default ObjectivesHeader;

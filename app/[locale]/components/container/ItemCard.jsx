@@ -3,7 +3,7 @@ import React from "react";
 const ItemCard = ({ children, className }) => {
   return (
     <div
-      className={`rounded-lg p-5 backdrop-blur-lg bg0black relative overflow-hidden ${className}`}
+      className={`rounded-lg p-3 backdrop-blur-lg bg-black relative overflow-hidden ${className}`}
       style={{
         border: "1.4px solid transparent",
         backgroundImage: `

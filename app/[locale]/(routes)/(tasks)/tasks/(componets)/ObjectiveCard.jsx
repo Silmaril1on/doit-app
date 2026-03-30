@@ -33,6 +33,7 @@ const ObjectiveCard = ({
   onToggleSubtask,
   onComplete,
   onStart,
+  completedView = false,
 }) => {
   const status = objective.status || "todo";
   const priority = objective.priority || "medium";
@@ -135,6 +136,7 @@ const ObjectiveCard = ({
         subtasks={subtasks}
         onToggleSubtask={onToggleSubtask}
         onRemoveSubtask={onRemoveSubtask}
+        completedView={completedView}
       />
       <CardFooter
         objective={objective}
@@ -150,11 +152,13 @@ const SubTasksSection = ({
   subtasks,
   onToggleSubtask,
   onRemoveSubtask,
+  completedView = false,
 }) => {
-  const completedCount = subtasks.filter(
-    (st) => typeof st === "object" && st.completed,
-  ).length;
-  const showProgress = Boolean(onToggleSubtask) && subtasks.length > 0;
+  const completedCount = completedView
+    ? subtasks.length
+    : subtasks.filter((st) => typeof st === "object" && st.completed).length;
+  const showProgress =
+    (Boolean(onToggleSubtask) || completedView) && subtasks.length > 0;
 
   return (
     <>
@@ -168,9 +172,10 @@ const SubTasksSection = ({
               const label =
                 typeof subtask === "object" ? subtask.label : subtask;
               const isCompleted =
-                typeof subtask === "object"
+                completedView ||
+                (typeof subtask === "object"
                   ? Boolean(subtask.completed)
-                  : false;
+                  : false);
               return (
                 <div
                   key={`${objective.id}-subtask-${index}`}
@@ -181,7 +186,7 @@ const SubTasksSection = ({
                       type="button"
                       onClick={() => onToggleSubtask(objective, index)}
                       aria-label={`Toggle subtask ${index + 1}`}
-                      className={`flex items-center gap-0.5 text-left font-medium cursor-pointer duration-300 ${
+                      className={`flex items-center gap-0.5 text-left font-medium duration-300 ${
                         isCompleted ? "text-green-500" : "text-chino/85"
                       }`}
                     >
@@ -193,9 +198,17 @@ const SubTasksSection = ({
                       <span className="capitalize">{label}</span>
                     </button>
                   ) : (
-                    <span className="flex items-center gap-0.5 text-chino/85">
-                      <IoMdArrowDropright size={16} className="shrink-0" />
-                      <span className="capitalize font-bold">{label}</span>
+                    <span
+                      className={`flex cursor-pointer  items-center gap-0.5 font-medium ${
+                        isCompleted ? "text-green-500" : "text-chino/85"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <IoIosCheckmark size={18} className="shrink-0" />
+                      ) : (
+                        <IoMdArrowDropright size={16} className="shrink-0" />
+                      )}
+                      <span className="capitalize">{label}</span>
                     </span>
                   )}
                   {onRemoveSubtask ? (
@@ -249,7 +262,7 @@ const CardFooter = ({ objective, onStart, onComplete }) => {
           </div>
         )}
       </div>
-      <div className="flex justify-end">
+      <div className="flex justify-end h-6">
         {onStart && (
           <Button
             text="Start Task"
