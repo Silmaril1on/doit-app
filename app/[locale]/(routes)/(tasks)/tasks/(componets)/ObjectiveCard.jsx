@@ -17,7 +17,7 @@ const priorityColorMap = {
 const statusColorMap = {
   todo: "sky",
   in_progress: "green",
-  completed: "gold",
+  completed: "green",
 };
 
 const formatLabel = (value) =>
@@ -40,6 +40,10 @@ const ObjectiveCard = ({
   const subtasks = Array.isArray(objective.subtasks) ? objective.subtasks : [];
   const countryAndCity = { country: objective.country, city: objective.city };
   const hasLocation = Boolean(objective.country || objective.city);
+
+  const canEdit = typeof onEdit === "function";
+  const canDelete = typeof onDelete === "function";
+  const hasActions = canEdit || canDelete;
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -67,36 +71,42 @@ const ObjectiveCard = ({
             {objective.task_description}
           </p>
         </div>
-        <div
-          ref={menuRef}
-          className="relative shrink-0 flex items-center gap-2"
-        >
-          <ActionButton
-            variant="expand"
-            onClick={() => setMenuOpen((prev) => !prev)}
-            ariaLabel="Open actions menu"
-          />
-          {menuOpen && (
-            <div className="absolute right-10 -top-3 mt-1.5 z-10 flex gap-2 rounded-xl border border-teal-500/20 bg-black/20 backdrop-blur-md p-1.5">
-              <ActionButton
-                variant="edit"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onEdit?.(objective);
-                }}
-                ariaLabel="Edit objective"
-              />
-              <ActionButton
-                variant="delete"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onDelete?.(objective);
-                }}
-                ariaLabel="Delete objective"
-              />
-            </div>
-          )}
-        </div>
+        {hasActions ? (
+          <div
+            ref={menuRef}
+            className="relative shrink-0 flex items-center gap-2"
+          >
+            <ActionButton
+              variant="expand"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              ariaLabel="Open actions menu"
+            />
+            {menuOpen && (
+              <div className="absolute right-10 -top-3 mt-1.5 z-10 flex gap-2 rounded-xl border border-teal-500/20 bg-black/20 backdrop-blur-md p-1.5">
+                {canEdit ? (
+                  <ActionButton
+                    variant="edit"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onEdit?.(objective);
+                    }}
+                    ariaLabel="Edit objective"
+                  />
+                ) : null}
+                {canDelete ? (
+                  <ActionButton
+                    variant="delete"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onDelete?.(objective);
+                    }}
+                    ariaLabel="Delete objective"
+                  />
+                ) : null}
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {/* Card Category and tablets  */}
@@ -188,14 +198,16 @@ const SubTasksSection = ({
                       <span className="capitalize font-bold">{label}</span>
                     </span>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => onRemoveSubtask?.(objective, index)}
-                    aria-label={`Remove subtask ${index + 1}`}
-                    className="cursor-pointer text-red-500 opacity-0 duration-300 group-hover:opacity-100"
-                  >
-                    <IoMdClose size={16} />
-                  </button>
+                  {onRemoveSubtask ? (
+                    <button
+                      type="button"
+                      onClick={() => onRemoveSubtask?.(objective, index)}
+                      aria-label={`Remove subtask ${index + 1}`}
+                      className="cursor-pointer text-red-500 opacity-0 duration-300 group-hover:opacity-100"
+                    >
+                      <IoMdClose size={16} />
+                    </button>
+                  ) : null}
                 </div>
               );
             })}
@@ -228,6 +240,12 @@ const CardFooter = ({ objective, onStart, onComplete }) => {
           <div className="flex items-center gap-1">
             <span className="text-chino/80">Created:</span>
             {formatDate(objective.created_at)}
+          </div>
+        )}
+        {objective.status === "completed" && (
+          <div className="flex items-center gap-1">
+            <span className="text-chino/80">Completed:</span>
+            {formatDate(objective.completed_at || objective.update_at)}
           </div>
         )}
       </div>
