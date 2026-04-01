@@ -25,8 +25,8 @@ const MODAL_REGISTRY = {
   },
   createObjective: {
     component: ObjectiveSubmissionForm,
-    title: "Create Objective",
-    submitLabel: "Create Objective",
+    title: "Start New Quest",
+    submitLabel: "Start New Quest",
   },
   editObjective: {
     component: ObjectiveSubmissionForm,

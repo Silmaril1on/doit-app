@@ -1,6 +1,14 @@
 "use server";
 
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
+import { revalidateTag } from "next/cache";
+import {
+  recordCategoryCompletion,
+  revokeCategoryCompletion,
+} from "@/app/[locale]/lib/services/achievement-badges/categoryProgress";
+import { badgesCacheTag } from "@/app/[locale]/lib/local-bd/categoryTypesData";
+import { createTaskCompletedNotification } from "@/app/[locale]/lib/services/notifications/notificationsTypes";
+import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
 
 const TABLE_NAME = "objectives";
 const ALLOWED_STATUS = new Set(["todo", "in_progress", "completed"]);
@@ -59,6 +67,18 @@ export async function getActiveQuestById(userId, questId) {
 export async function updateActiveQuest(userId, questId, updates) {
   if (!userId) throw new Error("userId is required");
   if (!questId) throw new Error("questId is required");
+
+  // Fetch the current row so we can detect status transitions and read category.
+  const { data: existing, error: fetchError } = await supabaseAdmin
+    .from(TABLE_NAME)
+    .select("status, task_category")
+    .eq("id", questId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!existing) throw new Error("Active quest not found");
+
   const updatePayload = {};
   if ("task_title" in updates) {
     const t = normalizeText(updates.task_title);
@@ -95,6 +115,7 @@ export async function updateActiveQuest(userId, questId, updates) {
   if (updatePayload.status && updatePayload.status !== "completed")
     updatePayload.completed_at = null;
   updatePayload.update_at = new Date().toISOString();
+
   const { data, error } = await supabaseAdmin
     .from(TABLE_NAME)
     .update(updatePayload)
@@ -102,8 +123,36 @@ export async function updateActiveQuest(userId, questId, updates) {
     .eq("user_id", userId)
     .select("*")
     .maybeSingle();
+
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Active quest not found");
+
+  // Badge logic — detect status transitions using the existing row.
+  const categoryId = existing.task_category;
+  const wasCompleted = existing.status === "completed";
+  const isNowCompleted =
+    (updatePayload.status ?? existing.status) === "completed";
+
+  if (!wasCompleted && isNowCompleted && categoryId) {
+    await recordCategoryCompletion(userId, categoryId);
+    // Bust the badges page cache so the user sees fresh data immediately.
+    revalidateTag(badgesCacheTag(userId));
+  } else if (wasCompleted && !isNowCompleted && categoryId) {
+    await revokeCategoryCompletion(userId, categoryId);
+    revalidateTag(badgesCacheTag(userId));
+  }
+
+  // Fire task-completed notification — failure must never break the main flow.
+  if (!wasCompleted && isNowCompleted) {
+    try {
+      const user = await getUserById(userId);
+      const displayName = user?.display_name ?? user?.first_name ?? "User";
+      await createTaskCompletedNotification(userId, displayName);
+    } catch {
+      // Notification failure must never break task completion.
+    }
+  }
+
   return data;
 }
 

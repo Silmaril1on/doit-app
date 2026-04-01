@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
+import { VALID_CATEGORY_IDS } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 
 const TABLE_NAME = "objectives";
 const ALLOWED_STATUS = new Set(["todo", "in_progress", "completed"]);
@@ -14,6 +15,23 @@ const normalizeText = (value) => {
 const normalizeOptionalText = (value) => {
   const normalized = normalizeText(value);
   return normalized ? normalized : null;
+};
+
+/**
+ * Validates and normalises task_category.
+ * Accepts a numeric category id (as number or stringified number).
+ * Stores the integer id. Returns null for empty/absent values.
+ * Throws for unrecognised ids so the client gets a clear 400.
+ */
+const normalizeCategoryId = (value) => {
+  if (value === "" || value == null) return null;
+  const id = Number(value);
+  if (!Number.isInteger(id) || !VALID_CATEGORY_IDS.has(id)) {
+    throw new Error(
+      `task_category must be one of: ${[...VALID_CATEGORY_IDS].join(", ")}`,
+    );
+  }
+  return id;
 };
 
 const normalizeStatus = (value) => {
@@ -106,11 +124,12 @@ export async function createObjective(userId, payload) {
 
   const now = new Date().toISOString();
   const status = normalizeStatus(payload?.status);
+  const categoryId = normalizeCategoryId(payload?.task_category);
 
   const createPayload = {
     task_title: taskTitle,
     task_description: taskDescription,
-    task_category: normalizeOptionalText(payload?.task_category),
+    task_category: categoryId,
     subtasks: normalizeSubtasks(payload?.subtasks),
     task_deadline: normalizeOptionalTimestamp(payload?.task_deadline),
     country: normalizeOptionalText(payload?.country),
@@ -129,12 +148,24 @@ export async function createObjective(userId, payload) {
     .single();
 
   if (error) throw new Error(error.message);
+
   return data;
 }
 
 export async function updateObjective(userId, objectiveId, updates) {
   if (!userId) throw new Error("userId is required");
   if (!objectiveId) throw new Error("objectiveId is required");
+
+  // Fetch the current state so we can detect status transitions and category.
+  const { data: existing, error: fetchError } = await supabaseAdmin
+    .from(TABLE_NAME)
+    .select("status, task_category")
+    .eq("id", objectiveId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!existing) throw new Error("Objective not found");
 
   const updatePayload = {};
 
@@ -155,7 +186,7 @@ export async function updateObjective(userId, objectiveId, updates) {
   }
 
   if ("task_category" in updates) {
-    updatePayload.task_category = normalizeOptionalText(updates.task_category);
+    updatePayload.task_category = normalizeCategoryId(updates.task_category);
   }
 
   if ("subtasks" in updates) {

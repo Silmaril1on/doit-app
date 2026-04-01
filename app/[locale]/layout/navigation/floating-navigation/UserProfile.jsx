@@ -115,6 +115,12 @@ const UserProfile = () => {
                 >
                   My Profile
                 </Link>
+                <Link
+                  className="text-teal-500 hover:text-teal-300"
+                  href={`/${locale}/profile/my-achievements`}
+                >
+                  Badges
+                </Link>
                 <Button
                   text="Logout"
                   variant="outline"

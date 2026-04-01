@@ -2,8 +2,14 @@
 
 import SubmissionForm from "@/app/[locale]/components/forms/SubmissionForm";
 import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
+import { TASK_CATEGORIES } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+
+const CATEGORY_OPTIONS = TASK_CATEGORIES.map((c) => ({
+  label: c.label,
+  value: String(c.id),
+}));
 
 const FIELDS = [
   {
@@ -47,8 +53,11 @@ const FIELDS = [
       {
         key: "task_category",
         label: "Task Category",
-        type: "text",
-        placeholder: "History, Sport, Night Life...",
+        type: "select",
+        options: [
+          { label: "Select a category…", value: "" },
+          ...CATEGORY_OPTIONS,
+        ],
       },
     ],
   },
@@ -93,7 +102,7 @@ const initialForm = {
   task_description: "",
   country: "",
   city: "",
-  task_category: "",
+  task_category: "", // stored as stringified category id, e.g. "1"
   priority: "medium",
   task_deadline: "",
   subtasks: [{ ...EMPTY_SUBTASK }],
@@ -123,7 +132,8 @@ const createFormFromObjective = (objective) => {
     task_description: objective.task_description || "",
     country: objective.country || "",
     city: objective.city || "",
-    task_category: objective.task_category || "",
+    task_category:
+      objective.task_category != null ? String(objective.task_category) : "",
     priority: objective.priority || "medium",
     task_deadline: formatForDateTimeLocal(objective.task_deadline),
     subtasks:

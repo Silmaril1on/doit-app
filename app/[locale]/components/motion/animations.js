@@ -87,3 +87,35 @@ export const scaleVariant = {
     transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
   },
 };
+
+// Stagger container — use directly on a motion.div wrapping badge grids.
+// Children should use badgeCardVariant (via <Motion animation="badgeCard" orchestrated>).
+export const staggerContainerVariant = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.05,
+    },
+  },
+  exit: {
+    transition: { staggerChildren: 0.05, staggerDirection: -1 },
+  },
+};
+
+// Individual badge card: opacity + subtle x-slide + scale pop.
+export const badgeCardVariant = {
+  initial: { opacity: 0, x: -8, scale: 0.88 },
+  animate: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: {
+    opacity: 0,
+    x: -8,
+    scale: 0.88,
+    transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
+  },
+};
