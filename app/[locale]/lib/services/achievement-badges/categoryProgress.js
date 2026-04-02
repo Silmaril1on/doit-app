@@ -58,6 +58,7 @@ export async function getAllCategoryProgress(userId) {
       category_icon: category.icon,
       completed_count: completedCount,
       current_level: currentLevel,
+      has_seen: row?.has_seen ?? true,
       current_tier:
         currentLevel > 0 ? getTierByLevel(category.id, currentLevel) : null,
       next_tier: nextTier,
@@ -106,6 +107,8 @@ export async function recordCategoryCompletion(userId, rawCategoryId) {
     current_level: newLevel,
     last_completed_at: now,
     updated_at: now,
+    // Reset has_seen whenever the user earns a new badge level
+    ...(tierEarned ? { has_seen: false } : {}),
   };
 
   const { data: upserted, error: upsertError } = await supabaseAdmin
@@ -149,6 +152,42 @@ export async function getUserEarnedBadges(userId) {
     [badgesCacheTag(userId)],
     { revalidate: 1800, tags: [badgesCacheTag(userId)] },
   )();
+}
+
+/**
+ * Marks all unseen badge rows as seen for the user.
+ * Called client-side via PATCH /api/achievement-badges when the user
+ * visits the My Achievements page.
+ */
+export async function markAllBadgesSeen(userId) {
+  if (!userId) throw new Error("userId is required");
+
+  const { error } = await supabaseAdmin
+    .from(PROGRESS_TABLE)
+    .update({ has_seen: true })
+    .eq("user_id", userId)
+    .eq("has_seen", false);
+
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * Direct, uncached query — always fresh from the DB.
+ * Returns category IDs where the user has an unseen new badge.
+ * Used on the My Achievements page to decide whether to show the "New Badge" tag.
+ */
+export async function getUnseenBadgeCategories(userId) {
+  if (!userId) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from(PROGRESS_TABLE)
+    .select("category_id")
+    .eq("user_id", userId)
+    .eq("has_seen", false)
+    .gt("current_level", 0);
+
+  if (error) return [];
+  return (data ?? []).map((r) => r.category_id);
 }
 
 export async function revokeCategoryCompletion(userId, rawCategoryId) {
