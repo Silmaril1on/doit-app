@@ -23,12 +23,6 @@ const parseCategoryId = (raw) => {
   return id;
 };
 
-// ─── public API ─────────────────────────────────────────────────────────────
-
-/**
- * Returns all category progress rows for the user, enriched with tier metadata.
- * Missing categories (never touched by user) are returned with zeroed defaults.
- */
 export async function getAllCategoryProgress(userId) {
   if (!userId) throw new Error("userId is required");
 
@@ -62,19 +56,11 @@ export async function getAllCategoryProgress(userId) {
       current_tier:
         currentLevel > 0 ? getTierByLevel(category.id, currentLevel) : null,
       next_tier: nextTier,
-      last_completed_at: row?.last_completed_at ?? null,
+      created_at: row?.created_at ?? null,
     };
   });
 }
 
-/**
- * Called after a task with a known category_id is marked completed.
- * Upserts the progress row, increments completed_count, and updates
- * current_level if a new tier threshold has been crossed.
- *
- * Returns { progress, newTier } where newTier is non-null when a badge
- * was just earned.
- */
 export async function recordCategoryCompletion(userId, rawCategoryId) {
   if (!userId) throw new Error("userId is required");
 
@@ -105,7 +91,6 @@ export async function recordCategoryCompletion(userId, rawCategoryId) {
     category_id: categoryId,
     completed_count: newCount,
     current_level: newLevel,
-    last_completed_at: now,
     updated_at: now,
     // Reset has_seen whenever the user earns a new badge level
     ...(tierEarned ? { has_seen: false } : {}),
@@ -140,11 +125,6 @@ export async function recordCategoryCompletion(userId, rawCategoryId) {
   return { progress: upserted, newTier: tierEarned };
 }
 
-/**
- * SSR-safe, per-user cached version of getAllCategoryProgress.
- * Cache is valid for 30 minutes and is busted immediately whenever
- * the user completes a task (via revalidateTag in myActiveQuests).
- */
 export async function getUserEarnedBadges(userId) {
   if (!userId) return Promise.resolve([]);
   return unstable_cache(
@@ -154,11 +134,6 @@ export async function getUserEarnedBadges(userId) {
   )();
 }
 
-/**
- * Marks all unseen badge rows as seen for the user.
- * Called client-side via PATCH /api/achievement-badges when the user
- * visits the My Achievements page.
- */
 export async function markAllBadgesSeen(userId) {
   if (!userId) throw new Error("userId is required");
 
@@ -171,11 +146,6 @@ export async function markAllBadgesSeen(userId) {
   if (error) throw new Error(error.message);
 }
 
-/**
- * Direct, uncached query — always fresh from the DB.
- * Returns category IDs where the user has an unseen new badge.
- * Used on the My Achievements page to decide whether to show the "New Badge" tag.
- */
 export async function getUnseenBadgeCategories(userId) {
   if (!userId) return [];
 

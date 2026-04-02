@@ -35,3 +35,30 @@ export const capitalizeFirst = (str) => {
 export const truncateString = (str, maxLength = 12) => {
   return str.length > maxLength ? str.slice(0, maxLength) + "..." : str;
 };
+
+export const timeAgo = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60_000);
+  const diffHours = Math.floor(diffMs / 3_600_000);
+
+  if (diffMins < 1) return "just now";
+  if (diffMins < 60)
+    return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
+  if (diffHours < 24)
+    return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterdayStart = new Date(todayStart - 86_400_000);
+  if (date >= yesterdayStart && date < todayStart) return "yesterday";
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  }).format(date);
+};

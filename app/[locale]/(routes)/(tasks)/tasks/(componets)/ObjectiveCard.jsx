@@ -114,8 +114,8 @@ const ObjectiveCard = ({
       </div>
 
       {/* Card Category and tablets  */}
-      <div className="flex justify-between items-center">
-        <div className="gap-1 flex flex-col items-start">
+      <div className=" ">
+        <div className="gap-1 flex flex-col items-start mb-4">
           {categoryData ? (
             <div>
               <p className="secondary text-xs uppercase tracking-[0.14em] text-teal-200/85">
@@ -130,19 +130,21 @@ const ObjectiveCard = ({
               Category: —
             </p>
           )}
+        </div>
+        <div className="flex justify-between items-center">
           {hasLocation && (
             <CountryFlags data={countryAndCity} title={true} size="sm" />
           )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Tablet
-            text={formatLabel(status)}
-            color={statusColorMap[status] || "sky"}
-          />
-          <Tablet
-            text={formatLabel(priority)}
-            color={priorityColorMap[priority] || priorityColorMap.medium}
-          />
+          <div className="flex items-center gap-2">
+            <Tablet
+              text={formatLabel(status)}
+              color={statusColorMap[status] || "sky"}
+            />
+            <Tablet
+              text={formatLabel(priority)}
+              color={priorityColorMap[priority] || priorityColorMap.medium}
+            />
+          </div>
         </div>
       </div>
       <SubTasksSection

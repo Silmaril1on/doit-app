@@ -6,6 +6,7 @@ import {
   recordCategoryCompletion,
   revokeCategoryCompletion,
 } from "@/app/[locale]/lib/services/achievement-badges/categoryProgress";
+import { recordXpGain } from "@/app/[locale]/lib/services/xp/xpProgress";
 import { badgesCacheTag } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { createTaskCompletedNotification } from "@/app/[locale]/lib/services/notifications/notificationsTypes";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
@@ -71,7 +72,7 @@ export async function updateActiveQuest(userId, questId, updates) {
   // Fetch the current row so we can detect status transitions and read category.
   const { data: existing, error: fetchError } = await supabaseAdmin
     .from(TABLE_NAME)
-    .select("status, task_category")
+    .select("status, task_category, priority")
     .eq("id", questId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -142,6 +143,16 @@ export async function updateActiveQuest(userId, questId, updates) {
     revalidateTag(badgesCacheTag(userId));
   }
 
+  // XP — only awarded on completion, never revoked.
+  let xpUpdate = null;
+  if (!wasCompleted && isNowCompleted) {
+    try {
+      xpUpdate = await recordXpGain(userId, existing.priority ?? "low");
+    } catch {
+      // XP failure must never break task completion.
+    }
+  }
+
   // Fire task-completed notification — failure must never break the main flow.
   if (!wasCompleted && isNowCompleted) {
     try {
@@ -153,7 +164,7 @@ export async function updateActiveQuest(userId, questId, updates) {
     }
   }
 
-  return data;
+  return { quest: data, xpUpdate };
 }
 
 export async function deleteActiveQuest(userId, questId) {

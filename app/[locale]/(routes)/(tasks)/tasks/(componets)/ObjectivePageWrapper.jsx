@@ -77,7 +77,7 @@ const ObjectivePageWrapper = ({
   const filteredItems = applyObjectivesFilters(searched, filters);
 
   return (
-    <section className="w-full grow px-3 pb-20 flex flex-col gap-3">
+    <section className="w-full grow px-3 pb-28 flex flex-col gap-3">
       <ObjectivesHeader
         items={items}
         title={title}

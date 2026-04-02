@@ -1,5 +1,6 @@
 "use client";
 import { clearUser, setUser } from "@/app/[locale]/lib/features/userSlice";
+import { setXp } from "@/app/[locale]/lib/features/xpSlice";
 import { useEffect } from "react";
 import { Provider } from "react-redux";
 import { useDispatch } from "react-redux";
@@ -34,22 +35,24 @@ const StoreHydrator = ({ children }) => {
         const cookieUser = JSON.parse(serializedUser);
         dispatch(setUser(cookieUser));
 
-        // Pull latest profile so Redux includes image_url and fresh profile fields.
-        const response = await fetch("/api/user/profile/single-profile", {
-          cache: "no-store",
-        });
-        if (!response.ok) return;
+        // Pull latest profile + XP in parallel.
+        const [profileRes, xpRes] = await Promise.all([
+          fetch("/api/user/profile/single-profile", { cache: "no-store" }),
+          fetch("/api/user/xp", { cache: "no-store" }),
+        ]);
 
-        const data = await response.json();
         if (!isMounted) return;
 
-        if (data?.profile) {
-          dispatch(
-            setUser({
-              ...cookieUser,
-              ...data.profile,
-            }),
-          );
+        if (profileRes.ok) {
+          const data = await profileRes.json();
+          if (data?.profile) {
+            dispatch(setUser({ ...cookieUser, ...data.profile }));
+          }
+        }
+
+        if (xpRes.ok) {
+          const xpData = await xpRes.json();
+          if (xpData?.xp) dispatch(setXp(xpData.xp));
         }
       } catch {
         dispatch(clearUser());
