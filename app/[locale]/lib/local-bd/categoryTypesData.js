@@ -4,31 +4,31 @@ export const TASK_CATEGORIES = [
   {
     id: 1,
     label: "Exploration",
-    description: "History, culture, architecture",
+    description: "Uncover hidden streets, ancient landmarks, and the stories carved into every city's walls.",
     icon: "compass",
   },
   {
     id: 2,
     label: "Culinary",
-    description: "Food and drinks experiences",
+    description: "Taste your way through local markets, hidden restaurants, and street food gems.",
     icon: "utensils",
   },
   {
     id: 3,
     label: "Nightlife",
-    description: "Clubs, bars, parties",
+    description: "From rooftop bars to basement clubs — find the beat and own every night.",
     icon: "moon",
   },
   {
     id: 4,
     label: "Experiences",
-    description: "Unique life moments",
+    description: "Recreate iconic viral moments and capture the magic of every place through your own lens.",
     icon: "star",
   },
   {
     id: 5,
-    label: "Lifestyle",
-    description: "Shopping, trends, daily life",
+    label: "Shopping",
+    description: "Hunt down local designers, vintage finds, and the trends that locals actually wear.",
     icon: "shopping-bag",
   },
 ];
