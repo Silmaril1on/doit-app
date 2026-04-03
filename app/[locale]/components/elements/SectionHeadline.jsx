@@ -6,7 +6,7 @@ const SectionHeadline = ({ title, subtitle }) => {
       <h1 className="text-teal-500 capitalize text-2xl lg:text-4xl font-bold">
         {title}
       </h1>
-      <p className="secondary text-chino">{subtitle}</p>
+      <p className="secondary text-chino text-xs">{subtitle}</p>
     </div>
   );
 };

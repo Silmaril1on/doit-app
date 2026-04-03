@@ -5,6 +5,7 @@ import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import Button from "@/app/[locale]/components/buttons/Button";
 import { CATEGORY_ACHIEVEMENT_TIERS } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { formatDate, timeAgo } from "@/app/[locale]/lib/utils/utils";
+import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
 
 const BadgesSlot = ({ categories, allProgress, unseenCategoryIds = [] }) => {
   const [activeCategory, setActiveCategory] = useState(categories[0]);
@@ -31,26 +32,15 @@ const BadgesSlot = ({ categories, allProgress, unseenCategoryIds = [] }) => {
 
   return (
     <ItemCard className="space-y-2">
-      {/* Top row: title left, count chip right */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="*:leading-none mb-2">
-          <h1 className="text-cream/90 text-3xl font-bold">Badges</h1>
-          <div className="flex items-center text-chino secondary text-xs">
-            {completedCount > 0 && (
-              <h1>
-                <b className="text-teal-400">{completedCount}</b>{" "}
-                <span>
-                  Quest
-                  {completedCount !== 1 ? "s" : ""} done
-                </span>{" "}
-                -
-              </h1>
-            )}
-            <p className="pl-1">You badge progress</p>
-          </div>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div>
+          <SectionHeadline
+            title="Badges"
+            subtitle={`Your badge progress - ${currentLevel} badge${currentLevel !== 1 ? "s" : ""} acquired`}
+          />
         </div>
       </div>
-      <div></div>
 
       {/* Category navigation tabs */}
       <div className="flex gap-1.5 flex-wrap mb-3">
@@ -61,9 +51,9 @@ const BadgesSlot = ({ categories, allProgress, unseenCategoryIds = [] }) => {
             <div key={cat.id} className="relative ">
               <Button
                 variant={isActive ? "fill" : "outline"}
+                size="sm"
                 text={cat.label}
                 onClick={() => setActiveCategory(cat)}
-                className="text-[10px] px-2.5 py-1 rounded-full font-semibold secondary"
               />
               {hasUnseen && (
                 <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-rose-500" />
@@ -128,9 +118,9 @@ const BadgesSlot = ({ categories, allProgress, unseenCategoryIds = [] }) => {
                     ? `Unlocked at ${tier.required_count} objectives`
                     : `Complete ${tier.required_count} objectives to unlock this badge`}
                 </p>
-                <div className="h-4 ">
+                <div className="h-4">
                   {earned && tier.level === currentLevel && acquiredAt && (
-                    <p className="text-[10px] secondary text-teal-400/70 leading-tight mt-0.5">
+                    <p className="text-[10px] secondary capitalize text-teal-400/70 leading-tight mt-0.5">
                       {timeAgo(acquiredAt)}
                     </p>
                   )}

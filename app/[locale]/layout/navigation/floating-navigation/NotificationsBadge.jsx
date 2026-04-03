@@ -10,10 +10,7 @@ import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import Motion from "../../../components/motion/Motion";
 
-const LIMIT = 15;
-// height of one notification row — used to cap the list at 5 visible items
-const ITEM_HEIGHT = 72;
-const MAX_VISIBLE = 5;
+const LIMIT = 5;
 
 const NotificationsBadge = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -122,10 +119,7 @@ const NotificationsBadge = () => {
               </div>
             </div>
             {/* Content — capped to 5 items height */}
-            <ul
-              className="overflow-y-auto"
-              style={{ maxHeight: `${ITEM_HEIGHT * MAX_VISIBLE}px` }}
-            >
+            <ul>
               {notifications.length === 0 && (
                 <li className="px-4 py-6 text-center">
                   <p className="secondary text-xs text-chino/60">

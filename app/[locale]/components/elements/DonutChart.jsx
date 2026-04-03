@@ -40,70 +40,58 @@ const DonutChart = ({
   const displayCenter = centerLabel ?? total;
 
   const chart = (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      aria-hidden="true"
-    >
-      {/* track */}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={radius}
-        fill="none"
-        stroke="rgba(255,255,255,0.06)"
-        strokeWidth={strokeWidth}
-      />
-
-      {/* animated segments */}
-      {arcs.map((arc, i) => {
-        if (arc.value === 0) return null;
-        return (
-          <motion.circle
-            key={arc.key ?? i}
-            cx={cx}
-            cy={cy}
-            r={radius}
-            fill="none"
-            stroke={arc.color}
-            strokeWidth={strokeWidth}
-            strokeLinecap="butt"
-            strokeDasharray={`${arc.dashLength} ${circumference}`}
-            transform={`rotate(${arc.rotation}, ${cx}, ${cy})`}
-            initial={{ opacity: 0, strokeDasharray: `0 ${circumference}` }}
-            animate={{
-              opacity: 1,
-              strokeDasharray: `${arc.dashLength} ${circumference}`,
-            }}
-            transition={{ duration: 0.7, ease: "easeOut", delay: i * 0.08 }}
-          />
-        );
-      })}
-
-      {/* center text */}
-      <text
-        x={cx}
-        y={cy - 6}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize="18"
-        fontWeight="bold"
-        fill="rgba(255,255,255,0.9)"
+    <div className="relative inline-flex items-center justify-center">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        aria-hidden="true"
       >
-        {displayCenter}
-      </text>
-      <text
-        x={cx}
-        y={cy + 10}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize="9"
-        fill="rgba(255,255,255,0.35)"
-      >
-        {centerSubLabel}
-      </text>
-    </svg>
+        {/* track */}
+        <circle
+          cx={cx}
+          cy={cy}
+          r={radius}
+          fill="none"
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth={strokeWidth}
+        />
+
+        {/* animated segments */}
+        {arcs.map((arc, i) => {
+          if (arc.value === 0) return null;
+          return (
+            <motion.circle
+              key={arc.key ?? i}
+              cx={cx}
+              cy={cy}
+              r={radius}
+              fill="none"
+              stroke={arc.color}
+              strokeWidth={strokeWidth}
+              strokeLinecap="butt"
+              strokeDasharray={`${arc.dashLength} ${circumference}`}
+              transform={`rotate(${arc.rotation}, ${cx}, ${cy})`}
+              initial={{ opacity: 0, strokeDasharray: `0 ${circumference}` }}
+              animate={{
+                opacity: 1,
+                strokeDasharray: `${arc.dashLength} ${circumference}`,
+              }}
+              transition={{ duration: 0.7, ease: "easeOut", delay: i * 0.08 }}
+            />
+          );
+        })}
+        {/* center text */}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <h1 className="text-cream text-2xl font-bold leading-none">
+          {displayCenter}
+        </h1>
+        <h1 className="text-cream/70 secondary text-xs capitalize">
+          {centerSubLabel}
+        </h1>
+      </div>
+    </div>
   );
 
   if (!showLegend) return chart;

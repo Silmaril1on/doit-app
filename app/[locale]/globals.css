@@ -43,7 +43,7 @@
   input,
   select,
   textarea {
-    @apply border text-xs lg:text-sm border-teal-500/30 px-2 lg:px-3 py-2 text-teal-500 bg-black placeholder:text-teal-500/50 rounded-md outline-none focus:border-teal-500 duration-300 focus:ring-2 focus:ring-teal-400/40 w-full;
+    @apply border text-xs lg:text-sm border-teal-500/15 px-3 lg:px-4 py-3 text-cream/80 bg-black/30 placeholder:text-cream/40 rounded-xl outline-none focus:border-teal-500/60 duration-300 focus:ring-2 focus:ring-teal-400/20 w-full;
     font-family: var(--font-jost);
   }
 }

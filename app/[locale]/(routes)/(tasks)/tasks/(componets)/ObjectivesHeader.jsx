@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import { motion } from "framer-motion";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import Button from "@/app/[locale]/components/buttons/Button";
 import DonutChart from "@/app/[locale]/components/elements/DonutChart";
@@ -11,6 +12,9 @@ import { IoIosAdd } from "react-icons/io";
 import { MdFilterAltOff } from "react-icons/md";
 import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
 import SearchBar from "@/app/[locale]/components/forms/SearchBar";
+import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
+import { selectXp } from "@/app/[locale]/lib/features/xpSlice";
+import { XP_PER_LEVEL } from "@/app/[locale]/lib/services/xp/xpConfig";
 
 const PRIORITY_CONFIG = [
   { key: "low", label: "Low", color: "#0ea5e9" },
@@ -49,18 +53,17 @@ const ObjectivesHeader = ({
 
   return (
     <div className="w-full space-y-2">
+      <SectionHeadline title={title} subtitle={subtitle} />
+
       {/* User tasks statistics header section */}
-      <ItemCard className="w-full grid gap-3">
-        <div className="grid grid-cols-2 gap-3">
-          <AvatarSide
-            title={title}
-            subtitle={subtitle}
-            buttonLabel={buttonLabel}
-            showCreateButton={showCreateButton}
-            onCreateClick={onCreateClick}
-          />
-          <div className="w-full *:w-full"></div>
-        </div>
+      <ItemCard className="w-full grid gap-3 ">
+        <AvatarSide
+          title={title}
+          subtitle={subtitle}
+          buttonLabel={buttonLabel}
+          showCreateButton={showCreateButton}
+          onCreateClick={onCreateClick}
+        />
         <div className="grid grid-cols-2 *:h-full gap-3 items-center">
           <div></div>
           <DonutChart segments={segments} gap={GAP} showLegend />
@@ -89,34 +92,24 @@ const ObjectivesHeader = ({
   );
 };
 
-const AvatarSide = ({
-  title,
-  subtitle,
-  buttonLabel,
-  showCreateButton,
-  onCreateClick,
-}) => {
+const AvatarSide = ({ buttonLabel, showCreateButton, onCreateClick }) => {
   const currentUser = useSelector(selectCurrentUser);
   const { profile } = useUserProfile(currentUser);
 
   return (
     <div className="flex flex-col justify-center gap-3">
-      <div className="*:leading-none">
-        <h1 className="text-3xl text-teal-300">{title}</h1>
-        <p className="secondary text-sm text-chino">{subtitle}</p>
-      </div>
       {profile && (
-        <div className="flex items-center gap-3 ">
-          <div className="w-24 h-24 rounded-lg overflow-hidden shrink-0 border border-teal-500/30 bg-teal-500/20">
+        <div className="flex items-start gap-3 ">
+          <div className="w-auto h-full rounded-lg overflow-hidden shrink-0 border border-teal-500/30 bg-teal-500/20">
             <ImageTag
               src={profile.image_url}
               alt={profile.display_name}
-              width={96}
-              height={96}
+              width={120}
+              height={120}
             />
           </div>
-          <div className="leading-none h-full w-full pt-2 flex flex-col justify-between items-start">
-            <div className="*:leading-none">
+          <div className="leading-none h-auto w-full py-1 flex flex-col items-start justify-start space-y-3">
+            <div className="*:leading-none ">
               <p className=" text-cream font-semibold text-lg">
                 {profile.display_name}
               </p>
@@ -125,13 +118,11 @@ const AvatarSide = ({
                 title={true}
                 size="sm"
               />
-              <h1 className="text-green-600 secondary text-sm">
-                Verified Account
-              </h1>
             </div>
+            <LevelBar />
             {showCreateButton ? (
               <Button
-                className="w-full"
+                className="w-fit"
                 icon={<IoIosAdd size={20} />}
                 text={buttonLabel}
                 onClick={onCreateClick}
@@ -140,6 +131,30 @@ const AvatarSide = ({
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+const LevelBar = () => {
+  const { level, currentXp } = useSelector(selectXp);
+  const pct = Math.min((currentXp / XP_PER_LEVEL) * 100, 100);
+  return (
+    <div className="flex items-center gap-2 flex-1 w-full">
+      <span className="text-[10px] font-bold text-teal-400 secondary shrink-0 leading-none">
+        Lv.{level}
+      </span>
+      <div className="relative flex-1 h-3 rounded-full bg-teal-500/10 border border-teal-500/20 overflow-hidden">
+        <motion.div
+          key={level}
+          className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-teal-600 to-teal-400"
+          initial={{ width: "0%" }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </div>
+      <span className="text-[9px] secondary text-cream/40 shrink-0 leading-none">
+        {currentXp}/{XP_PER_LEVEL}
+      </span>
     </div>
   );
 };

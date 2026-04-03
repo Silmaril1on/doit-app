@@ -14,7 +14,7 @@ const ItemCard = ({ children, className }) => {
         backgroundClip: "padding-box, border-box",
       }}
     >
-      <div className="absolute left-0 top-0 w-[40%] h-[30%] rounded-full bg-teal-400 blur-[70px] -z-1" />
+      {/* <div className="absolute left-0 top-0 w-[40%] h-[30%] rounded-full bg-teal-400 blur-[70px] -z-1" /> */}
       {children}
     </div>
   );

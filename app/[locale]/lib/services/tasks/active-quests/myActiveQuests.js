@@ -23,13 +23,15 @@ const normalizeOptionalText = (value) => {
 const normalizeSubtasks = (value) => {
   if (!Array.isArray(value)) return [];
   return value
-    .map((item) => {
+    .map((item, index) => {
       if (typeof item === "string") {
         const label = normalizeText(item);
-        return label ? { label, completed: false } : null;
+        return label ? { id: index + 1, label, completed: false } : null;
       }
       const label = normalizeText(item?.label);
-      return label ? { label, completed: Boolean(item?.completed) } : null;
+      const id =
+        typeof item?.id === "number" && item.id > 0 ? item.id : index + 1;
+      return label ? { id, label, completed: Boolean(item?.completed) } : null;
     })
     .filter(Boolean);
 };
@@ -147,7 +149,13 @@ export async function updateActiveQuest(userId, questId, updates) {
   let xpUpdate = null;
   if (!wasCompleted && isNowCompleted) {
     try {
-      xpUpdate = await recordXpGain(userId, existing.priority ?? "low");
+      const user = await getUserById(userId);
+      const displayName = user?.display_name ?? user?.first_name ?? "User";
+      xpUpdate = await recordXpGain(
+        userId,
+        existing.priority ?? "low",
+        displayName,
+      );
     } catch {
       // XP failure must never break task completion.
     }

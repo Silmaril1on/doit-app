@@ -8,11 +8,17 @@ const variantClassMap = {
   outline: "bg-teal-500/20 hover:bg-teal-500/40 text-cream",
 };
 
+const sizeClassMap = {
+  md: "px-4 py-1  text-sm font-bold",
+  sm: "px-2.5 py-1  text-[10px] font-semibold secondary",
+};
+
 const Button = ({
   onClick,
   text,
   icon,
   variant = "fill",
+  size = "md",
   href,
   type = "button",
   disabled = false,
@@ -20,7 +26,8 @@ const Button = ({
   form,
 }) => {
   const variantClasses = variantClassMap[variant] ?? variantClassMap.fill;
-  const sharedClassName = `flex relative items-center justify-center gap-1.5 cursor-pointer px-4 py-1 rounded-sm font-bold transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${variantClasses} ${className}`;
+  const sizeClasses = sizeClassMap[size] ?? sizeClassMap.md;
+  const sharedClassName = `flex rounded-sm relative items-center justify-center gap-1.5 cursor-pointer transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${sizeClasses} ${variantClasses} ${className}`;
 
   const content = (
     <div className=" center gap-1.5">

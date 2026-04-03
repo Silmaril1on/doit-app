@@ -34,7 +34,7 @@ const FloatingNavigation = () => {
         isOpen={isOpen}
         onClick={() => setIsOpen((current) => !current)}
       />
-      <LevelBar />
+      {/* <LevelBar /> */}
       <div className="flex gap-2 items-center ">
         <Link href="/tasks/objectives">
           <ActionButton variant="home" />
@@ -100,19 +100,3 @@ const LevelBar = () => {
 };
 
 export default FloatingNavigation;
-
-// create table public.user_xp (
-//   id uuid not null default gen_random_uuid (),
-//   user_id uuid not null,
-//   total_xp integer not null default 0,
-//   current_level integer not null default 1,
-//   created_at timestamp with time zone not null default now(),
-//   updated_at timestamp with time zone not null default now(),
-//   constraint user_xp_pkey primary key (id),
-//   constraint user_xp_user_id_key unique (user_id),
-//   constraint user_xp_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
-//   constraint user_xp_current_level_check check ((current_level >= 1)),
-//   constraint user_xp_total_xp_check check ((total_xp >= 0))
-// ) TABLESPACE pg_default;
-
-// create index IF not exists idx_user_xp_user_id on public.user_xp using btree (user_id) TABLESPACE pg_default;

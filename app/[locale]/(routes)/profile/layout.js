@@ -14,6 +14,9 @@ const userProfileLayout = ({ children }) => {
         <Link href="/profile/my-achievements" className="text-teal-500">
           My Achievements
         </Link>
+        <Link href="/profile/statistics" className="text-teal-500">
+          Statistics
+        </Link>
       </div>
       {children}
     </div>

@@ -79,6 +79,7 @@ const TaskManagerPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [taskPriorityOrder, setTaskPriorityOrder] = useState(null);
+  const [modalKey, setModalKey] = useState(0);
 
   const groupedTasks = useMemo(() => {
     return STATUS_COLUMNS.reduce((acc, column) => {
@@ -206,11 +207,13 @@ const TaskManagerPage = () => {
 
   const openCreateModal = () => {
     setEditingTaskId(null);
+    setModalKey((k) => k + 1);
     setIsCreateModalOpen(true);
   };
 
   const openEditModal = (taskId) => {
     setEditingTaskId(taskId);
+    setModalKey((k) => k + 1);
     setIsCreateModalOpen(true);
   };
 
@@ -372,7 +375,7 @@ const TaskManagerPage = () => {
   };
 
   return (
-    <div className="p-3 lg:p-4 space-y-4 bg-black h-screen">
+    <div className="p-3 lg:p-4 space-y-4 bg-black min-h-screen">
       <div>
         <h1 className="text-gold text-2xl lg:text-4xl font-bold secondary">
           Task Manager
@@ -445,7 +448,7 @@ const TaskManagerPage = () => {
       </div>
 
       <CreateTaskModal
-        key={editingTaskId ?? "new"}
+        key={modalKey}
         isOpen={isCreateModalOpen}
         onClose={handleModalClose}
         onSubmit={handleSaveTask}

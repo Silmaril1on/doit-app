@@ -47,13 +47,15 @@ const normalizePriority = (value) => {
 const normalizeSubtasks = (value) => {
   if (!Array.isArray(value)) return [];
   return value
-    .map((item) => {
+    .map((item, index) => {
       if (typeof item === "string") {
         const label = normalizeText(item);
-        return label ? { label, completed: false } : null;
+        return label ? { id: index + 1, label, completed: false } : null;
       }
       const label = normalizeText(item?.label);
-      return label ? { label, completed: Boolean(item?.completed) } : null;
+      const id =
+        typeof item?.id === "number" && item.id > 0 ? item.id : index + 1;
+      return label ? { id, label, completed: Boolean(item?.completed) } : null;
     })
     .filter(Boolean);
 };

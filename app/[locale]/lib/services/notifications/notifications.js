@@ -12,37 +12,6 @@ const NOTIFICATION_STATUS = {
   TASK_COMPLETED: "Task Completed",
 };
 
-/**
- * createTaskCompletedNotification
- * Inserts a low-priority "Task Completed" notification for a user.
- */
-export async function createTaskCompletedNotification(userId, displayName) {
-  if (!userId) throw new Error("userId is required");
-  if (!displayName) throw new Error("displayName is required");
-
-  const { data, error } = await supabaseAdmin
-    .from(TABLE_NAME)
-    .insert({
-      user_id: userId,
-      status: NOTIFICATION_STATUS.TASK_COMPLETED,
-      message: "You have completed your task successfully.",
-      priority: PRIORITY.LOW,
-      display_name: displayName,
-      has_read: false,
-    })
-    .select("*")
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
-}
-
-/**
- * getNotifications
- * Returns notifications for a user, newest first.
- * @param {string} userId
- * @param {number|null} limit  - if provided, fetches limit+1 rows to detect hasMore
- */
 export async function getNotifications(userId, limit = null) {
   if (!userId) throw new Error("userId is required");
 
