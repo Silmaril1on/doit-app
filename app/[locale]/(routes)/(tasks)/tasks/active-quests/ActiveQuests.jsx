@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
+import { setXp } from "@/app/[locale]/lib/features/xpSlice";
 import { useActiveQuests } from "@/app/[locale]/lib/hooks/useActiveQuests";
 import { ACHIEVEMENTS_PAGE1_KEY } from "@/app/[locale]/lib/hooks/useAchievements";
 import { mutate as globalMutate } from "swr";
@@ -61,6 +62,7 @@ const ActiveQuests = ({ initialData = null }) => {
           throw new Error(data.error || "Failed to update subtask");
         if (allDone) {
           setQuests((prev) => prev.filter((q) => q.id !== quest.id));
+          if (data.xpUpdate) dispatch(setXp(data.xpUpdate));
           dispatch(
             setToast({
               type: "success",
@@ -160,10 +162,11 @@ const ActiveQuests = ({ initialData = null }) => {
             body: JSON.stringify({ status: "completed" }),
           },
         );
+        const data = await response.json();
         if (!response.ok) {
-          const data = await response.json();
           throw new Error(data.error || "Failed to complete quest");
         }
+        if (data.xpUpdate) dispatch(setXp(data.xpUpdate));
         dispatch(
           setToast({ type: "success", msg: "Task completed! Well done." }),
         );

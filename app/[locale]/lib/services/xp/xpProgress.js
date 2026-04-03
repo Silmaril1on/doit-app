@@ -6,6 +6,7 @@ import {
   resolveXpState,
 } from "@/app/[locale]/lib/services/xp/xpConfig";
 
+
 const XP_TABLE = "user_xp";
 
 export async function getUserXp(userId) {
@@ -62,4 +63,32 @@ export async function recordXpGain(userId, priority) {
     total_xp: upserted.total_xp,
     current_level: upserted.current_level,
   };
+}
+
+export async function recordFixedXpGain(userId, amount) {
+  if (!userId) throw new Error("userId is required");
+
+  const { data: existing, error: fetchError } = await supabaseAdmin
+    .from(XP_TABLE)
+    .select("total_xp")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (fetchError) throw new Error(fetchError.message);
+
+  const prevXp = existing?.total_xp ?? 0;
+  const { total_xp, current_level } = resolveXpState(prevXp + amount);
+
+  const { data: upserted, error: upsertError } = await supabaseAdmin
+    .from(XP_TABLE)
+    .upsert(
+      { user_id: userId, total_xp, current_level, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" },
+    )
+    .select("total_xp, current_level")
+    .single();
+
+  if (upsertError) throw new Error(upsertError.message);
+
+  return { xpGained: amount, total_xp: upserted.total_xp, current_level: upserted.current_level };
 }

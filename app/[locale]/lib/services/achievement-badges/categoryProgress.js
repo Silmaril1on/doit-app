@@ -104,6 +104,16 @@ export async function recordCategoryCompletion(userId, rawCategoryId) {
 
   if (upsertError) throw new Error(upsertError.message);
 
+  // Count total badges across all categories for milestone check.
+  let totalBadges = null;
+  if (tierEarned) {
+    const { data: allProgress } = await supabaseAdmin
+      .from(PROGRESS_TABLE)
+      .select("current_level")
+      .eq("user_id", userId);
+    totalBadges = (allProgress ?? []).reduce((sum, r) => sum + (r.current_level ?? 0), 0);
+  }
+
   // Fire badge notification — failure must never break the main flow.
   if (tierEarned) {
     const category = TASK_CATEGORIES.find((c) => c.id === categoryId);
@@ -122,7 +132,7 @@ export async function recordCategoryCompletion(userId, rawCategoryId) {
     }
   }
 
-  return { progress: upserted, newTier: tierEarned };
+  return { progress: upserted, newTier: tierEarned, totalBadges };
 }
 
 export async function getUserEarnedBadges(userId) {
