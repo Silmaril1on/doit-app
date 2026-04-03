@@ -321,7 +321,7 @@ const CardFooter = ({
           </div>
         )}
       </div>
-      <div className="flex flex-col items-end gap-1 shrink-0">
+      <div className="flex flex-col items-end gap-1 shrink-0 *:w-full">
         {onStart && (
           <Button
             text="Start Task"
@@ -347,7 +347,12 @@ const CardFooter = ({
           />
         )}
         {completedView && gallery.length > 0 && (
-          <Button text="View Gallery" variant="outline" onClick={onViewClick} />
+          <Button
+            text="View Gallery"
+            size="sm"
+            variant="outline"
+            onClick={onViewClick}
+          />
         )}
       </div>
     </div>
