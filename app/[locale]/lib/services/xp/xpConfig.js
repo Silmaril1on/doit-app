@@ -1,5 +1,8 @@
 export const XP_PER_LEVEL = 250;
 
+export const BADGE_MILESTONE_COUNT = 5;
+export const BADGE_MILESTONE_XP = 50;
+
 export const PRIORITY_XP = {
   low: 20,
   medium: 50,

@@ -6,7 +6,8 @@ import {
   recordCategoryCompletion,
   revokeCategoryCompletion,
 } from "@/app/[locale]/lib/services/achievement-badges/categoryProgress";
-import { recordXpGain } from "@/app/[locale]/lib/services/xp/xpProgress";
+import { recordXpGain, recordFixedXpGain } from "@/app/[locale]/lib/services/xp/xpProgress";
+import { BADGE_MILESTONE_COUNT, BADGE_MILESTONE_XP } from "@/app/[locale]/lib/services/xp/xpConfig";
 import { badgesCacheTag } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { createTaskCompletedNotification } from "@/app/[locale]/lib/services/notifications/notificationsTypes";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
@@ -72,7 +73,7 @@ export async function updateActiveQuest(userId, questId, updates) {
   // Fetch the current row so we can detect status transitions and read category.
   const { data: existing, error: fetchError } = await supabaseAdmin
     .from(TABLE_NAME)
-    .select("status, task_category, priority")
+    .select("status, task_category, priority, completed_at")
     .eq("id", questId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -113,7 +114,8 @@ export async function updateActiveQuest(userId, questId, updates) {
     throw new Error("No valid fields to update");
   if (updatePayload.status === "completed" && !updatePayload.completed_at)
     updatePayload.completed_at = new Date().toISOString();
-  if (updatePayload.status && updatePayload.status !== "completed")
+  // Same as objectives: preserve completed_at when reactivating a previously-completed task.
+  if (updatePayload.status && updatePayload.status !== "completed" && existing.status !== "completed")
     updatePayload.completed_at = null;
   updatePayload.update_at = new Date().toISOString();
 
@@ -133,9 +135,13 @@ export async function updateActiveQuest(userId, questId, updates) {
   const wasCompleted = existing.status === "completed";
   const isNowCompleted =
     (updatePayload.status ?? existing.status) === "completed";
+  // existing.completed_at being set means this task was previously completed —
+  // XP and badge progress have already been awarded for it, so skip them.
+  const alreadyRewarded = Boolean(existing.completed_at);
 
-  if (!wasCompleted && isNowCompleted && categoryId) {
-    await recordCategoryCompletion(userId, categoryId);
+  let badgeResult = null;
+  if (!wasCompleted && isNowCompleted && !alreadyRewarded && categoryId) {
+    badgeResult = await recordCategoryCompletion(userId, categoryId);
     // Bust the badges page cache so the user sees fresh data immediately.
     revalidateTag(badgesCacheTag(userId));
   } else if (wasCompleted && !isNowCompleted && categoryId) {
@@ -143,13 +149,22 @@ export async function updateActiveQuest(userId, questId, updates) {
     revalidateTag(badgesCacheTag(userId));
   }
 
-  // XP — only awarded on completion, never revoked.
+  // XP — only awarded on first-ever completion, never revoked.
   let xpUpdate = null;
-  if (!wasCompleted && isNowCompleted) {
+  if (!wasCompleted && isNowCompleted && !alreadyRewarded) {
     try {
       xpUpdate = await recordXpGain(userId, existing.priority ?? "low");
     } catch {
       // XP failure must never break task completion.
+    }
+  }
+
+  // Badge milestone: every 5th total badge earns a 50 XP bonus.
+  if (badgeResult?.newTier && badgeResult.totalBadges % BADGE_MILESTONE_COUNT === 0) {
+    try {
+      xpUpdate = await recordFixedXpGain(userId, BADGE_MILESTONE_XP);
+    } catch {
+      // Bonus XP failure must never break task completion.
     }
   }
 
