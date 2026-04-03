@@ -225,7 +225,10 @@ export async function updateObjective(userId, objectiveId, updates) {
     updatePayload.completed_at = new Date().toISOString();
   }
 
-  if (updatePayload.status && updatePayload.status !== "completed") {
+  // When reactivating a previously-completed task, keep completed_at as a historical
+  // marker so the XP/badge logic knows this task was already rewarded.
+  // Only null it out when a task that was never completed moves to a non-completed state.
+  if (updatePayload.status && updatePayload.status !== "completed" && existing.status !== "completed") {
     updatePayload.completed_at = null;
   }
 
