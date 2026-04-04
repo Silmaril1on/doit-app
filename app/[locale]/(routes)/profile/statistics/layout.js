@@ -5,3 +5,4 @@ const StatisticsLayout = ({ countryTasksSlug }) => {
 };
 
 export default StatisticsLayout;
+``;

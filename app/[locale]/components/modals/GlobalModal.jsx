@@ -10,6 +10,7 @@ import {
 
 import ProfileForm from "@/app/[locale]/(routes)/profile/basic-information/ProfileForm";
 import ObjectiveSubmissionForm from "@/app/[locale]/(routes)/(tasks)/tasks/(componets)/ObjectiveSubmissionForm";
+import ViewGalleryModal from "@/app/[locale]/(routes)/(tasks)/tasks/achievements/ViewGalleryModal";
 import ActionButton from "../buttons/ActionButton";
 import Button from "../buttons/Button";
 import BorderSvg from "../elements/BorderSvg";
@@ -33,6 +34,13 @@ const MODAL_REGISTRY = {
     title: "Edit Objective",
     submitLabel: "Save Changes",
   },
+  viewGallery: {
+    component: ViewGalleryModal,
+    title: "Gallery",
+    submitLabel: "Close",
+    footerMode: "close",
+    scrollContent: false,
+  },
 };
 
 const GlobalModal = () => {
@@ -42,6 +50,11 @@ const GlobalModal = () => {
 
   const entry = modalType ? MODAL_REGISTRY[modalType] : null;
   const ModalContent = entry?.component ?? null;
+  const isSubmitFooter = (entry?.footerMode ?? "submit") === "submit";
+  const contentClassName =
+    entry?.scrollContent === false
+      ? "mt-6 space-y-4 relative z-10"
+      : "mt-6 space-y-4 relative z-10 overflow-y-auto pr-1";
 
   const handleClose = () => {
     dispatch(closeModal());
@@ -57,7 +70,7 @@ const GlobalModal = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={handleClose}
         >
           <motion.div
@@ -83,7 +96,7 @@ const GlobalModal = () => {
               </div>
 
               {/* Content */}
-              <div className="mt-6 space-y-4 relative z-10 h-125 overflow-y-auto pr-1">
+              <div className={contentClassName}>
                 <ModalContent
                   {...modalProps}
                   formId={MODAL_FORM_ID}
@@ -95,12 +108,17 @@ const GlobalModal = () => {
               {/* Footer */}
               <div className="flex items-center justify-end pt-4 relative z-10">
                 <Button
-                  type="submit"
+                  type={isSubmitFooter ? "submit" : "button"}
                   variant="outline"
-                  form={MODAL_FORM_ID}
-                  disabled={submitting}
+                  form={isSubmitFooter ? MODAL_FORM_ID : undefined}
+                  disabled={isSubmitFooter ? submitting : false}
+                  onClick={isSubmitFooter ? undefined : handleClose}
                   text={
-                    submitting ? "Saving..." : (entry.submitLabel ?? "Submit")
+                    isSubmitFooter
+                      ? submitting
+                        ? "Saving..."
+                        : (entry.submitLabel ?? "Submit")
+                      : (entry.submitLabel ?? "Close")
                   }
                 />
               </div>

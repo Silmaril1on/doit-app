@@ -105,7 +105,7 @@ const ProfileForm = ({ profile, formId, onClose, onSubmittingChange }) => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 border">
       {error && (
         <p className="text-red-500 text-sm border border-red-500/30 bg-red-500/10 px-3 py-2">
           {error}

@@ -1,13 +1,12 @@
 "use client";
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { MdClose } from "react-icons/md";
 
 // Visual config per depth (0 = active, 1 = next, 2 = next+1) — right-stacked
 const STACK = [
-  { x: 0,  y: 0,  scale: 1,    rotate: 0, blur: 0, opacity: 1,    z: 30 },
+  { x: 0, y: 0, scale: 1, rotate: 0, blur: 0, opacity: 1, z: 30 },
   { x: 38, y: 10, scale: 0.96, rotate: 4, blur: 1, opacity: 0.85, z: 20 },
-  { x: 68, y: 20, scale: 0.90, rotate: 8, blur: 3, opacity: 0.50, z: 10 },
+  { x: 68, y: 20, scale: 0.9, rotate: 8, blur: 3, opacity: 0.5, z: 10 },
 ];
 
 const SPRING = { type: "spring", stiffness: 320, damping: 32 };
@@ -20,7 +19,14 @@ const GalleryCard = ({ item, depth, label }) => {
   return (
     <motion.div
       className="absolute left-0 w-full rounded-[26px] border border-white/10 bg-black overflow-hidden"
-      animate={{ x: s.x, y: s.y, scale: s.scale, rotate: s.rotate, filter: `blur(${s.blur}px)`, opacity: s.opacity }}
+      animate={{
+        x: s.x,
+        y: s.y,
+        scale: s.scale,
+        rotate: s.rotate,
+        filter: `blur(${s.blur}px)`,
+        opacity: s.opacity,
+      }}
       transition={SPRING}
       style={{ zIndex: s.z }}
     >
@@ -39,28 +45,29 @@ const GalleryCard = ({ item, depth, label }) => {
   );
 };
 
-const ViewGalleryModal = ({ gallery = [], subtasks = [], onClose }) => {
+const ViewGalleryModal = ({ gallery = [], subtasks = [] }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const overlayRef = useRef(null);
   const dragStartX = useRef(null);
 
   const labelMap = Object.fromEntries(
-    subtasks.map((st) => [st.id, typeof st === "object" ? st.label : String(st ?? "")]),
+    subtasks.map((st) => [
+      st.id,
+      typeof st === "object" ? st.label : String(st ?? ""),
+    ]),
   );
 
   const getLabel = (item) =>
     subtasks.length === 0
       ? `Photo #${item.subtask_id}`
-      : labelMap[item.subtask_id] ?? `Subtask #${item.subtask_id}`;
+      : (labelMap[item.subtask_id] ?? `Subtask #${item.subtask_id}`);
 
   const total = gallery.length;
 
-  const navigate = (dir) =>
-    setActiveIndex((p) => (p + dir + total) % total);
+  const navigate = (dir) => setActiveIndex((p) => (p + dir + total) % total);
 
   const handlePointerDown = (e) => {
     dragStartX.current = e.clientX;
-    e.currentTarget.setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture?.(e.pointerId);
   };
 
   const handlePointerUp = (e) => {
@@ -70,39 +77,24 @@ const ViewGalleryModal = ({ gallery = [], subtasks = [], onClose }) => {
     if (Math.abs(delta) > DRAG_THRESHOLD) {
       // drag left → next card (goes behind stack); drag right → previous
       navigate(delta < 0 ? 1 : -1);
-      return;
     }
-    if (e.target === overlayRef.current) onClose();
   };
 
   if (!gallery.length) return null;
 
   return (
-    <motion.div
-      ref={overlayRef}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-4 select-none"
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-    >
-      {/* Header */}
-      <div className="w-full max-w-xs flex items-center justify-between mb-8 px-1">
-        <p className="secondary text-xs text-chino/60">
-          {activeIndex + 1} / {gallery.length}
-        </p>
-        <button
-          type="button"
-          onClick={onClose}
-          className="text-chino/60 hover:text-cream duration-200 cursor-pointer"
-        >
-          <MdClose size={20} />
-        </button>
-      </div>
+    <div className="flex flex-col items-center select-none">
+      <p className="secondary text-xs text-chino/60">
+        {activeIndex + 1} / {gallery.length}
+      </p>
 
       {/* Card deck — depth 2 rendered first (behind), depth 0 last (on top) */}
-      <div className="relative w-full max-w-xs cursor-grab active:cursor-grabbing" style={{ minHeight: 260 }}>
+      <div
+        className="relative w-full max-w-xs cursor-grab active:cursor-grabbing mt-4"
+        style={{ minHeight: 260 }}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+      >
         {[...STACK].reverse().map((_, i) => {
           const depth = STACK.length - 1 - i;
           const item = gallery[(activeIndex + depth) % total];
@@ -134,7 +126,7 @@ const ViewGalleryModal = ({ gallery = [], subtasks = [], onClose }) => {
           ))}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 

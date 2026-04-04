@@ -244,7 +244,7 @@ const ObjectiveSubmissionForm = ({
   };
 
   return (
-    <form id={formId} onSubmit={handleSubmit} className="space-y-3">
+    <form id={formId} onSubmit={handleSubmit} className="space-y-2 py-2">
       <SubmissionForm
         fields={FIELDS}
         values={form}

@@ -9,8 +9,6 @@ import UploadImageInput from "@/app/[locale]/components/forms/UploadImageInput";
 import Button from "@/app/[locale]/components/buttons/Button";
 import { deleteGalleryPhoto } from "@/app/[locale]/lib/services/tasks/gallery/galleryActions";
 
-// ─── Main modal ──────────────────────────────────────────────────────────────
-
 const UploadGalleryModal = ({
   objective,
   gallery: initialGallery = [],
@@ -215,7 +213,7 @@ const UploadGalleryModal = ({
                   return uploaded ? (
                     <div
                       key={id}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left border-green-500/30 bg-black/30"
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left border-teal-500/15 bg-black/30"
                     >
                       <div className="flex items-center gap-2">
                         <span className="secondary text-[10px] text-chino/40 shrink-0">

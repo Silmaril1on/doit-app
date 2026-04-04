@@ -292,7 +292,7 @@ const SubmissionForm = ({
 
   // Flat format (backward compat)
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`space-y-3  ${className}`}>
       {imageField && (
         <UploadImageInput
           value={imageField.value}

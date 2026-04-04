@@ -7,11 +7,12 @@ import { CountryFlags } from "@/app/[locale]/components/elements/CountryFlags";
 import { formatDate } from "@/app/[locale]/lib/utils/utils";
 import ProgressBar from "@/app/[locale]/components/elements/ProgressBar";
 import { TASK_CATEGORIES } from "@/app/[locale]/lib/local-bd/categoryTypesData";
+import { openModal } from "@/app/[locale]/lib/features/modalSlice";
 import React, { useRef, useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { IoMdClose, IoMdArrowDropright, IoIosCheckmark } from "react-icons/io";
 import { AnimatePresence } from "framer-motion";
 import UploadGalleryModal from "../achievements/UploadGalleryModal";
-import ViewGalleryModal from "../achievements/ViewGalleryModal";
 
 const priorityColorMap = {
   low: "blue",
@@ -40,6 +41,7 @@ const ObjectiveCard = ({
   onStart,
   completedView = false,
 }) => {
+  const dispatch = useDispatch();
   const status = objective.status || "todo";
   const priority = objective.priority || "medium";
   const categoryData =
@@ -57,7 +59,6 @@ const ObjectiveCard = ({
   const menuRef = useRef(null);
 
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [viewOpen, setViewOpen] = useState(false);
   const [localGallery, setLocalGallery] = useState(
     Array.isArray(objective.task_gallery) ? objective.task_gallery : [],
   );
@@ -181,10 +182,19 @@ const ObjectiveCard = ({
           onComplete={onComplete}
           completedView={completedView}
           gallery={localGallery}
-          onViewClick={() => setViewOpen(true)}
+          onViewClick={() =>
+            dispatch(
+              openModal({
+                modalType: "viewGallery",
+                modalProps: {
+                  gallery: localGallery,
+                  subtasks,
+                },
+              }),
+            )
+          }
         />
       </ItemCard>
-
       <AnimatePresence>
         {uploadOpen && (
           <UploadGalleryModal
@@ -192,15 +202,6 @@ const ObjectiveCard = ({
             gallery={localGallery}
             onClose={() => setUploadOpen(false)}
             onUploaded={(g) => setLocalGallery(g)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {viewOpen && localGallery.length > 0 && (
-          <ViewGalleryModal
-            gallery={localGallery}
-            onClose={() => setViewOpen(false)}
           />
         )}
       </AnimatePresence>
