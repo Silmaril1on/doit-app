@@ -1,46 +1,81 @@
 "use client";
 import { useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MdClose, MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { motion } from "framer-motion";
+import { MdClose } from "react-icons/md";
 
-const SLIDE_VARIANTS = {
-  enter: (dir) => ({ opacity: 0, x: dir * 50 }),
-  center: { opacity: 1, x: 0 },
-  exit: (dir) => ({ opacity: 0, x: dir * -50 }),
+// Visual config per depth (0 = active, 1 = next, 2 = next+1) — right-stacked
+const STACK = [
+  { x: 0,  y: 0,  scale: 1,    rotate: 0, blur: 0, opacity: 1,    z: 30 },
+  { x: 38, y: 10, scale: 0.96, rotate: 4, blur: 1, opacity: 0.85, z: 20 },
+  { x: 68, y: 20, scale: 0.90, rotate: 8, blur: 3, opacity: 0.50, z: 10 },
+];
+
+const SPRING = { type: "spring", stiffness: 320, damping: 32 };
+
+const DRAG_THRESHOLD = 50;
+
+const GalleryCard = ({ item, depth, label }) => {
+  const s = STACK[depth];
+  if (!s) return null;
+  return (
+    <motion.div
+      className="absolute left-0 w-full rounded-[26px] border border-white/10 bg-black overflow-hidden"
+      animate={{ x: s.x, y: s.y, scale: s.scale, rotate: s.rotate, filter: `blur(${s.blur}px)`, opacity: s.opacity }}
+      transition={SPRING}
+      style={{ zIndex: s.z }}
+    >
+      <img
+        src={item.image_url}
+        alt={label}
+        className="w-full h-auto object-contain"
+        draggable={false}
+      />
+      {depth === 0 && (
+        <div className="bg-linear-to-t from-black/70 to-transparent px-4 py-3">
+          <p className="secondary text-sm text-cream/90 capitalize">{label}</p>
+        </div>
+      )}
+    </motion.div>
+  );
 };
 
 const ViewGalleryModal = ({ gallery = [], subtasks = [], onClose }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [direction, setDirection] = useState(0);
   const overlayRef = useRef(null);
+  const dragStartX = useRef(null);
 
-  // Build id→label map from subtasks
   const labelMap = Object.fromEntries(
-    subtasks.map((st) => [
-      st.id,
-      typeof st === "object" ? st.label : String(st ?? ""),
-    ]),
+    subtasks.map((st) => [st.id, typeof st === "object" ? st.label : String(st ?? "")]),
   );
 
-  const getLabel = (item) => {
-    if (subtasks.length === 0) return `Photo #${item.subtask_id}`;
-    return labelMap[item.subtask_id] ?? `Subtask #${item.subtask_id}`;
+  const getLabel = (item) =>
+    subtasks.length === 0
+      ? `Photo #${item.subtask_id}`
+      : labelMap[item.subtask_id] ?? `Subtask #${item.subtask_id}`;
+
+  const total = gallery.length;
+
+  const navigate = (dir) =>
+    setActiveIndex((p) => (p + dir + total) % total);
+
+  const handlePointerDown = (e) => {
+    dragStartX.current = e.clientX;
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
-  const navigate = (dir) => {
-    const next = activeIndex + dir;
-    if (next < 0 || next >= gallery.length) return;
-    setDirection(dir);
-    setActiveIndex(next);
+  const handlePointerUp = (e) => {
+    if (dragStartX.current === null) return;
+    const delta = e.clientX - dragStartX.current;
+    dragStartX.current = null;
+    if (Math.abs(delta) > DRAG_THRESHOLD) {
+      // drag left → next card (goes behind stack); drag right → previous
+      navigate(delta < 0 ? 1 : -1);
+      return;
+    }
+    if (e.target === overlayRef.current) onClose();
   };
 
-  const goTo = (index) => {
-    setDirection(index > activeIndex ? 1 : -1);
-    setActiveIndex(index);
-  };
-
-  const current = gallery[activeIndex];
-  if (!current) return null;
+  if (!gallery.length) return null;
 
   return (
     <motion.div
@@ -48,97 +83,57 @@ const ViewGalleryModal = ({ gallery = [], subtasks = [], onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4"
-      onPointerDown={(e) => {
-        if (e.target === overlayRef.current) onClose();
-      }}
+      className="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-4 select-none"
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
     >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.97 }}
-        transition={{ duration: 0.2 }}
-        className="w-full max-w-lg"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3 px-1">
-          <p className="secondary text-xs text-chino/60">
-            {activeIndex + 1} / {gallery.length}
-          </p>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-chino/60 hover:text-cream duration-200 cursor-pointer"
-          >
-            <MdClose size={20} />
-          </button>
-        </div>
+      {/* Header */}
+      <div className="w-full max-w-xs flex items-center justify-between mb-8 px-1">
+        <p className="secondary text-xs text-chino/60">
+          {activeIndex + 1} / {gallery.length}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-chino/60 hover:text-cream duration-200 cursor-pointer"
+        >
+          <MdClose size={20} />
+        </button>
+      </div>
 
-        {/* Image slider */}
-        <div className="relative rounded-2xl overflow-hidden bg-black border border-teal-500/15 aspect-4/3">
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.img
-              key={current.image_url}
-              src={current.image_url}
-              alt={getLabel(current)}
-              custom={direction}
-              variants={SLIDE_VARIANTS}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="absolute inset-0 w-full h-full object-cover"
+      {/* Card deck — depth 2 rendered first (behind), depth 0 last (on top) */}
+      <div className="relative w-full max-w-xs cursor-grab active:cursor-grabbing" style={{ minHeight: 260 }}>
+        {[...STACK].reverse().map((_, i) => {
+          const depth = STACK.length - 1 - i;
+          const item = gallery[(activeIndex + depth) % total];
+          return (
+            <GalleryCard
+              key={`${depth}-${item.image_url}`}
+              item={item}
+              depth={depth}
+              label={getLabel(item)}
             />
-          </AnimatePresence>
+          );
+        })}
+      </div>
 
-          {/* Prev */}
-          {activeIndex > 0 && (
+      {/* Dot navigation */}
+      {gallery.length > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-10">
+          {gallery.map((_, i) => (
             <button
+              key={i}
               type="button"
-              onClick={() => navigate(-1)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 duration-200 cursor-pointer"
-            >
-              <MdChevronLeft size={26} />
-            </button>
-          )}
-
-          {/* Next */}
-          {activeIndex < gallery.length - 1 && (
-            <button
-              type="button"
-              onClick={() => navigate(1)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 duration-200 cursor-pointer"
-            >
-              <MdChevronRight size={26} />
-            </button>
-          )}
+              onClick={() => setActiveIndex(i)}
+              className={`rounded-full duration-200 cursor-pointer ${
+                i === activeIndex
+                  ? "w-5 h-2 bg-teal-400"
+                  : "w-2 h-2 bg-teal-500/30 hover:bg-teal-500/60"
+              }`}
+            />
+          ))}
         </div>
-
-        {/* Subtask label */}
-        <div className="mt-3 text-center px-1">
-          <p className="secondary text-sm text-cream/80 capitalize leading-tight">
-            {getLabel(current)}
-          </p>
-        </div>
-
-        {/* Dot navigation */}
-        {gallery.length > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-3">
-            {gallery.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => goTo(i)}
-                className={`rounded-full duration-200 cursor-pointer ${
-                  i === activeIndex
-                    ? "w-5 h-2 bg-teal-400"
-                    : "w-2 h-2 bg-teal-500/30 hover:bg-teal-500/60"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-      </motion.div>
+      )}
     </motion.div>
   );
 };
