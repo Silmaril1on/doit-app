@@ -1,3 +1,4 @@
+"use client";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
 import Button from "@/app/[locale]/components/buttons/Button";
@@ -97,6 +98,16 @@ const ObjectiveCard = ({
               />
               {menuOpen && (
                 <div className="absolute right-10 -top-3 mt-1.5 z-10 flex gap-2 rounded-xl border border-teal-500/20 bg-black/20 backdrop-blur-md p-1.5">
+                  {completedView ? (
+                    <ActionButton
+                      variant="uploadImage"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setUploadOpen(true);
+                      }}
+                      ariaLabel="Upload image"
+                    />
+                  ) : null}
                   {canEdit ? (
                     <ActionButton
                       variant="edit"
@@ -170,7 +181,6 @@ const ObjectiveCard = ({
           onComplete={onComplete}
           completedView={completedView}
           gallery={localGallery}
-          onUploadClick={() => setUploadOpen(true)}
           onViewClick={() => setViewOpen(true)}
         />
       </ItemCard>
@@ -296,7 +306,6 @@ const CardFooter = ({
   onComplete,
   completedView,
   gallery,
-  onUploadClick,
   onViewClick,
 }) => {
   return (
@@ -336,14 +345,6 @@ const CardFooter = ({
             variant="outline"
             size="sm"
             onClick={() => onComplete(objective)}
-          />
-        )}
-        {completedView && (
-          <Button
-            text="Upload Image"
-            variant="outline"
-            size="sm"
-            onClick={onUploadClick}
           />
         )}
         {completedView && gallery.length > 0 && (

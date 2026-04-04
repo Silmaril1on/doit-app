@@ -117,3 +117,69 @@ export async function POST(request) {
     );
   }
 }
+
+// DELETE /api/user/task/gallery
+// Body: JSON { objectiveId, subtaskId }
+export async function DELETE(request) {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { objectiveId, subtaskId } = await request.json();
+
+    if (!objectiveId) {
+      return NextResponse.json(
+        { error: "objectiveId is required" },
+        { status: 400 },
+      );
+    }
+    if (!subtaskId) {
+      return NextResponse.json(
+        { error: "subtaskId is required" },
+        { status: 400 },
+      );
+    }
+
+    const supabase = createSupabaseAdminClient();
+
+    const { data: objective, error: fetchError } = await supabase
+      .from("objectives")
+      .select("id, task_gallery")
+      .eq("id", objectiveId)
+      .eq("user_id", userId)
+      .single();
+
+    if (fetchError || !objective) {
+      return NextResponse.json(
+        { error: "Objective not found" },
+        { status: 404 },
+      );
+    }
+
+    const filePath = `${userId}/${objectiveId}/subtask_${subtaskId}.jpg`;
+    await supabase.storage.from(BUCKET).remove([filePath]);
+
+    const gallery = Array.isArray(objective.task_gallery)
+      ? objective.task_gallery.filter(
+          (item) => String(item.subtask_id) !== String(subtaskId),
+        )
+      : [];
+
+    const { error: updateError } = await supabase
+      .from("objectives")
+      .update({ task_gallery: gallery })
+      .eq("id", objectiveId)
+      .eq("user_id", userId);
+
+    if (updateError) throw new Error(updateError.message);
+
+    return NextResponse.json({ gallery });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err.message || "Delete failed" },
+      { status: 500 },
+    );
+  }
+}

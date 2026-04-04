@@ -2,10 +2,12 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MdClose, MdCheckCircle } from "react-icons/md";
+import { IoMdClose } from "react-icons/io";
 import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
 import { truncateString } from "@/app/[locale]/lib/utils/utils";
 import UploadImageInput from "@/app/[locale]/components/forms/UploadImageInput";
 import Button from "@/app/[locale]/components/buttons/Button";
+import { deleteGalleryPhoto } from "@/app/[locale]/lib/services/tasks/gallery/galleryActions";
 
 // ─── Main modal ──────────────────────────────────────────────────────────────
 
@@ -31,6 +33,7 @@ const UploadGalleryModal = ({
   const [file, setFile] = useState(null);
   const [pickerKey, setPickerKey] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(null);
   const [error, setError] = useState(null);
 
   const overlayRef = useRef(null);
@@ -70,6 +73,31 @@ const UploadGalleryModal = ({
       setError(err.message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDelete = async (subtaskId) => {
+    setDeleting(subtaskId);
+    setError(null);
+
+    try {
+      const { gallery: updatedGallery } = await deleteGalleryPhoto(
+        String(objective.id),
+        String(subtaskId),
+      );
+
+      setGallery(updatedGallery);
+      onUploaded?.(updatedGallery);
+
+      if (selectedId === subtaskId) {
+        setSelectedId(null);
+        setFile(null);
+        setPickerKey((k) => k + 1);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -184,7 +212,36 @@ const UploadGalleryModal = ({
                   const uploaded = hasImage(id);
                   const isSelected = selectedId === id;
 
-                  return (
+                  return uploaded ? (
+                    <div
+                      key={id}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left border-green-500/30 bg-black/30"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="secondary text-[10px] text-chino/40 shrink-0">
+                          #{id}
+                        </span>
+                        <span className="secondary text-sm capitalize text-cream/80">
+                          {label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="flex items-center gap-1 secondary text-[10px] text-green-500">
+                          <MdCheckCircle size={12} />
+                          Uploaded
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(id)}
+                          disabled={deleting === id}
+                          aria-label={`Delete photo ${id}`}
+                          className="cursor-pointer text-red-500 duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <IoMdClose size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
                     <button
                       key={id}
                       type="button"
@@ -208,12 +265,6 @@ const UploadGalleryModal = ({
                           {label}
                         </span>
                       </div>
-                      {uploaded && (
-                        <span className="flex items-center gap-1 secondary text-[10px] text-green-500 shrink-0">
-                          <MdCheckCircle size={12} />
-                          Uploaded
-                        </span>
-                      )}
                     </button>
                   );
                 })}

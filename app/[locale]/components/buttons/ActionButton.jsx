@@ -4,6 +4,7 @@ import { MdEdit, MdClose, MdHeartBroken, MdMenu } from "react-icons/md";
 import { FaTrash, FaHouseDamage, FaUser } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { RiImageAddFill } from "react-icons/ri";
 
 const VARIANTS = {
   edit: { icon: MdEdit, color: "teal" },
@@ -16,6 +17,7 @@ const VARIANTS = {
   more: { icon: BsThreeDotsVertical, color: "teal" },
   expand: { icon: BsThreeDotsVertical, color: "teal" },
   menu: { icon: MdMenu, color: "teal" },
+  uploadImage: { icon: RiImageAddFill, color: "teal" },
 };
 
 const COLOR_CLASSES = {
