@@ -3,6 +3,7 @@ import UploadImageInput from "./UploadImageInput";
 import ToggleButton from "../buttons/ToggleButton";
 import { FaCheck, FaChevronDown } from "react-icons/fa";
 import ActionButton from "../buttons/ActionButton";
+import { MdClose } from "react-icons/md";
 
 const normalizeOptions = (options = []) =>
   options.map((opt) =>
@@ -29,7 +30,7 @@ const SelectField = ({ field, value, onChange, disabled }) => (
           </option>
         ))}
       </select>
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-teal-400/85">
+      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-cream/80">
         <FaChevronDown size={10} />
       </span>
     </div>
@@ -94,7 +95,6 @@ const TextareaField = ({ field, value, onChange, disabled }) => (
       disabled={disabled || field.disabled}
       rows={field.rows ?? 3}
       onChange={(e) => onChange(field.key, e.target.value)}
-      className="border secondary border-teal-500/30 px-3 py-2 text-teal-500 bg-black placeholder:text-teal-500/50 rounded-md outline-none focus:border-teal-500 duration-300 focus:ring-2 focus:ring-teal-400/60 w-full resize-y disabled:opacity-50 disabled:cursor-not-allowed"
     />
   </div>
 );
@@ -162,14 +162,14 @@ const SubtasksField = ({ field, value, onChange, disabled }) => {
               }
             />
             {subtasks.length > 1 && index > 0 ? (
-              <ActionButton
-                variant="remove"
+              <span
+                className=" rounded-md cursor-pointer border border-red-600/20 bg-red-700/20 hover:bg-red-700/40 duration-300 p-1 text-red-600"
                 disabled={disabled || field.disabled}
                 onClick={() => handleRemoveSubtask(index)}
-              />
-            ) : (
-              <span aria-hidden="true" className="inline-flex h-9 w-9" />
-            )}
+              >
+                <MdClose size={16} />
+              </span>
+            ) : null}
           </div>
         ))}
       </div>
@@ -193,6 +193,8 @@ const SubmissionForm = ({
   disabled = false,
   className = "",
   imageField = null, // { value: string|null, onChange: fn }
+  formId,
+  onSubmit,
 }) => {
   const renderField = (field) => {
     const value = values[field.key] ?? "";
@@ -266,32 +268,27 @@ const SubmissionForm = ({
   // Grouped format: [{ cols: 2, fields: [...] }, ...]
   const isGrouped = fields.length > 0 && Array.isArray(fields[0]?.fields);
 
-  if (isGrouped) {
-    return (
-      <div className={`space-y-3 ${className}`}>
-        {imageField && (
-          <UploadImageInput
-            value={imageField.value}
-            onChange={imageField.onChange}
-            disabled={disabled}
-          />
-        )}
-        {fields.map((row, rowIndex) => (
-          <div
-            key={rowIndex}
-            className={`grid gap-2 lg:gap-3 ${COLS_CLASS[row.cols] ?? "grid-cols-1"}`}
-          >
-            {row.fields.map((field) => (
-              <div key={field.key}>{renderField(field)}</div>
-            ))}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  // Flat format (backward compat)
-  return (
+  const content = isGrouped ? (
+    <div className={`space-y-3 ${className}`}>
+      {imageField && (
+        <UploadImageInput
+          value={imageField.value}
+          onChange={imageField.onChange}
+          disabled={disabled}
+        />
+      )}
+      {fields.map((row, rowIndex) => (
+        <div
+          key={rowIndex}
+          className={`grid gap-2 lg:gap-3 ${COLS_CLASS[row.cols] ?? "grid-cols-1"}`}
+        >
+          {row.fields.map((field) => (
+            <div key={field.key}>{renderField(field)}</div>
+          ))}
+        </div>
+      ))}
+    </div>
+  ) : (
     <div className={`space-y-3  ${className}`}>
       {imageField && (
         <UploadImageInput
@@ -312,6 +309,16 @@ const SubmissionForm = ({
       </div>
     </div>
   );
+
+  if (typeof onSubmit === "function") {
+    return (
+      <form id={formId} onSubmit={onSubmit}>
+        {content}
+      </form>
+    );
+  }
+
+  return content;
 };
 
 export default SubmissionForm;

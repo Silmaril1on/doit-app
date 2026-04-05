@@ -71,10 +71,10 @@ const ToggleButton = ({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange?.(!checked)}
-      className={`relative inline-flex bg-teal-500 hover:bg-teal-400 shrink-0 cursor-pointer rounded-full  duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${s.track}`}
+      className={`relative inline-flex shrink-0 cursor-pointer rounded-full duration-300 ${checked ? "bg-teal-500/50" : "bg-teal-500 hover:bg-teal-400"} ${s.track}`}
     >
       <span
-        className={`absolute ${s.offset} inline-block rounded-full bg-teal-800 shadow transition-transform duration-300 ${s.thumb} ${
+        className={`absolute ${s.offset} inline-block rounded-full ${checked ? "bg-teal-400" : "bg-teal-800"} shadow transition-transform duration-300 ${s.thumb} ${
           checked ? s.translate : "translate-x-0"
         }`}
       />

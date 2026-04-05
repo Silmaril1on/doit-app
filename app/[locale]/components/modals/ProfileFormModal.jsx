@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { mutate as mutateCache } from "swr";
+import { useDispatch, useSelector } from "react-redux";
 import SubmissionForm from "@/app/[locale]/components/forms/SubmissionForm";
+import GlobalModal from "@/app/[locale]/components/modals/GlobalModal";
+import {
+  closeModal,
+  selectModal,
+} from "@/app/[locale]/lib/features/modalSlice";
 
 const FIELDS = [
   {
@@ -45,20 +51,40 @@ const FIELDS = [
   },
 ];
 
-const ProfileForm = ({ profile, formId, onClose, onSubmittingChange }) => {
-  const [form, setForm] = useState(
-    FIELDS.flatMap((row) => row.fields).reduce((acc, field) => {
-      acc[field.key] = profile?.[field.key] ?? "";
-      return acc;
-    }, {}),
-  );
+const MODAL_TYPE = "editProfile";
+const MODAL_FORM_ID = "edit-profile-form";
+
+const createInitialForm = (profile) =>
+  FIELDS.flatMap((row) => row.fields).reduce((acc, field) => {
+    acc[field.key] = profile?.[field.key] ?? "";
+    return acc;
+  }, {});
+
+const ProfileFormModal = () => {
+  const dispatch = useDispatch();
+  const { modalType, modalProps } = useSelector(selectModal);
+  const isOpen = modalType === MODAL_TYPE;
+  const profile = modalProps?.profile ?? null;
+
+  const [form, setForm] = useState(() => createInitialForm(profile));
   const [imageFile, setImageFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  const setSubmittingState = (value) => {
-    setSubmitting(value);
-    onSubmittingChange?.(value);
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    setForm(createInitialForm(profile));
+    setImageFile(null);
+    setSubmitting(false);
+    setError(null);
+  }, [isOpen, profile]);
+
+  const handleClose = () => {
+    dispatch(closeModal());
+    setSubmitting(false);
+    setError(null);
   };
 
   const handleChange = (key, value) => {
@@ -67,7 +93,7 @@ const ProfileForm = ({ profile, formId, onClose, onSubmittingChange }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmittingState(true);
+    setSubmitting(true);
     setError(null);
 
     try {
@@ -96,36 +122,44 @@ const ProfileForm = ({ profile, formId, onClose, onSubmittingChange }) => {
         throw new Error(data.error || "Failed to update profile");
 
       await mutateCache("/api/user/profile/single-profile");
-      onClose?.();
+      handleClose();
     } catch (err) {
       setError(err.message || "Failed to update profile");
     } finally {
-      setSubmittingState(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-3 border">
+    <GlobalModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Edit Profile"
+      maxWidth="max-w-3xl"
+      formId={MODAL_FORM_ID}
+      submitLabel={submitting ? "Saving..." : "Save Changes"}
+      submitDisabled={submitting}
+    >
       {error && (
         <p className="text-red-500 text-sm border border-red-500/30 bg-red-500/10 px-3 py-2">
           {error}
         </p>
       )}
 
-      <form id={formId} onSubmit={handleSubmit}>
-        <SubmissionForm
-          fields={FIELDS}
-          values={form}
-          onChange={handleChange}
-          disabled={submitting}
-          imageField={{
-            value: profile?.image_url ?? null,
-            onChange: setImageFile,
-          }}
-        />
-      </form>
-    </div>
+      <SubmissionForm
+        fields={FIELDS}
+        values={form}
+        onChange={handleChange}
+        disabled={submitting}
+        formId={MODAL_FORM_ID}
+        onSubmit={handleSubmit}
+        imageField={{
+          value: profile?.image_url ?? null,
+          onChange: setImageFile,
+        }}
+      />
+    </GlobalModal>
   );
 };
 
-export default ProfileForm;
+export default ProfileFormModal;

@@ -8,7 +8,7 @@ import { ACTIVE_QUESTS_PAGE1_KEY } from "@/app/[locale]/lib/hooks/useActiveQuest
 import { mutate as globalMutate } from "swr";
 import ObjectivePageWrapper from "../(componets)/ObjectivePageWrapper";
 
-const REVALIDATE_MODALS = ["editObjective"];
+const REVALIDATE_MODALS = ["editObjective", "uploadGallery"];
 
 const Achievements = ({ initialData = null }) => {
   const dispatch = useDispatch();

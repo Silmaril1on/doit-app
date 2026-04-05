@@ -6,8 +6,14 @@ import {
   recordCategoryCompletion,
   revokeCategoryCompletion,
 } from "@/app/[locale]/lib/services/achievement-badges/categoryProgress";
-import { recordXpGain, recordFixedXpGain } from "@/app/[locale]/lib/services/xp/xpProgress";
-import { BADGE_MILESTONE_COUNT, BADGE_MILESTONE_XP } from "@/app/[locale]/lib/services/xp/xpConfig";
+import {
+  recordXpGain,
+  recordFixedXpGain,
+} from "@/app/[locale]/lib/services/xp/xpProgress";
+import {
+  BADGE_MILESTONE_COUNT,
+  BADGE_MILESTONE_XP,
+} from "@/app/[locale]/lib/services/xp/xpConfig";
 import { badgesCacheTag } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { createTaskCompletedNotification } from "@/app/[locale]/lib/services/notifications/notificationsTypes";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
@@ -20,6 +26,17 @@ const normalizeText = (value) => String(value ?? "").trim();
 const normalizeOptionalText = (value) => {
   const n = normalizeText(value);
   return n || null;
+};
+const normalizeBoolean = (value, fallback = false) => {
+  if (value == null) return fallback;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "on"].includes(normalized)) return true;
+    if (["false", "0", "no", "off", ""].includes(normalized)) return false;
+  }
+  return Boolean(value);
 };
 const normalizeSubtasks = (value) => {
   if (!Array.isArray(value)) return [];
@@ -106,6 +123,9 @@ export async function updateActiveQuest(userId, questId, updates) {
     const p = normalizeText(updates.priority).toLowerCase();
     updatePayload.priority = ALLOWED_PRIORITY.has(p) ? p : "medium";
   }
+  if ("is_public" in updates) {
+    updatePayload.is_public = normalizeBoolean(updates.is_public, false);
+  }
   if ("status" in updates) {
     const s = normalizeText(updates.status).toLowerCase();
     updatePayload.status = ALLOWED_STATUS.has(s) ? s : "in_progress";
@@ -117,7 +137,11 @@ export async function updateActiveQuest(userId, questId, updates) {
   if (updatePayload.status === "completed" && !updatePayload.completed_at)
     updatePayload.completed_at = new Date().toISOString();
   // Same as objectives: preserve completed_at when reactivating a previously-completed task.
-  if (updatePayload.status && updatePayload.status !== "completed" && existing.status !== "completed")
+  if (
+    updatePayload.status &&
+    updatePayload.status !== "completed" &&
+    existing.status !== "completed"
+  )
     updatePayload.completed_at = null;
   updatePayload.update_at = new Date().toISOString();
 
@@ -168,7 +192,10 @@ export async function updateActiveQuest(userId, questId, updates) {
   }
 
   // Badge milestone: every 5th total badge earns a 50 XP bonus.
-  if (badgeResult?.newTier && badgeResult.totalBadges % BADGE_MILESTONE_COUNT === 0) {
+  if (
+    badgeResult?.newTier &&
+    badgeResult.totalBadges % BADGE_MILESTONE_COUNT === 0
+  ) {
     try {
       xpUpdate = await recordFixedXpGain(userId, BADGE_MILESTONE_XP);
     } catch {

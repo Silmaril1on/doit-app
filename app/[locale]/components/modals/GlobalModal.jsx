@@ -1,69 +1,28 @@
 "use client";
 
-import { useDispatch, useSelector } from "react-redux";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import {
-  closeModal,
-  selectModal,
-} from "@/app/[locale]/lib/features/modalSlice";
-
-import ProfileForm from "@/app/[locale]/(routes)/profile/basic-information/ProfileForm";
-import ObjectiveSubmissionForm from "@/app/[locale]/(routes)/(tasks)/tasks/(componets)/ObjectiveSubmissionForm";
-import ViewGalleryModal from "@/app/[locale]/(routes)/(tasks)/tasks/achievements/ViewGalleryModal";
 import ActionButton from "../buttons/ActionButton";
 import Button from "../buttons/Button";
 import BorderSvg from "../elements/BorderSvg";
 
-const MODAL_FORM_ID = "global-modal-form";
-
-// Registry: { component, title, submitLabel? }
-const MODAL_REGISTRY = {
-  editProfile: {
-    component: ProfileForm,
-    title: "Edit Profile",
-    submitLabel: "Save Changes",
-  },
-  createObjective: {
-    component: ObjectiveSubmissionForm,
-    title: "Start New Quest",
-    submitLabel: "Start New Quest",
-  },
-  editObjective: {
-    component: ObjectiveSubmissionForm,
-    title: "Edit Objective",
-    submitLabel: "Save Changes",
-  },
-  viewGallery: {
-    component: ViewGalleryModal,
-    title: "Gallery",
-    submitLabel: "Close",
-    footerMode: "close",
-    scrollContent: false,
-  },
-};
-
-const GlobalModal = () => {
-  const dispatch = useDispatch();
-  const { modalType, modalProps } = useSelector(selectModal);
-  const [submitting, setSubmitting] = useState(false);
-
-  const entry = modalType ? MODAL_REGISTRY[modalType] : null;
-  const ModalContent = entry?.component ?? null;
-  const isSubmitFooter = (entry?.footerMode ?? "submit") === "submit";
-  const contentClassName =
-    entry?.scrollContent === false
-      ? "mt-6 space-y-4 relative z-10"
-      : "mt-6 space-y-4 relative z-10 overflow-y-auto pr-1";
-
-  const handleClose = () => {
-    dispatch(closeModal());
-    setSubmitting(false);
-  };
+const GlobalModal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  maxWidth = "max-w-xl",
+  formId,
+  submitLabel = "Submit",
+  submitDisabled = false,
+  footerMode = "submit",
+}) => {
+  const isSubmitFooter = footerMode === "submit";
+  const isCloseFooter = footerMode === "close";
+  const shouldRenderFooter = isSubmitFooter || isCloseFooter;
 
   return (
     <AnimatePresence>
-      {ModalContent && (
+      {isOpen && (
         <motion.div
           key="modal-backdrop"
           initial={{ opacity: 0 }}
@@ -71,7 +30,6 @@ const GlobalModal = () => {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4"
-          onClick={handleClose}
         >
           <motion.div
             key="modal-content"
@@ -80,48 +38,37 @@ const GlobalModal = () => {
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.2 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-xl"
+            className={`w-full  ${maxWidth}`}
           >
             {/* FromContainer-style card */}
             <div className="relative bg-teal-400/10 backdrop-blur-lg overflow-hidden rounded-lg border border-teal-500/20 p-6">
               <BorderSvg strokeWidth={1} fadeAt={0.7} />
-              <div className="absolute left-0 top-0 w-[40%] h-[30%] rounded-full bg-teal-500/30 blur-[90px] pointer-events-none" />
+              <div className="absolute left-0 top-0 w-[40%] h-[30%] rounded-full bg-teal-500/40 blur-[90px] pointer-events-none" />
 
               {/* Header */}
               <div className="flex items-start justify-between gap-2 relative z-10">
                 <h1 className="primary text-4xl uppercase leading-none text-teal-500">
-                  {entry.title}
+                  {title}
                 </h1>
-                <ActionButton variant="close" onClick={handleClose} />
+                <ActionButton variant="close" onClick={onClose} />
               </div>
 
               {/* Content */}
-              <div className={contentClassName}>
-                <ModalContent
-                  {...modalProps}
-                  formId={MODAL_FORM_ID}
-                  onClose={handleClose}
-                  onSubmittingChange={setSubmitting}
-                />
-              </div>
+              <div>{children}</div>
 
               {/* Footer */}
-              <div className="flex items-center justify-end pt-4 relative z-10">
-                <Button
-                  type={isSubmitFooter ? "submit" : "button"}
-                  variant="outline"
-                  form={isSubmitFooter ? MODAL_FORM_ID : undefined}
-                  disabled={isSubmitFooter ? submitting : false}
-                  onClick={isSubmitFooter ? undefined : handleClose}
-                  text={
-                    isSubmitFooter
-                      ? submitting
-                        ? "Saving..."
-                        : (entry.submitLabel ?? "Submit")
-                      : (entry.submitLabel ?? "Close")
-                  }
-                />
-              </div>
+              {shouldRenderFooter ? (
+                <div className="flex items-center justify-end pt-4 relative z-10">
+                  <Button
+                    type={isSubmitFooter ? "submit" : "button"}
+                    variant="outline"
+                    form={isSubmitFooter ? formId : undefined}
+                    disabled={isSubmitFooter ? submitDisabled : false}
+                    onClick={isCloseFooter ? onClose : undefined}
+                    text={submitLabel}
+                  />
+                </div>
+              ) : null}
             </div>
           </motion.div>
         </motion.div>

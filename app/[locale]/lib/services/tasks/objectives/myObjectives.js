@@ -17,6 +17,18 @@ const normalizeOptionalText = (value) => {
   return normalized ? normalized : null;
 };
 
+const normalizeBoolean = (value, fallback = false) => {
+  if (value == null) return fallback;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "on"].includes(normalized)) return true;
+    if (["false", "0", "no", "off", ""].includes(normalized)) return false;
+  }
+  return Boolean(value);
+};
+
 /**
  * Validates and normalises task_category.
  * Accepts a numeric category id (as number or stringified number).
@@ -138,6 +150,7 @@ export async function createObjective(userId, payload) {
     city: normalizeOptionalText(payload?.city),
     status,
     priority: normalizePriority(payload?.priority),
+    is_public: normalizeBoolean(payload?.is_public, false),
     user_id: userId,
     update_at: now,
     completed_at: status === "completed" ? now : null,
@@ -213,6 +226,10 @@ export async function updateObjective(userId, objectiveId, updates) {
     updatePayload.priority = normalizePriority(updates.priority);
   }
 
+  if ("is_public" in updates) {
+    updatePayload.is_public = normalizeBoolean(updates.is_public, false);
+  }
+
   if ("completed_at" in updates) {
     updatePayload.completed_at = updates.completed_at || null;
   }
@@ -228,7 +245,11 @@ export async function updateObjective(userId, objectiveId, updates) {
   // When reactivating a previously-completed task, keep completed_at as a historical
   // marker so the XP/badge logic knows this task was already rewarded.
   // Only null it out when a task that was never completed moves to a non-completed state.
-  if (updatePayload.status && updatePayload.status !== "completed" && existing.status !== "completed") {
+  if (
+    updatePayload.status &&
+    updatePayload.status !== "completed" &&
+    existing.status !== "completed"
+  ) {
     updatePayload.completed_at = null;
   }
 

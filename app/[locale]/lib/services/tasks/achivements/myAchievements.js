@@ -11,6 +11,17 @@ const normalizeOptionalText = (value) => {
   const n = normalizeText(value);
   return n || null;
 };
+const normalizeBoolean = (value, fallback = false) => {
+  if (value == null) return fallback;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (["true", "1", "yes", "on"].includes(normalized)) return true;
+    if (["false", "0", "no", "off", ""].includes(normalized)) return false;
+  }
+  return Boolean(value);
+};
 const normalizeSubtasks = (value) => {
   if (!Array.isArray(value)) return [];
   return value
@@ -84,6 +95,9 @@ export async function updateAchievement(userId, achievementId, updates) {
   if ("priority" in updates) {
     const p = normalizeText(updates.priority).toLowerCase();
     updatePayload.priority = ALLOWED_PRIORITY.has(p) ? p : "medium";
+  }
+  if ("is_public" in updates) {
+    updatePayload.is_public = normalizeBoolean(updates.is_public, false);
   }
   if ("status" in updates) {
     const s = normalizeText(updates.status).toLowerCase();

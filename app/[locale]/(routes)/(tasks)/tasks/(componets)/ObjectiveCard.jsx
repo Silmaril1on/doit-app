@@ -8,11 +8,9 @@ import { formatDate } from "@/app/[locale]/lib/utils/utils";
 import ProgressBar from "@/app/[locale]/components/elements/ProgressBar";
 import { TASK_CATEGORIES } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { openModal } from "@/app/[locale]/lib/features/modalSlice";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { IoMdClose, IoMdArrowDropright, IoIosCheckmark } from "react-icons/io";
-import { AnimatePresence } from "framer-motion";
-import UploadGalleryModal from "../achievements/UploadGalleryModal";
 
 const priorityColorMap = {
   low: "blue",
@@ -25,6 +23,8 @@ const statusColorMap = {
   in_progress: "green",
   completed: "green",
 };
+
+const EMPTY_LIST = [];
 
 const formatLabel = (value) =>
   String(value || "")
@@ -47,21 +47,19 @@ const ObjectiveCard = ({
   const categoryData =
     TASK_CATEGORIES.find((c) => c.id === Number(objective.task_category)) ??
     null;
-  const subtasks = Array.isArray(objective.subtasks) ? objective.subtasks : [];
+  const subtasks = Array.isArray(objective.subtasks)
+    ? objective.subtasks
+    : EMPTY_LIST;
   const countryAndCity = { country: objective.country, city: objective.city };
   const hasLocation = Boolean(objective.country || objective.city);
-
   const canEdit = typeof onEdit === "function";
   const canDelete = typeof onDelete === "function";
   const hasActions = canEdit || canDelete;
-
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
-
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const [localGallery, setLocalGallery] = useState(
-    Array.isArray(objective.task_gallery) ? objective.task_gallery : [],
-  );
+  const gallery = Array.isArray(objective.task_gallery)
+    ? objective.task_gallery
+    : EMPTY_LIST;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -73,6 +71,31 @@ const ObjectiveCard = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [menuOpen]);
+
+  const handleOpenUploadGallery = useCallback(() => {
+    setMenuOpen(false);
+    dispatch(
+      openModal({
+        modalType: "uploadGallery",
+        modalProps: {
+          objective,
+          gallery,
+        },
+      }),
+    );
+  }, [dispatch, objective, gallery]);
+
+  const handleOpenViewGallery = useCallback(() => {
+    dispatch(
+      openModal({
+        modalType: "viewGallery",
+        modalProps: {
+          gallery,
+          subtasks,
+        },
+      }),
+    );
+  }, [dispatch, gallery, subtasks]);
 
   return (
     <>
@@ -102,10 +125,7 @@ const ObjectiveCard = ({
                   {completedView ? (
                     <ActionButton
                       variant="uploadImage"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setUploadOpen(true);
-                      }}
+                      onClick={handleOpenUploadGallery}
                       ariaLabel="Upload image"
                     />
                   ) : null}
@@ -181,30 +201,10 @@ const ObjectiveCard = ({
           onStart={onStart}
           onComplete={onComplete}
           completedView={completedView}
-          gallery={localGallery}
-          onViewClick={() =>
-            dispatch(
-              openModal({
-                modalType: "viewGallery",
-                modalProps: {
-                  gallery: localGallery,
-                  subtasks,
-                },
-              }),
-            )
-          }
+          gallery={gallery}
+          onViewClick={handleOpenViewGallery}
         />
       </ItemCard>
-      <AnimatePresence>
-        {uploadOpen && (
-          <UploadGalleryModal
-            objective={objective}
-            gallery={localGallery}
-            onClose={() => setUploadOpen(false)}
-            onUploaded={(g) => setLocalGallery(g)}
-          />
-        )}
-      </AnimatePresence>
     </>
   );
 };
