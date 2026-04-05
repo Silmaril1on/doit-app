@@ -107,7 +107,7 @@ const DonutChart = ({
               style={{ background: seg.color }}
             />
             {seg.label && (
-              <span className="secondary text-xs text-chino/70 w-12">
+              <span className="secondary text-xs text-chino/70 w-20">
                 {seg.label}
               </span>
             )}
