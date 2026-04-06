@@ -10,6 +10,53 @@ async function getUserId() {
   return cookieStore.get("doit-user-id")?.value ?? null;
 }
 
+// GET /api/user/task/gallery?objectiveId=...
+export async function GET(request) {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const objectiveId = request.nextUrl.searchParams.get("objectiveId");
+    if (!objectiveId) {
+      return NextResponse.json(
+        { error: "objectiveId is required" },
+        { status: 400 },
+      );
+    }
+
+    const supabase = createSupabaseAdminClient();
+    const { data: objective, error: fetchError } = await supabase
+      .from("objectives")
+      .select("id, task_gallery")
+      .eq("id", objectiveId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (fetchError) throw new Error(fetchError.message);
+    if (!objective) {
+      return NextResponse.json(
+        { error: "Objective not found" },
+        { status: 404 },
+      );
+    }
+
+    const gallery = Array.isArray(objective.task_gallery)
+      ? objective.task_gallery
+          .filter((item) => item && typeof item === "object")
+          .sort((a, b) => Number(a.subtask_id) - Number(b.subtask_id))
+      : [];
+
+    return NextResponse.json({ gallery }, { status: 200 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err.message || "Failed to fetch gallery" },
+      { status: 500 },
+    );
+  }
+}
+
 // POST /api/user/task/gallery
 // Body: FormData { file, objectiveId, subtaskId }
 export async function POST(request) {

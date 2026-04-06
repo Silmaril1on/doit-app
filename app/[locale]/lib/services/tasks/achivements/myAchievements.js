@@ -3,6 +3,8 @@
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 
 const TABLE_NAME = "objectives";
+const ACHIEVEMENT_LIST_COLUMNS =
+  "id,user_id,task_title,task_description,task_category,subtasks,country,city,priority,is_public,status,created_at,update_at,completed_at";
 const ALLOWED_STATUS = new Set(["todo", "in_progress", "completed"]);
 const ALLOWED_PRIORITY = new Set(["low", "medium", "high"]);
 
@@ -45,7 +47,7 @@ export async function getAllAchievements(
   if (!userId) throw new Error("userId is required");
   const { data, count, error } = await supabaseAdmin
     .from(TABLE_NAME)
-    .select("*", { count: "exact" })
+    .select(ACHIEVEMENT_LIST_COLUMNS, { count: "exact" })
     .eq("user_id", userId)
     .eq("status", "completed")
     .order("created_at", { ascending: false })

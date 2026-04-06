@@ -12,7 +12,10 @@ import {
 import { truncateString } from "@/app/[locale]/lib/utils/utils";
 import UploadImageInput from "@/app/[locale]/components/forms/UploadImageInput";
 import Button from "@/app/[locale]/components/buttons/Button";
-import { deleteGalleryPhoto } from "@/app/[locale]/lib/services/tasks/gallery/galleryActions";
+import {
+  deleteGalleryPhoto,
+  getTaskGallery,
+} from "@/app/[locale]/lib/services/tasks/gallery/galleryActions";
 
 const MODAL_TYPE = "uploadGallery";
 
@@ -55,6 +58,34 @@ const UploadGalleryModal = () => {
     setUploading(false);
     setDeleting(null);
     setError(null);
+
+    let isAlive = true;
+
+    const loadExistingGallery = async () => {
+      if (!objective?.id || incomingGallery.length > 0) {
+        return;
+      }
+
+      try {
+        const { gallery: fetchedGallery = [] } = await getTaskGallery(
+          String(objective.id),
+        );
+        if (!isAlive) return;
+        setGallery(
+          Array.isArray(fetchedGallery)
+            ? fetchedGallery.filter((item) => item && typeof item === "object")
+            : [],
+        );
+      } catch {
+        // Keep modal usable even if gallery prefetch fails.
+      }
+    };
+
+    loadExistingGallery();
+
+    return () => {
+      isAlive = false;
+    };
   }, [isOpen, incomingGallery, objective?.id]);
 
   const handleClose = () => {

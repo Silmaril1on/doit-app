@@ -1,177 +1,148 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import GlobalModal from "@/app/[locale]/components/modals/GlobalModal";
 import {
   closeModal,
   selectModal,
 } from "@/app/[locale]/lib/features/modalSlice";
+import { getTaskGallery } from "@/app/[locale]/lib/services/tasks/gallery/galleryActions";
+import Swiper from "@/app/[locale]/components/motion/Swiper";
+import ImageTag from "../elements/ImageTag";
 
-// Visual config per depth (0 = active, 1 = next, 2 = next+1) — right-stacked
-const STACK = [
-  { x: 0, y: 0, scale: 1, rotate: 0, blur: 0, opacity: 1, z: 30 },
-  { x: 38, y: 10, scale: 0.96, rotate: 4, blur: 1, opacity: 0.85, z: 20 },
-  { x: 68, y: 20, scale: 0.9, rotate: 8, blur: 3, opacity: 0.5, z: 10 },
-];
-
-const SPRING = { type: "spring", stiffness: 320, damping: 32 };
-
-const DRAG_THRESHOLD = 50;
 const MODAL_TYPE = "viewGallery";
-
-const GalleryCard = ({ item, depth, label }) => {
-  const s = STACK[depth];
-  if (!s) return null;
-  return (
-    <motion.div
-      className="absolute left-0 w-full rounded-[26px] border border-white/10 bg-black overflow-hidden"
-      animate={{
-        x: s.x,
-        y: s.y,
-        scale: s.scale,
-        rotate: s.rotate,
-        filter: `blur(${s.blur}px)`,
-        opacity: s.opacity,
-      }}
-      transition={SPRING}
-      style={{ zIndex: s.z }}
-    >
-      <img
-        src={item.image_url}
-        alt={label}
-        className="w-full h-auto object-contain"
-        draggable={false}
-      />
-      {depth === 0 && (
-        <div className="bg-linear-to-t from-black/70 to-transparent px-4 py-3">
-          <p className="secondary text-sm text-cream/90 capitalize">{label}</p>
-        </div>
-      )}
-    </motion.div>
-  );
-};
+const STATIC_CARD_TEXT = "Captured Progress Moment";
 
 const ViewGalleryModal = () => {
   const dispatch = useDispatch();
   const { modalType, modalProps } = useSelector(selectModal);
   const isOpen = modalType === MODAL_TYPE;
-  const gallery = Array.isArray(modalProps?.gallery)
-    ? modalProps.gallery.filter((item) => item && typeof item === "object")
-    : [];
+  const objectiveId = modalProps?.objectiveId
+    ? String(modalProps.objectiveId)
+    : null;
   const subtasks = Array.isArray(modalProps?.subtasks)
     ? modalProps.subtasks
     : [];
-  const [activeIndex, setActiveIndex] = useState(0);
-  const dragStartX = useRef(null);
+
+  const [gallery, setGallery] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setActiveIndex(0);
+    if (!isOpen) {
+      return;
     }
-  }, [isOpen, modalProps?.gallery]);
+    setError(null);
+
+    if (!objectiveId) {
+      setGallery([]);
+      return;
+    }
+    let isAlive = true;
+
+    const load = async () => {
+      setIsLoading(true);
+      try {
+        const { gallery: items = [] } = await getTaskGallery(objectiveId);
+        if (!isAlive) return;
+        setGallery(items.filter((item) => item && typeof item === "object"));
+      } catch (err) {
+        if (!isAlive) return;
+        setGallery([]);
+        setError(err instanceof Error ? err.message : "Failed to load gallery");
+      } finally {
+        if (isAlive) setIsLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      isAlive = false;
+    };
+  }, [isOpen, objectiveId]);
 
   const handleClose = () => {
     dispatch(closeModal());
-    setActiveIndex(0);
+    setGallery([]);
+    setError(null);
+    setIsLoading(false);
   };
 
-  const labelMap = Object.fromEntries(
-    subtasks.map((st) => [
-      st.id,
-      typeof st === "object" ? st.label : String(st ?? ""),
-    ]),
+  const labelMap = useMemo(
+    () =>
+      Object.fromEntries(
+        subtasks.map((st, index) => {
+          if (typeof st === "object") {
+            return [Number(st.id), String(st.label ?? "")];
+          }
+          return [index + 1, String(st ?? "")];
+        }),
+      ),
+    [subtasks],
   );
 
   const getLabel = (item) => {
-    const subtaskId = item?.subtask_id;
-    if (subtaskId == null) {
-      return "Photo";
+    const subtaskId = Number(item?.subtask_id);
+    if (!Number.isFinite(subtaskId) || subtasks.length === 0) {
+      return null;
     }
-
-    return subtasks.length === 0
-      ? `Photo #${subtaskId}`
-      : (labelMap[subtaskId] ?? `Subtask #${subtaskId}`);
+    return labelMap[subtaskId] ?? null;
   };
 
   const total = gallery.length;
-
-  const navigate = (dir) =>
-    setActiveIndex((p) => (total > 0 ? (p + dir + total) % total : 0));
-
-  const handlePointerDown = (e) => {
-    dragStartX.current = e.clientX;
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-  };
-
-  const handlePointerUp = (e) => {
-    if (dragStartX.current === null) return;
-    if (total === 0) {
-      dragStartX.current = null;
-      return;
-    }
-    const delta = e.clientX - dragStartX.current;
-    dragStartX.current = null;
-    if (Math.abs(delta) > DRAG_THRESHOLD) {
-      // drag left → next card (goes behind stack); drag right → previous
-      navigate(delta < 0 ? 1 : -1);
-    }
-  };
 
   return (
     <GlobalModal
       isOpen={isOpen}
       onClose={handleClose}
       title="Gallery"
-      maxWidth="max-w-2xl"
+      maxWidth="max-w-3xl"
       footerMode="none"
-      scrollContent={false}
+      isLoading={isLoading}
+      error={error}
+      isEmpty={total === 0}
+      emptyMessage="No gallery images uploaded for this task yet."
     >
-      <div className="flex flex-col items-center select-none">
-        <p className="secondary text-xs text-chino/60">
-          {activeIndex + 1} / {gallery.length}
-        </p>
-        {/* Card deck - depth 2 rendered first (behind), depth 0 last (on top) */}
-        <div
-          className="relative w-full max-w-xs cursor-grab active:cursor-grabbing mt-4"
-          style={{ minHeight: 260 }}
-          onPointerDown={handlePointerDown}
-          onPointerUp={handlePointerUp}
-        >
-          {[...STACK].reverse().map((_, i) => {
-            const depth = STACK.length - 1 - i;
-            const item = gallery[(activeIndex + depth) % total];
-            if (!item) {
-              return null;
-            }
-
-            return (
-              <GalleryCard
-                key={`${depth}-${item.image_url ?? activeIndex}`}
-                item={item}
-                depth={depth}
-                label={getLabel(item)}
-              />
-            );
-          })}
-        </div>
-
-        {/* Dot navigation */}
-        {gallery.length > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-10">
-            {gallery.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setActiveIndex(i)}
-                className={`rounded-full duration-200 cursor-pointer ${
-                  i === activeIndex
-                    ? "w-5 h-2 bg-teal-400"
-                    : "w-2 h-2 bg-teal-500/30 hover:bg-teal-500/60"
-                }`}
-              />
-            ))}
-          </div>
+      <div className="relative center p-3 select-none">
+        {!isLoading && !error && total > 0 && (
+          <>
+            <Swiper
+              items={gallery}
+              cardWidth={304}
+              spacing={12}
+              mobileOnly={false}
+              className="w-full"
+            >
+              {gallery.map((item, index) => (
+                <article
+                  key={`${item.image_url ?? "img"}-${index}`}
+                  className="w-full overflow-hidden rounded-2xl backdrop-blur-xl"
+                >
+                  <div className="w-full pointer-events-none">
+                    <ImageTag
+                      src={item.image_url}
+                      alt="Gallery slider"
+                      width={0}
+                      height={0}
+                      sizes="304px"
+                      className="w-full h-auto"
+                    />
+                  </div>
+                  {getLabel(item) && (
+                    <div className="p-4 text-center">
+                      <p className="secondary text-[22px] leading-tight text-cream/95 capitalize">
+                        {getLabel(item)}
+                      </p>
+                      <h1 className="primary mt-3 text-sm uppercase tracking-[0.14em] text-chino/85">
+                        {STATIC_CARD_TEXT}
+                      </h1>
+                    </div>
+                  )}
+                </article>
+              ))}
+            </Swiper>
+          </>
         )}
       </div>
     </GlobalModal>

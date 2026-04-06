@@ -90,12 +90,13 @@ const ObjectiveCard = ({
       openModal({
         modalType: "viewGallery",
         modalProps: {
-          gallery,
+          objectiveId: objective?.id,
           subtasks,
+          taskTitle: objective?.task_title,
         },
       }),
     );
-  }, [dispatch, gallery, subtasks]);
+  }, [dispatch, objective?.id, objective?.task_title, subtasks]);
 
   return (
     <>
@@ -201,7 +202,6 @@ const ObjectiveCard = ({
           onStart={onStart}
           onComplete={onComplete}
           completedView={completedView}
-          gallery={gallery}
           onViewClick={handleOpenViewGallery}
         />
       </ItemCard>
@@ -306,28 +306,28 @@ const CardFooter = ({
   onStart,
   onComplete,
   completedView,
-  gallery,
   onViewClick,
 }) => {
   return (
     <div className="flex items-start justify-between gap-3">
-      <div className="grid grid-cols-2 gap-1 text-xs text-cream secondary flex-1">
-        {formatDate(objective.update_at) !== "—" && (
+      <div className="grid md:grid-cols-2 gap-1 text-xs text-cream secondary flex-1 ">
+        {objective.status === "completed" && (
           <div className="flex items-center gap-1">
-            <span className="text-chino/80">Updated:</span>
-            {formatDate(objective.update_at)}
+            <span className="text-chino/80">Completed:</span>
+            {formatDate(objective.completed_at || objective.update_at)}
           </div>
         )}
+
         {formatDate(objective.created_at) !== "—" && (
           <div className="flex items-center gap-1">
             <span className="text-chino/80">Created:</span>
             {formatDate(objective.created_at)}
           </div>
         )}
-        {objective.status === "completed" && (
+        {formatDate(objective.update_at) !== "—" && (
           <div className="flex items-center gap-1">
-            <span className="text-chino/80">Completed:</span>
-            {formatDate(objective.completed_at || objective.update_at)}
+            <span className="text-chino/80">Updated:</span>
+            {formatDate(objective.update_at)}
           </div>
         )}
       </div>
@@ -348,7 +348,7 @@ const CardFooter = ({
             onClick={() => onComplete(objective)}
           />
         )}
-        {completedView && gallery.length > 0 && (
+        {completedView && (
           <Button
             text="View Gallery"
             size="sm"
