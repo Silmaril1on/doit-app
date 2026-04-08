@@ -82,8 +82,7 @@ const UserProfile = () => {
               alt="User avatar"
               width={32}
               height={32}
-              containerClassName="w-full h-full"
-              imageClassName="w-full h-full"
+              className="w-full h-full object-cover"
             />
           ) : (
             <span className=" bg-teal-500 text-sm font-bold uppercase text-black">
