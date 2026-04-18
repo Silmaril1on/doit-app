@@ -113,6 +113,7 @@ const FIELDS = [
 const EMPTY_SUBTASK = { label: "", completed: false };
 const CREATE_MODAL_TYPE = "createObjective";
 const EDIT_MODAL_TYPE = "editObjective";
+const RECREATE_MODAL_TYPE = "recreateObjective";
 const MODAL_FORM_ID = "objective-form-modal";
 
 const initialForm = {
@@ -141,7 +142,7 @@ const formatForDateTimeLocal = (value) => {
   return new Date(date.getTime() - offsetInMs).toISOString().slice(0, 16);
 };
 
-const createFormFromObjective = (objective) => {
+const createFormFromObjective = (objective, isRecreate = false) => {
   if (!objective) {
     return initialForm;
   }
@@ -154,11 +155,20 @@ const createFormFromObjective = (objective) => {
     task_category:
       objective.task_category != null ? String(objective.task_category) : "",
     priority: objective.priority || "medium",
-    task_deadline: formatForDateTimeLocal(objective.task_deadline),
+    // Clear deadline on recreate — user should set their own timeline
+    task_deadline: isRecreate
+      ? ""
+      : formatForDateTimeLocal(objective.task_deadline),
     is_public: objective.is_public === true,
     subtasks:
       Array.isArray(objective.subtasks) && objective.subtasks.length > 0
-        ? objective.subtasks
+        ? isRecreate
+          ? // Reset all subtask completions for the new owner
+            objective.subtasks.map((st) => ({
+              ...st,
+              completed: false,
+            }))
+          : objective.subtasks
         : [{ ...EMPTY_SUBTASK }],
   };
 };
@@ -167,9 +177,13 @@ const CreateTaskModal = () => {
   const dispatch = useDispatch();
   const { modalType, modalProps } = useSelector(selectModal);
   const objective = modalProps?.objective ?? null;
+  const originalTaskId = modalProps?.originalTaskId ?? null;
   const isOpen =
-    modalType === CREATE_MODAL_TYPE || modalType === EDIT_MODAL_TYPE;
+    modalType === CREATE_MODAL_TYPE ||
+    modalType === EDIT_MODAL_TYPE ||
+    modalType === RECREATE_MODAL_TYPE;
   const isEditMode = modalType === EDIT_MODAL_TYPE && Boolean(objective?.id);
+  const isRecreateMode = modalType === RECREATE_MODAL_TYPE;
 
   const [form, setForm] = useState(() => createFormFromObjective(objective));
   const [submitting, setSubmitting] = useState(false);
@@ -178,9 +192,9 @@ const CreateTaskModal = () => {
     if (!isOpen) {
       return;
     }
-    setForm(createFormFromObjective(objective));
+    setForm(createFormFromObjective(objective, isRecreateMode));
     setSubmitting(false);
-  }, [isOpen, objective]);
+  }, [isOpen, objective, isRecreateMode]);
 
   const handleClose = () => {
     dispatch(closeModal());
@@ -200,6 +214,10 @@ const CreateTaskModal = () => {
         ? `/api/user/task/objectives?id=${encodeURIComponent(objective.id)}`
         : "/api/user/task/objectives";
       const submitData = { ...form };
+      // Pass originalTaskId so the API can increment recreate_count atomically
+      if (isRecreateMode && originalTaskId) {
+        submitData.originalTaskId = originalTaskId;
+      }
       if (isEditMode && objective?.status === "completed") {
         const originalSubtasks = Array.isArray(objective.subtasks)
           ? objective.subtasks.filter(
@@ -231,9 +249,20 @@ const CreateTaskModal = () => {
           type: "success",
           msg: isEditMode
             ? "Quest updated successfully."
-            : "Quest created successfully.",
+            : isRecreateMode
+              ? "Quest recreated and added to your objectives!"
+              : "Quest created successfully.",
         }),
       );
+
+      // Notify CardFeedActions so it increments the count immediately
+      if (isRecreateMode && originalTaskId) {
+        window.dispatchEvent(
+          new CustomEvent("taskRecreated", {
+            detail: { taskId: originalTaskId },
+          }),
+        );
+      }
 
       if (!isEditMode) {
         setForm(initialForm);
@@ -256,12 +285,18 @@ const CreateTaskModal = () => {
     }
   };
 
-  const title = isEditMode ? "Edit Quest" : "Start New Quest";
+  const title = isEditMode
+    ? "Edit Quest"
+    : isRecreateMode
+      ? "Recreate Quest"
+      : "Start New Quest";
   const submitLabel = submitting
     ? "Saving..."
     : isEditMode
       ? "Save Changes"
-      : "Start New Quest";
+      : isRecreateMode
+        ? "Add to My Objectives"
+        : "Start New Quest";
 
   return (
     <GlobalModal
@@ -281,10 +316,6 @@ const CreateTaskModal = () => {
         formId={MODAL_FORM_ID}
         onSubmit={handleSubmit}
       />
-      <p className="secondary text-xs text-chino/70">
-        created_at, update_at, user_id and completed_at are managed securely by
-        the backend.
-      </p>
     </GlobalModal>
   );
 };

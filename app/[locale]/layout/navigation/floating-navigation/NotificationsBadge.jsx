@@ -130,7 +130,7 @@ const NotificationsBadge = () => {
               {notifications.map((n) => (
                 <li
                   key={n.id}
-                  className={`group flex items-start gap-3 px-4 py-3 m-1 rounded-lg duration-200 ${
+                  className={`group flex items-start gap-3 px-4 pointer-events-none py-3 m-1 rounded-lg duration-200 ${
                     n.has_read ? "opacity-50" : "bg-teal-500/5"
                   }`}
                 >

@@ -1,14 +1,12 @@
 "use client";
 import FromContainer from "@/app/[locale]/components/container/FromContainer";
 import Logo from "@/app/[locale]/components/elements/Logo";
+import GoogleAuth from "@/app/[locale]/components/buttons/GoogleAuth";
+import { useState } from "react";
 import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setUser } from "@/app/[locale]/lib/features/userSlice";
-import {
-  getPasswordStrength,
-  validateRegistrationForm,
-} from "@/app/[locale]/lib/utils/regValidation";
+import { validateRegistrationForm } from "@/app/[locale]/lib/utils/regValidation";
 import { useParams, useRouter } from "next/navigation";
-import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 
 const userFormConfig = [
@@ -60,8 +58,6 @@ const RegistrationPage = () => {
     confirmPassword: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const shouldShowPasswordStrength = form.password.length > 0;
-  const passwordStrength = getPasswordStrength(form.password);
 
   const handleChange = (field) => (event) => {
     const value = event.target.value;
@@ -74,9 +70,7 @@ const RegistrationPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     dispatch(clearToast());
-
     const validation = validateRegistrationForm(form);
     if (!validation.isValid) {
       dispatch(
@@ -87,7 +81,6 @@ const RegistrationPage = () => {
       );
       return;
     }
-
     try {
       setIsSubmitting(true);
       const response = await fetch("/api/auth/register", {
@@ -101,19 +94,14 @@ const RegistrationPage = () => {
           password: validation.cleanedData.password,
         }),
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.error || "Registration failed");
       }
-
       dispatch(
         setToast({ type: "success", msg: "Account created successfully." }),
       );
-
       dispatch(setUser(data.user));
-
       setForm({
         username: "",
         email: "",
@@ -146,40 +134,13 @@ const RegistrationPage = () => {
         submitLabel="Create Account"
         submittingLabel="Creating Account"
         isSubmitting={isSubmitting}
-        formExtras={
-          shouldShowPasswordStrength ? (
-            <div className="rounded-xl border border-teal-500/25 bg-black/45 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="secondary text-xs uppercase tracking-[0.16em] text-white/65">
-                  Password Strength
-                </p>
-                <p className={`primary text-sm ${passwordStrength.textClass}`}>
-                  {passwordStrength.label}
-                </p>
-              </div>
-              <div className="mt-2 grid grid-cols-4 gap-2">
-                {[1, 2, 3, 4].map((step) => (
-                  <span
-                    key={step}
-                    className={`h-1.5 rounded-full ${
-                      passwordStrength.score >= step
-                        ? passwordStrength.barClass
-                        : "bg-white/15"
-                    }`}
-                  />
-                ))}
-              </div>
-              <p className="secondary mt-2 text-xs text-white/70">
-                {passwordStrength.hint}
-              </p>
-            </div>
-          ) : null
-        }
+        passwordValue={form.password}
         fields={userFormConfig}
         values={form}
         onFieldChange={handleChange}
         fieldsWrapperClassName="grid gap-5 sm:grid-cols-2"
         maxWidthClass="w-full max-w-xl"
+        oauthSlot={<GoogleAuth />}
         footerText="Already registered?"
         footerLinkLabel="Login"
         footerLinkHref={`/${locale}/login`}

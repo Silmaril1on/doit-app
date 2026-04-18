@@ -42,7 +42,7 @@ const MyProfile = ({ user }) => {
   }
 
   return (
-    <div className="p-3 space-y-4">
+    <div className="page-wrapper space-y-4">
       <SectionHeadline
         title="My Profile"
         subtitle="Manage your personal information and settings"
@@ -57,10 +57,14 @@ const MyProfile = ({ user }) => {
             height={80}
           />
         </div>
-        <div className="text-cream">
-          <h1 className="font-bold">{profile.display_name}</h1>
-          <h1 className="">{profile.email}</h1>
-          <h1 className="text-xs opacity-80">
+        <div className="">
+          <h1 className="font-bold text-cream capitalize tracking-wide leading-none">
+            {profile.display_name}
+          </h1>
+          <h1 className="secondary text-cream/80  text-xs leading-none mb-3">
+            {profile.email}
+          </h1>
+          <h1 className="text-xs opacity-80 text-cream">
             <i className="secondary pr-1"> Member Since</i>{" "}
             <b>{formatDate(profile.created_at)}</b>
           </h1>
@@ -80,7 +84,7 @@ const MyProfile = ({ user }) => {
           {Object.entries(FIELD_LABELS).map(([key, label]) => (
             <div
               key={key}
-              className="px-3 py-2 space-y-0.5 bg-black/50 backdrop-blur-lg rounded-md"
+              className="px-3 py-2 space-y-0.5 border border-teal-500/20 bg-black/30 backdrop-blur-lg rounded-md"
             >
               <p className="text-chino/60 text-[10px] uppercase secondary font-bold">
                 {label}

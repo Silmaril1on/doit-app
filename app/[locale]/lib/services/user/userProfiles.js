@@ -60,3 +60,29 @@ export async function updateUser(userId, updates) {
   if (error) throw new Error(error.message);
   return data;
 }
+
+export async function getUserByDisplayName(displayName) {
+  if (!displayName) throw new Error("displayName is required");
+
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("display_name", displayName)
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function searchUsersByDisplayName(query) {
+  if (!query || query.trim().length < 2) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from("users")
+    .select("id, display_name, first_name, last_name, email, image_url")
+    .ilike("display_name", `%${query.trim()}%`)
+    .limit(5);
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}

@@ -35,6 +35,10 @@ const ObjectivePageWrapper = ({
   onComplete,
   onToggleSubtask,
   onRemoveSubtask,
+  showHeader = true,
+  showSidebar = true,
+  renderCardBefore = null,
+  readOnly = false,
 }) => {
   const dispatch = useDispatch();
   const { open } = useModal();
@@ -77,29 +81,33 @@ const ObjectivePageWrapper = ({
   const filteredItems = applyObjectivesFilters(searched, filters);
 
   return (
-    <section className="w-full grow px-3 pb-28 flex flex-col gap-3">
-      <ObjectivesHeader
-        items={items}
-        title={title}
-        subtitle={subtitle}
-        buttonLabel={derivedButtonLabel}
-        showCreateButton={showCreateButton}
-        showControls={true}
-        onCreateClick={showCreateButton ? handleOpenCreate : undefined}
-        onOpenSidebar={() => setSidebarOpen(true)}
-        filters={filters}
-        onClearFilters={() => setFilters(EMPTY_FILTERS)}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+    <section className="w-full grow px-3 pb-28 flex flex-col gap-3 bg-black">
+      {showHeader && (
+        <ObjectivesHeader
+          items={items}
+          title={title}
+          subtitle={subtitle}
+          buttonLabel={derivedButtonLabel}
+          showCreateButton={showCreateButton}
+          showControls={true}
+          onCreateClick={showCreateButton ? handleOpenCreate : undefined}
+          onOpenSidebar={() => setSidebarOpen(true)}
+          filters={filters}
+          onClearFilters={() => setFilters(EMPTY_FILTERS)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+      )}
 
-      <ObjectivesSideBar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        objectives={items}
-        filters={filters}
-        onFiltersApply={setFilters}
-      />
+      {showSidebar && (
+        <ObjectivesSideBar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          objectives={items}
+          filters={filters}
+          onFiltersApply={setFilters}
+        />
+      )}
 
       {isLoading && (
         <p className="secondary text-sm text-chino/70">
@@ -123,19 +131,37 @@ const ObjectivePageWrapper = ({
 
       {!isLoading && filteredItems.length > 0 && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {filteredItems.map((item) => (
-            <ObjectiveCard
-              key={item.id}
-              objective={item}
-              onEdit={handleOpenEdit}
-              onDelete={onDelete}
-              onStart={onStart}
-              onComplete={onComplete}
-              onToggleSubtask={onToggleSubtask}
-              onRemoveSubtask={onRemoveSubtask}
-              completedView={completedView}
-            />
-          ))}
+          {filteredItems.map((item) =>
+            renderCardBefore ? (
+              <div key={item.id} className="flex flex-col">
+                {renderCardBefore(item)}
+                <ObjectiveCard
+                  objective={item}
+                  onEdit={handleOpenEdit}
+                  onDelete={onDelete}
+                  onStart={onStart}
+                  onComplete={onComplete}
+                  onToggleSubtask={onToggleSubtask}
+                  onRemoveSubtask={onRemoveSubtask}
+                  completedView={completedView}
+                  readOnly={readOnly}
+                />
+              </div>
+            ) : (
+              <ObjectiveCard
+                key={item.id}
+                objective={item}
+                onEdit={handleOpenEdit}
+                onDelete={onDelete}
+                onStart={onStart}
+                onComplete={onComplete}
+                onToggleSubtask={onToggleSubtask}
+                onRemoveSubtask={onRemoveSubtask}
+                completedView={completedView}
+                readOnly={readOnly}
+              />
+            ),
+          )}
         </div>
       )}
 

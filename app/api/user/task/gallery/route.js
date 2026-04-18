@@ -31,7 +31,7 @@ export async function GET(request) {
       .from("objectives")
       .select("id, task_gallery")
       .eq("id", objectiveId)
-      .eq("user_id", userId)
+      .or(`user_id.eq.${userId},is_public.eq.true`)
       .maybeSingle();
 
     if (fetchError) throw new Error(fetchError.message);

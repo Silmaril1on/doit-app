@@ -1,25 +1,25 @@
 "use client";
-import { motion } from "framer-motion";
-import Link from "next/link";
-import React, { useState } from "react";
+import { useState } from "react";
 import ActionButton from "../../../components/buttons/ActionButton";
-import LevelProgressBar from "../../../components/elements/LevelProgressBar";
 import ArrowUpDown from "../../../components/elements/ArrowUpDown";
 import UserProfile from "./UserProfile";
 import NotificationsBadge from "./NotificationsBadge";
+import { motion, AnimatePresence } from "framer-motion";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../lib/features/userSlice";
-import BorderSvg from "@/app/[locale]/components/elements/BorderSvg";
-import { selectXp } from "@/app/[locale]/lib/features/xpSlice";
-import { XP_PER_LEVEL } from "@/app/[locale]/lib/services/xp/xpConfig";
 
 const FloatingNavigation = () => {
   const [isOpen, setIsOpen] = useState(true);
   const user = useSelector(selectCurrentUser);
+  const [open, setOpen] = useState(false);
 
   if (!user) {
     return null;
   }
+
+  const handleOpen = () => {
+    setOpen((current) => !current);
+  };
 
   return (
     <motion.div
@@ -35,16 +35,33 @@ const FloatingNavigation = () => {
         onClick={() => setIsOpen((current) => !current)}
       />
       {/* <LevelBar /> */}
-      <div className="flex gap-2 items-center ">
-        <Link href="/tasks/objectives">
-          <ActionButton variant="home" />
-        </Link>
-        <Link href="/tasks/active-quests">
-          <ActionButton variant="profile" />
-        </Link>
-        <Link href="/tasks/achievements">
-          <ActionButton variant="achievements" />
-        </Link>
+      <div className="flex gap-2 items-center">
+        <ActionButton onClick={handleOpen} variant="home" text="Listory" />
+        <AnimatePresence>
+          {open && (
+            <div key="listory" className="absolute -top-25 flex flex-col gap-1">
+              <ActionButton
+                variant="home"
+                href="/tasks/objectives"
+                animation="bottom"
+                delay={0}
+              />
+              <ActionButton
+                variant="profile"
+                href="/tasks/active-quests"
+                animation="bottom"
+                delay={0.08}
+              />
+              <ActionButton
+                variant="achievements"
+                href="/tasks/achievements"
+                animation="bottom"
+                delay={0.16}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+        <ActionButton variant="home" text="Feed" href="/feed" />
       </div>
       <div className="flex items-center gap-2 ">
         <NotificationsBadge />
@@ -63,7 +80,7 @@ const EdgeButton = ({ isOpen, onClick }) => {
         isOpen ? "Collapse floating navigation" : "Expand floating navigation"
       }
       aria-expanded={isOpen}
-      className={`absolute cursor-pointer -top-3 left-10 flex-col items-center justify-center`}
+      className={`absolute cursor-pointer -top-3 right-10 flex-col items-center justify-center`}
     >
       <span
         className={`flex h-3 w-20 items-center justify-center rounded-t-full bg-teal-700/20 text-white  duration-300 hover:bg-teal-700/80`}
@@ -71,31 +88,6 @@ const EdgeButton = ({ isOpen, onClick }) => {
         <ArrowUpDown isOpen={isOpen} size={10} className="text-white" />
       </span>
     </button>
-  );
-};
-
-const LevelBar = () => {
-  const { level, currentXp } = useSelector(selectXp);
-  const pct = Math.min((currentXp / XP_PER_LEVEL) * 100, 100);
-
-  return (
-    <div className="flex items-center gap-2 flex-1 min-w-0 absolute w-[65%] right-3 -top-4">
-      <span className="text-[10px] font-bold text-teal-400 secondary shrink-0 leading-none">
-        Lv.{level}
-      </span>
-      <div className="relative flex-1 h-3 rounded-full bg-teal-500/10 border border-teal-500/20 overflow-hidden">
-        <motion.div
-          key={level}
-          className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-teal-600 to-teal-400"
-          initial={{ width: "0%" }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        />
-      </div>
-      <span className="text-[9px] secondary text-cream/40 shrink-0 leading-none">
-        {currentXp}/{XP_PER_LEVEL}
-      </span>
-    </div>
   );
 };
 

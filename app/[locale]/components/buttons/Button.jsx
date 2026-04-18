@@ -27,7 +27,7 @@ const Button = ({
 }) => {
   const variantClasses = variantClassMap[variant] ?? variantClassMap.fill;
   const sizeClasses = sizeClassMap[size] ?? sizeClassMap.md;
-  const sharedClassName = `flex rounded-sm relative items-center justify-center gap-1.5 cursor-pointer transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${sizeClasses} ${variantClasses} ${className}`;
+  const sharedClassName = `flex relative rounded-sm relative items-center justify-center gap-1.5 cursor-pointer transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${sizeClasses} ${variantClasses} ${className}`;
 
   const content = (
     <div className=" center gap-1.5">
@@ -39,6 +39,7 @@ const Button = ({
   if (href) {
     return (
       <Link href={href} className={sharedClassName}>
+        <BorderSvg strokeWidth={0.8} radius={4} />
         {content}
       </Link>
     );

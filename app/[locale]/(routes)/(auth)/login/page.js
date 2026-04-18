@@ -2,6 +2,7 @@
 
 import FromContainer from "@/app/[locale]/components/container/FromContainer";
 import Logo from "@/app/[locale]/components/elements/Logo";
+import GoogleAuth from "@/app/[locale]/components/buttons/GoogleAuth";
 import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setUser } from "@/app/[locale]/lib/features/userSlice";
 import { useParams, useRouter } from "next/navigation";
@@ -113,6 +114,19 @@ const LoginPage = () => {
         onFieldChange={handleChange}
         fieldsWrapperClassName="grid gap-5 sm:grid-cols-2"
         maxWidthClass="w-full max-w-lg"
+        oauthSlot={
+          <div className="space-y-3">
+            <GoogleAuth />
+            <div className="text-center">
+              <a
+                href={`/${locale}/reset-password`}
+                className="secondary text-xs text-white/40 hover:text-teal-500 transition-colors duration-200 uppercase tracking-widest"
+              >
+                Forgot your password?
+              </a>
+            </div>
+          </div>
+        }
         footerText="Don't have an account?"
         footerLinkLabel="Register"
         footerLinkHref={`/${locale}/register`}

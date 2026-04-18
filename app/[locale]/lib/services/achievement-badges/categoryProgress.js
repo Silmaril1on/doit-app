@@ -10,8 +10,8 @@ import {
   getTierByLevel,
   badgesCacheTag,
 } from "@/app/[locale]/lib/local-bd/categoryTypesData";
-import { createNewBadgeNotification } from "@/app/[locale]/lib/services/notifications/notificationsTypes";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
+import { insertFeedEvent } from "@/app/[locale]/lib/services/tasks/feed/feedEvents";
 
 const PROGRESS_TABLE = "user_category_progress";
 
@@ -111,25 +111,35 @@ export async function recordCategoryCompletion(userId, rawCategoryId) {
       .from(PROGRESS_TABLE)
       .select("current_level")
       .eq("user_id", userId);
-    totalBadges = (allProgress ?? []).reduce((sum, r) => sum + (r.current_level ?? 0), 0);
+    totalBadges = (allProgress ?? []).reduce(
+      (sum, r) => sum + (r.current_level ?? 0),
+      0,
+    );
   }
 
-  // Fire badge notification — failure must never break the main flow.
+  // Fire badge notification + feed event — failure must never break the main flow.
   if (tierEarned) {
     const category = TASK_CATEGORIES.find((c) => c.id === categoryId);
     try {
       const user = await getUserById(userId);
       const displayName = user?.display_name ?? user?.first_name ?? "User";
-      await createNewBadgeNotification(
-        userId,
-        displayName,
-        tierEarned.title,
-        category?.label ?? "Unknown",
-        tierEarned.level,
-      );
+      await supabaseAdmin.from("notifications").insert({
+        user_id: userId,
+        status: "New Badge",
+        message: `You've unlocked the "${tierEarned.title}" badge (Level ${tierEarned.level}) in ${category?.label ?? "Unknown"}! Keep going to reach the next tier. `,
+        priority: "low",
+        display_name: displayName,
+        has_read: false,
+      });
     } catch {
       // Notification failure must never break badge progress recording.
     }
+    insertFeedEvent(userId, "badge", {
+      badge_title: tierEarned.title,
+      badge_level: tierEarned.level,
+      category_id: categoryId,
+      category_label: category?.label ?? "Unknown",
+    });
   }
 
   return { progress: upserted, newTier: tierEarned, totalBadges };

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setXp } from "@/app/[locale]/lib/features/xpSlice";
+import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { useActiveQuests } from "@/app/[locale]/lib/hooks/useActiveQuests";
 import { ACHIEVEMENTS_PAGE1_KEY } from "@/app/[locale]/lib/hooks/useAchievements";
 import { mutate as globalMutate } from "swr";
@@ -13,6 +14,8 @@ const REVALIDATE_MODALS = ["editObjective"];
 
 const ActiveQuests = ({ initialData = null }) => {
   const dispatch = useDispatch();
+  const currentUser = useSelector(selectCurrentUser);
+  const userId = currentUser?.id ?? null;
   const {
     quests: swrQuests,
     hasMore,
@@ -22,7 +25,24 @@ const ActiveQuests = ({ initialData = null }) => {
     mutate,
   } = useActiveQuests(initialData);
 
-  const [quests, setQuests] = useState(swrQuests);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // Fallback: re-fetch XP from the API and sync Redux when xpUpdate is missing
+  const refreshXp = useCallback(async () => {
+    try {
+      const res = await fetch("/api/user/xp", { cache: "no-store" });
+      if (res.ok) {
+        const xpData = await res.json();
+        console.log("[Client] Refreshed XP from API:", xpData?.xp);
+        if (xpData?.xp) dispatch(setXp(xpData.xp));
+      }
+    } catch (err) {
+      console.error("[Client] XP refresh failed:", err);
+    }
+  }, [dispatch]);
+
+  const [quests, setQuests] = useState(() => initialData?.quests ?? []);
   useEffect(() => {
     setQuests(swrQuests);
   }, [swrQuests]);
@@ -62,7 +82,15 @@ const ActiveQuests = ({ initialData = null }) => {
           throw new Error(data.error || "Failed to update subtask");
         if (allDone) {
           setQuests((prev) => prev.filter((q) => q.id !== quest.id));
-          if (data.xpUpdate) dispatch(setXp(data.xpUpdate));
+          console.log("[Client] Subtask completion xpUpdate:", data.xpUpdate);
+          if (data.xpUpdate) {
+            dispatch(setXp(data.xpUpdate));
+          } else {
+            console.warn(
+              "[Client] xpUpdate missing after subtask completion — refetching XP",
+            );
+            await refreshXp();
+          }
           dispatch(
             setToast({
               type: "success",
@@ -70,7 +98,7 @@ const ActiveQuests = ({ initialData = null }) => {
             }),
           );
           mutate();
-          globalMutate(ACHIEVEMENTS_PAGE1_KEY);
+          globalMutate([ACHIEVEMENTS_PAGE1_KEY, userId]);
         }
       } catch (error) {
         setQuests((prev) =>
@@ -89,7 +117,7 @@ const ActiveQuests = ({ initialData = null }) => {
         );
       }
     },
-    [dispatch, mutate],
+    [dispatch, mutate, refreshXp],
   );
 
   const handleRemoveSubtask = useCallback(
@@ -166,12 +194,20 @@ const ActiveQuests = ({ initialData = null }) => {
         if (!response.ok) {
           throw new Error(data.error || "Failed to complete quest");
         }
-        if (data.xpUpdate) dispatch(setXp(data.xpUpdate));
+        console.log("[Client] Task completion xpUpdate:", data.xpUpdate);
+        if (data.xpUpdate) {
+          dispatch(setXp(data.xpUpdate));
+        } else {
+          console.warn(
+            "[Client] xpUpdate missing after task completion — refetching XP",
+          );
+          await refreshXp();
+        }
         dispatch(
           setToast({ type: "success", msg: "Task completed! Well done." }),
         );
         mutate();
-        globalMutate(ACHIEVEMENTS_PAGE1_KEY);
+        globalMutate([ACHIEVEMENTS_PAGE1_KEY, userId]);
       } catch (error) {
         mutate();
         dispatch(
@@ -185,7 +221,7 @@ const ActiveQuests = ({ initialData = null }) => {
         );
       }
     },
-    [dispatch, mutate],
+    [dispatch, mutate, refreshXp],
   );
 
   const handleDeleteQuest = useCallback(
@@ -219,7 +255,7 @@ const ActiveQuests = ({ initialData = null }) => {
     <ObjectivePageWrapper
       items={quests}
       hasMore={hasMore}
-      isLoading={isLoading}
+      isLoading={mounted && isLoading}
       isLoadingMore={isLoadingMore}
       loadMore={loadMore}
       title="Active Quests"

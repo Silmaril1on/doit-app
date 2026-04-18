@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
+import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { useObjectives } from "@/app/[locale]/lib/hooks/useObjectives";
 import { ACTIVE_QUESTS_PAGE1_KEY } from "@/app/[locale]/lib/hooks/useActiveQuests";
 import { mutate as globalMutate } from "swr";
@@ -12,6 +13,8 @@ const REVALIDATE_MODALS = ["createObjective", "editObjective"];
 
 const Objectives = ({ initialData = null }) => {
   const dispatch = useDispatch();
+  const currentUser = useSelector(selectCurrentUser);
+  const userId = currentUser?.id ?? null;
   const {
     objectives: swrObjectives,
     hasMore,
@@ -21,7 +24,14 @@ const Objectives = ({ initialData = null }) => {
     mutate,
   } = useObjectives(initialData);
 
-  const [objectives, setObjectives] = useState(swrObjectives);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  // Initialize from the serialized server prop so server and client agree on the
+  // first render. After mount, the useEffect below keeps it in sync with SWR.
+  const [objectives, setObjectives] = useState(
+    () => initialData?.objectives ?? [],
+  );
   useEffect(() => {
     setObjectives(swrObjectives);
   }, [swrObjectives]);
@@ -46,7 +56,7 @@ const Objectives = ({ initialData = null }) => {
           setToast({ type: "success", msg: "You have started your task" }),
         );
         mutate();
-        globalMutate(ACTIVE_QUESTS_PAGE1_KEY);
+        globalMutate([ACTIVE_QUESTS_PAGE1_KEY, userId]);
       } catch (error) {
         mutate();
         dispatch(
@@ -58,7 +68,7 @@ const Objectives = ({ initialData = null }) => {
         );
       }
     },
-    [dispatch, mutate],
+    [dispatch, mutate, userId],
   );
 
   const handleDeleteTask = useCallback(
@@ -140,7 +150,7 @@ const Objectives = ({ initialData = null }) => {
     <ObjectivePageWrapper
       items={objectives}
       hasMore={hasMore}
-      isLoading={isLoading}
+      isLoading={mounted && isLoading}
       isLoadingMore={isLoadingMore}
       loadMore={loadMore}
       title="Objectives"

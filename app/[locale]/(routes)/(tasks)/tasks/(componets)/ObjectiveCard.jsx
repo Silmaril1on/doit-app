@@ -11,6 +11,9 @@ import { openModal } from "@/app/[locale]/lib/features/modalSlice";
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { IoMdClose, IoMdArrowDropright, IoIosCheckmark } from "react-icons/io";
+import { AiFillFire, AiOutlineFire } from "react-icons/ai";
+import { MdOutlineReviews, MdReviews } from "react-icons/md";
+import { IoBookmarkOutline, IoBookmark } from "react-icons/io5";
 
 const priorityColorMap = {
   low: "blue",
@@ -40,6 +43,7 @@ const ObjectiveCard = ({
   onComplete,
   onStart,
   completedView = false,
+  readOnly = false,
 }) => {
   const dispatch = useDispatch();
   const status = objective.status || "todo";
@@ -52,8 +56,8 @@ const ObjectiveCard = ({
     : EMPTY_LIST;
   const countryAndCity = { country: objective.country, city: objective.city };
   const hasLocation = Boolean(objective.country || objective.city);
-  const canEdit = typeof onEdit === "function";
-  const canDelete = typeof onDelete === "function";
+  const canEdit = !readOnly && typeof onEdit === "function";
+  const canDelete = !readOnly && typeof onDelete === "function";
   const hasActions = canEdit || canDelete;
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -90,106 +94,37 @@ const ObjectiveCard = ({
       openModal({
         modalType: "viewGallery",
         modalProps: {
-          objectiveId: objective?.id,
+          objectiveId: objective.id,
           subtasks,
-          taskTitle: objective?.task_title,
+          taskTitle: objective.task_title,
         },
       }),
     );
-  }, [dispatch, objective?.id, objective?.task_title, subtasks]);
+  }, [dispatch, objective.id, objective.task_title, subtasks]);
 
   return (
     <>
       <ItemCard className="space-y-3 rounded-xl border border-teal-500/20 bg-black/45 p-4">
-        {/* Card header  */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="leading-none mb-5">
-            <h2 className="text-2xl capitalize font-bold text-cream">
-              {objective.task_title}
-            </h2>
-            <p className="secondary text-sm leading-4.5 text-chino">
-              {objective.task_description}
-            </p>
-          </div>
-          {hasActions ? (
-            <div
-              ref={menuRef}
-              className="relative shrink-0 flex items-center gap-2"
-            >
-              <ActionButton
-                variant="expand"
-                onClick={() => setMenuOpen((prev) => !prev)}
-                ariaLabel="Open actions menu"
-              />
-              {menuOpen && (
-                <div className="absolute right-10 -top-3 mt-1.5 z-10 flex gap-2 rounded-xl border border-teal-500/20 bg-black/20 backdrop-blur-md p-1.5">
-                  {completedView ? (
-                    <ActionButton
-                      variant="uploadImage"
-                      onClick={handleOpenUploadGallery}
-                      ariaLabel="Upload image"
-                    />
-                  ) : null}
-                  {canEdit ? (
-                    <ActionButton
-                      variant="edit"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        onEdit?.(objective);
-                      }}
-                      ariaLabel="Edit objective"
-                    />
-                  ) : null}
-                  {canDelete ? (
-                    <ActionButton
-                      variant="delete"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        onDelete?.(objective);
-                      }}
-                      ariaLabel="Delete objective"
-                    />
-                  ) : null}
-                </div>
-              )}
-            </div>
-          ) : null}
-        </div>
-
-        {/* Card Category and tablets  */}
-        <div className=" ">
-          <div className="gap-1 flex flex-col items-start mb-4">
-            {categoryData ? (
-              <div>
-                <p className="secondary text-xs uppercase tracking-[0.14em] text-teal-200/85">
-                  Category: {categoryData.label}
-                </p>
-                <p className="secondary capitalize text-[10px] text-chino">
-                  {categoryData.description}
-                </p>
-              </div>
-            ) : (
-              <p className="secondary  text-xs uppercase tracking-[0.14em] text-teal-200/85">
-                Category: —
-              </p>
-            )}
-          </div>
-          <div className="flex justify-between items-center">
-            {hasLocation && (
-              <CountryFlags data={countryAndCity} title={true} size="sm" />
-            )}
-            <div className="flex items-center gap-2">
-              <Tablet
-                text={formatLabel(status)}
-                color={statusColorMap[status] || "sky"}
-              />
-              <Tablet
-                text={formatLabel(priority)}
-                color={priorityColorMap[priority] || priorityColorMap.medium}
-              />
-            </div>
-          </div>
-        </div>
+        <CardHeader
+          objective={objective}
+          hasActions={hasActions}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          completedView={completedView}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          menuRef={menuRef}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onUploadGallery={handleOpenUploadGallery}
+        />
+        <CardCategorySection
+          categoryData={categoryData}
+          countryAndCity={countryAndCity}
+          status={status}
+          priority={priority}
+          hasLocation={hasLocation}
+        />
         <SubTasksSection
           objective={objective}
           subtasks={subtasks}
@@ -202,10 +137,135 @@ const ObjectiveCard = ({
           onStart={onStart}
           onComplete={onComplete}
           completedView={completedView}
+          readOnly={readOnly}
           onViewClick={handleOpenViewGallery}
         />
+        {readOnly && (
+          <CardFeedActions
+            objective={objective}
+            objectiveId={objective.id}
+            taskOwnerId={objective.user_id}
+            initialLikeCount={objective.like_count ?? 0}
+            initialIsLiked={objective.is_liked ?? false}
+            initialReviewCount={objective.review_count ?? 0}
+            initialRecreateCount={objective.recreate_count ?? 0}
+          />
+        )}
       </ItemCard>
     </>
+  );
+};
+
+const CardHeader = ({
+  objective,
+  hasActions,
+  canEdit,
+  canDelete,
+  completedView,
+  menuOpen,
+  setMenuOpen,
+  menuRef,
+  onEdit,
+  onDelete,
+}) => {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="leading-none mb-5">
+        <h2 className="text-2xl capitalize font-bold text-cream">
+          {objective.task_title}
+        </h2>
+        <p className="secondary text-sm leading-4.5 text-chino">
+          {objective.task_description}
+        </p>
+      </div>
+      {hasActions ? (
+        <div
+          ref={menuRef}
+          className="relative shrink-0 flex items-center gap-2"
+        >
+          <ActionButton
+            variant="expand"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            ariaLabel="Open actions menu"
+          />
+          {menuOpen && (
+            <div className="absolute right-10 -top-3 mt-1.5 z-10 flex gap-2 rounded-xl border border-teal-500/20 bg-black/20 backdrop-blur-md p-1.5">
+              {completedView ? (
+                <ActionButton
+                  variant="uploadImage"
+                  onClick={onUploadGallery}
+                  ariaLabel="Upload image"
+                />
+              ) : null}
+              {canEdit ? (
+                <ActionButton
+                  variant="edit"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onEdit?.(objective);
+                  }}
+                  ariaLabel="Edit objective"
+                />
+              ) : null}
+              {canDelete ? (
+                <ActionButton
+                  variant="delete"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDelete?.(objective);
+                  }}
+                  ariaLabel="Delete objective"
+                />
+              ) : null}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const CardCategorySection = ({
+  categoryData,
+  countryAndCity,
+  status,
+  priority,
+  hasLocation,
+}) => {
+  return (
+    <div className=" ">
+      <div className="gap-1 flex flex-col items-start mb-4">
+        {categoryData ? (
+          <div>
+            <p className="secondary text-xs uppercase tracking-[0.14em] text-teal-200/85">
+              Category: {categoryData.label}
+            </p>
+            <p className="secondary capitalize text-[10px] text-chino">
+              {categoryData.description}
+            </p>
+          </div>
+        ) : (
+          <p className="secondary  text-xs uppercase tracking-[0.14em] text-teal-200/85">
+            Category: —
+          </p>
+        )}
+      </div>
+      <div className="flex justify-between items-center">
+        {hasLocation && (
+          <CountryFlags data={countryAndCity} title={true} size="sm" />
+        )}
+        <div className="flex items-center gap-2">
+          <Tablet
+            text={formatLabel(status)}
+            color={statusColorMap[status] || "sky"}
+          />
+          <Tablet
+            text={formatLabel(priority)}
+            color={priorityColorMap[priority] || priorityColorMap.medium}
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -306,6 +366,7 @@ const CardFooter = ({
   onStart,
   onComplete,
   completedView,
+  readOnly = false,
   onViewClick,
 }) => {
   return (
@@ -348,7 +409,7 @@ const CardFooter = ({
             onClick={() => onComplete(objective)}
           />
         )}
-        {completedView && (
+        {(completedView || readOnly) && (
           <Button
             text="View Gallery"
             size="sm"
@@ -357,6 +418,143 @@ const CardFooter = ({
           />
         )}
       </div>
+    </div>
+  );
+};
+
+const CardFeedActions = ({
+  objective,
+  objectiveId,
+  taskOwnerId,
+  initialLikeCount = 0,
+  initialIsLiked = false,
+  initialReviewCount = 0,
+  initialRecreateCount = 0,
+}) => {
+  const dispatch = useDispatch();
+  const [liked, setLiked] = useState(initialIsLiked);
+  const [likeCount, setLikeCount] = useState(initialLikeCount);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [reviewCount, setReviewCount] = useState(initialReviewCount);
+  const isReviewed = reviewCount > 0;
+  const [recreateCount, setRecreateCount] = useState(initialRecreateCount);
+  const [hasRecreated, setHasRecreated] = useState(false);
+
+  // Sync review count from ThoughsModal
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail.taskId === objectiveId) {
+        setReviewCount(e.detail.reviewCount);
+      }
+    };
+    window.addEventListener("thoughtsUpdated", handler);
+    return () => window.removeEventListener("thoughtsUpdated", handler);
+  }, [objectiveId]);
+
+  // Sync recreate count from CreateTaskModal
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail.taskId === objectiveId) {
+        setRecreateCount((c) => c + 1);
+        setHasRecreated(true);
+      }
+    };
+    window.addEventListener("taskRecreated", handler);
+    return () => window.removeEventListener("taskRecreated", handler);
+  }, [objectiveId]);
+
+  const handleToggleLike = async () => {
+    if (likeLoading) return;
+    const prevLiked = liked;
+    const prevCount = likeCount;
+    setLiked(!prevLiked);
+    setLikeCount(prevLiked ? likeCount - 1 : likeCount + 1);
+    setLikeLoading(true);
+    try {
+      let res;
+      if (!prevLiked) {
+        res = await fetch("/api/user/task/feed-likes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            task_id: objectiveId,
+            task_owner_id: taskOwnerId,
+          }),
+        });
+      } else {
+        res = await fetch(
+          `/api/user/task/feed-likes?taskId=${encodeURIComponent(objectiveId)}`,
+          { method: "DELETE" },
+        );
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setLikeCount(data.like_count);
+      setLiked(data.liked);
+    } catch {
+      setLiked(prevLiked);
+      setLikeCount(prevCount);
+    } finally {
+      setLikeLoading(false);
+    }
+  };
+
+  const handleOpenThoughts = () => {
+    dispatch(
+      openModal({
+        modalType: "thoughts",
+        modalProps: { taskId: objectiveId, taskOwnerId },
+      }),
+    );
+  };
+
+  const handleRecreate = () => {
+    dispatch(
+      openModal({
+        modalType: "recreateObjective",
+        modalProps: {
+          objective,
+          originalTaskId: objectiveId,
+        },
+      }),
+    );
+  };
+
+  return (
+    <div className="flex items-center gap-1.5 pt-1">
+      {/* Fire / Like */}
+      <ActionButton
+        color="orange"
+        active={liked}
+        icon={<AiOutlineFire size={14} />}
+        activeIcon={<AiFillFire size={14} />}
+        count={likeCount}
+        text={likeCount !== 1 ? "Fires" : "Fire"}
+        onClick={handleToggleLike}
+        disabled={likeLoading}
+      />
+
+      {/* Thoughts / Reviews */}
+      <ActionButton
+        color="yellow"
+        active={isReviewed}
+        icon={<MdOutlineReviews size={14} />}
+        activeIcon={<MdReviews size={14} />}
+        count={reviewCount}
+        text={reviewCount !== 1 ? "Thoughts" : "Thought"}
+        onClick={handleOpenThoughts}
+      />
+
+      {/* Recreate */}
+      <ActionButton
+        color="cyan"
+        active={hasRecreated || recreateCount > 0}
+        icon={<IoBookmarkOutline size={13} />}
+        activeIcon={<IoBookmark size={13} />}
+        count={recreateCount}
+        text={recreateCount !== 1 ? "Recreates" : "Recreate"}
+        onClick={handleRecreate}
+      />
     </div>
   );
 };

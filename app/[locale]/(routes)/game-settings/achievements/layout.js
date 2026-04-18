@@ -6,7 +6,7 @@ const MyAchievementsLayout = ({
   levelBadgesSlug,
 }) => {
   return (
-    <div className="p-3 space-y-4">
+    <div className="  page-wrapper space-y-4">
       {badgesSlug}
       {countryTasksSlug}
       {levelBadgesSlug}

@@ -5,7 +5,17 @@ import { usePagination } from "./usePagination";
 
 const PAGE_SIZE = 20;
 
-const fetcher = (url) =>
+// Read the non-httpOnly user-id cookie synchronously so the SWR key is
+// user-specific from the very first render, preventing cross-user cache leakage.
+const getCookieUserId = () => {
+  if (typeof document === "undefined") return null;
+  const entry = document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("doit-user-id="));
+  return entry ? decodeURIComponent(entry.split("=").slice(1).join("=")) : null;
+};
+
+const fetcher = ([url]) =>
   fetch(url).then((res) => {
     if (!res.ok) throw new Error("Failed to fetch objectives");
     return res.json();
@@ -13,23 +23,17 @@ const fetcher = (url) =>
 
 export const OBJECTIVES_PAGE1_KEY = `/api/user/task/objectives?status=todo&limit=${PAGE_SIZE}&offset=0`;
 
-/**
- * useObjectives
- * - initialData: SSR-fetched { objectives, total } passed as SWR fallback
- * - revalidateOnFocus / revalidateOnReconnect: live client-side freshness
- * - dedupingInterval: 15 min cache window — no redundant background fetches
- */
 export function useObjectives(initialData = null) {
-  const { data, error, isLoading, mutate } = useSWR(
-    OBJECTIVES_PAGE1_KEY,
-    fetcher,
-    {
-      fallbackData: initialData ?? undefined,
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 900000, // 15 min
-    },
-  );
+  const userId = getCookieUserId();
+  const swrKey = userId ? [OBJECTIVES_PAGE1_KEY, userId] : null;
+
+  const { data, error, isLoading, mutate } = useSWR(swrKey, fetcher, {
+    fallbackData: initialData ?? undefined,
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    revalidateOnMount: true,
+    dedupingInterval: 30000, // 30 sec
+  });
 
   const firstPage = data?.objectives ?? [];
   const total = data?.total ?? firstPage.length;

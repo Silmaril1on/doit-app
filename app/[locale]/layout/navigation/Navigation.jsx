@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 import { FaMoon, FaSun } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import Button from "../../components/buttons/Button";
+import UserSearch from "../../components/forms/UserSearch";
 
 const Navigation = () => {
   const { isDark, toggle } = useDarkMode();
@@ -18,6 +19,7 @@ const Navigation = () => {
   return (
     <nav className="p-3 flex w-full items-center justify-between bg-black">
       <Logo size="sm" />
+      <UserSearch />
       <DarkModeSection isDark={isDark} toggle={toggle} />
       <LoginButtonSection locale={locale} currentUser={currentUser} />
     </nav>

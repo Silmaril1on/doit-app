@@ -29,12 +29,6 @@ const normalizeBoolean = (value, fallback = false) => {
   return Boolean(value);
 };
 
-/**
- * Validates and normalises task_category.
- * Accepts a numeric category id (as number or stringified number).
- * Stores the integer id. Returns null for empty/absent values.
- * Throws for unrecognised ids so the client gets a clear 400.
- */
 const normalizeCategoryId = (value) => {
   if (value === "" || value == null) return null;
   const id = Number(value);

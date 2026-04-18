@@ -6,6 +6,7 @@ import {
   getAllObjectives,
   updateObjective,
 } from "@/app/[locale]/lib/services/tasks/objectives/myObjectives";
+import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 
 async function getUserId() {
   const cookieStore = await cookies();
@@ -54,7 +55,25 @@ export async function POST(request) {
     }
 
     const payload = await request.json();
-    const objective = await createObjective(userId, payload);
+    const { originalTaskId, ...createPayload } = payload;
+
+    const objective = await createObjective(userId, createPayload);
+
+    // If this is a recreate, atomically increment recreate_count on the source task
+    if (originalTaskId) {
+      const { data: source } = await supabaseAdmin
+        .from("objectives")
+        .select("recreate_count")
+        .eq("id", originalTaskId)
+        .maybeSingle();
+
+      if (source) {
+        await supabaseAdmin
+          .from("objectives")
+          .update({ recreate_count: (source.recreate_count ?? 0) + 1 })
+          .eq("id", originalTaskId);
+      }
+    }
 
     return NextResponse.json({ objective }, { status: 201 });
   } catch (err) {

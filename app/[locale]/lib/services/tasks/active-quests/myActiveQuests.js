@@ -1,5 +1,4 @@
 "use server";
-
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 import { revalidateTag } from "next/cache";
 import {
@@ -15,7 +14,6 @@ import {
   BADGE_MILESTONE_XP,
 } from "@/app/[locale]/lib/services/xp/xpConfig";
 import { badgesCacheTag } from "@/app/[locale]/lib/local-bd/categoryTypesData";
-import { createTaskCompletedNotification } from "@/app/[locale]/lib/services/notifications/notificationsTypes";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
 
 const TABLE_NAME = "objectives";
@@ -181,13 +179,18 @@ export async function updateActiveQuest(userId, questId, updates) {
     try {
       const user = await getUserById(userId);
       const displayName = user?.display_name ?? user?.first_name ?? "User";
+      console.log(
+        `[Task] Awarding XP for userId=${userId} priority=${existing.priority} displayName=${displayName}`,
+      );
       xpUpdate = await recordXpGain(
         userId,
         existing.priority ?? "low",
         displayName,
       );
-    } catch {
+      console.log(`[Task] XP awarded:`, xpUpdate);
+    } catch (xpErr) {
       // XP failure must never break task completion.
+      console.error(`[Task] XP gain failed for userId=${userId}:`, xpErr);
     }
   }
 
@@ -197,9 +200,14 @@ export async function updateActiveQuest(userId, questId, updates) {
     badgeResult.totalBadges % BADGE_MILESTONE_COUNT === 0
   ) {
     try {
+      console.log(
+        `[Task] Badge milestone hit (totalBadges=${badgeResult.totalBadges}), awarding ${BADGE_MILESTONE_XP} bonus XP`,
+      );
       xpUpdate = await recordFixedXpGain(userId, BADGE_MILESTONE_XP);
-    } catch {
+      console.log(`[Task] Bonus XP awarded:`, xpUpdate);
+    } catch (bonusErr) {
       // Bonus XP failure must never break task completion.
+      console.error(`[Task] Bonus XP failed for userId=${userId}:`, bonusErr);
     }
   }
 
@@ -208,7 +216,13 @@ export async function updateActiveQuest(userId, questId, updates) {
     try {
       const user = await getUserById(userId);
       const displayName = user?.display_name ?? user?.first_name ?? "User";
-      await createTaskCompletedNotification(userId, displayName);
+      await supabaseAdmin.from("notifications").insert({
+        user_id: userId,
+        status: "Task Completed",
+        message: "You have completed your task successfully.",
+        priority: "low",
+        display_name: displayName,
+      });
     } catch {
       // Notification failure must never break task completion.
     }

@@ -9,6 +9,7 @@ import { useUserProfile } from "@/app/[locale]/lib/hooks/userProfileHook";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { IoIosAdd } from "react-icons/io";
+import { FaUser } from "react-icons/fa";
 import { MdFilterAltOff } from "react-icons/md";
 import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
 import SearchBar from "@/app/[locale]/components/forms/SearchBar";
@@ -100,13 +101,17 @@ const AvatarSide = ({ buttonLabel, showCreateButton, onCreateClick }) => {
     <div className="flex flex-col justify-center gap-3">
       {profile && (
         <div className="flex items-start gap-3 ">
-          <div className="w-auto h-full rounded-lg overflow-hidden shrink-0 border border-teal-500/30 bg-teal-500/20">
-            <ImageTag
-              src={profile.image_url}
-              alt={profile.display_name}
-              width={120}
-              height={120}
-            />
+          <div className="w-auto h-full rounded-lg overflow-hidden shrink-0 border border-teal-500/30 bg-teal-500/20 flex items-center justify-center">
+            {profile.image_url ? (
+              <ImageTag
+                src={profile.image_url}
+                alt={profile.display_name}
+                width={120}
+                height={120}
+              />
+            ) : (
+              <FaUser size={48} className="text-teal-400/60 m-4" />
+            )}
           </div>
           <div className="leading-none h-auto w-full py-1 flex flex-col items-start justify-start space-y-3">
             <div className="*:leading-none ">
@@ -145,7 +150,6 @@ const LevelBar = () => {
       </span>
       <div className="relative flex-1 h-3 rounded-full bg-teal-500/10 border border-teal-500/20 overflow-hidden">
         <motion.div
-          key={level}
           className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-teal-600 to-teal-400"
           initial={{ width: "0%" }}
           animate={{ width: `${pct}%` }}

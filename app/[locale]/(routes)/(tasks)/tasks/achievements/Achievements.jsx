@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
+import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { useAchievements } from "@/app/[locale]/lib/hooks/useAchievements";
 import { ACTIVE_QUESTS_PAGE1_KEY } from "@/app/[locale]/lib/hooks/useActiveQuests";
 import { mutate as globalMutate } from "swr";
@@ -12,6 +13,8 @@ const REVALIDATE_MODALS = ["editObjective", "uploadGallery"];
 
 const Achievements = ({ initialData = null }) => {
   const dispatch = useDispatch();
+  const currentUser = useSelector(selectCurrentUser);
+  const userId = currentUser?.id ?? null;
   const {
     achievements: swrAchievements,
     hasMore,
@@ -47,7 +50,7 @@ const Achievements = ({ initialData = null }) => {
           setToast({ type: "success", msg: "Task moved to Active Quests" }),
         );
         mutate();
-        globalMutate(ACTIVE_QUESTS_PAGE1_KEY);
+        globalMutate([ACTIVE_QUESTS_PAGE1_KEY, userId]);
       } catch (error) {
         mutate();
         dispatch(
@@ -66,8 +69,8 @@ const Achievements = ({ initialData = null }) => {
 
   const handleModalClose = useCallback(() => {
     mutate();
-    globalMutate(ACTIVE_QUESTS_PAGE1_KEY);
-  }, [mutate]);
+    globalMutate([ACTIVE_QUESTS_PAGE1_KEY, userId]);
+  }, [mutate, userId]);
 
   return (
     <ObjectivePageWrapper
