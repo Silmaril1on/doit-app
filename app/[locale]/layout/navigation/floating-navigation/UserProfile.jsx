@@ -189,6 +189,7 @@ const ProfileBody = ({
               <Link
                 className="text-teal-500 hover:text-teal-300 leading-none"
                 href={`/${locale}/game-settings`}
+                onClick={() => setIsMenuOpen(false)}
               >
                 Game Settings
               </Link>

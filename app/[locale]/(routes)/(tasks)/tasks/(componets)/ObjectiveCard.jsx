@@ -117,6 +117,7 @@ const ObjectiveCard = ({
           onEdit={onEdit}
           onDelete={onDelete}
           onUploadGallery={handleOpenUploadGallery}
+          readOnly={readOnly}
         />
         <CardCategorySection
           categoryData={categoryData}
@@ -167,10 +168,30 @@ const CardHeader = ({
   menuRef,
   onEdit,
   onDelete,
+  readOnly,
 }) => {
+  const owner = readOnly ? objective.user : null;
   return (
     <div className="flex items-start justify-between gap-3">
-      <div className="leading-none mb-5">
+      <div className="leading-none mb-5 w-full">
+        {owner && (
+          <div className="flex items-center gap-2 mb-2">
+            {owner.image_url ? (
+              <img
+                src={owner.image_url}
+                alt={owner.display_name}
+                className="h-6 w-6 rounded-full object-cover"
+              />
+            ) : (
+              <span className="h-6 w-6 rounded-full bg-teal-500 center text-[10px] font-bold uppercase text-black flex items-center justify-center">
+                {owner.display_name?.[0] ?? "?"}
+              </span>
+            )}
+            <span className="secondary text-xs font-semibold text-teal-400 capitalize">
+              {owner.display_name}
+            </span>
+          </div>
+        )}
         <h2 className="text-2xl capitalize font-bold text-cream">
           {objective.task_title}
         </h2>
