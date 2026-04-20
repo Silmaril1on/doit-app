@@ -9,6 +9,9 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import Motion from "../../../components/motion/Motion";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
+import { supabaseClient } from "@/app/[locale]/lib/supabase/supabaseClient";
 
 const LIMIT = 5;
 
@@ -19,10 +22,11 @@ const NotificationsBadge = () => {
   const containerRef = useRef(null);
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
+  const user = useSelector(selectCurrentUser);
 
   const hasUnread = notifications.some((n) => !n.has_read);
 
-  // Fetch last 15 notifications; re-fetch each time the panel opens
+  // Initial fetch
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/admin/notifications?limit=${LIMIT}`)
@@ -37,6 +41,43 @@ const NotificationsBadge = () => {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  // Supabase Realtime — listen for new notifications inserted for this user
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabaseClient
+      .channel(`notifications-user-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          setNotifications((prev) => [payload.new, ...prev].slice(0, LIMIT));
+          setHasMore((prev) => prev); // preserve existing hasMore
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabaseClient.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  // Auto mark-all-read when the panel is closed after being opened
+  const wasOpenRef = useRef(false);
+  useEffect(() => {
+    if (wasOpenRef.current && !isOpen) {
+      // Panel just closed — silently mark all as read
+      fetch("/api/admin/notifications", { method: "PATCH" }).catch(() => {});
+      setNotifications((prev) => prev.map((n) => ({ ...n, has_read: true })));
+    }
+    wasOpenRef.current = isOpen;
   }, [isOpen]);
 
   // Close panel on outside click
