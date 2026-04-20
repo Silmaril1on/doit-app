@@ -23,12 +23,12 @@ const fetcher = ([url]) =>
 
 export const OBJECTIVES_PAGE1_KEY = `/api/user/task/objectives?status=todo&limit=${PAGE_SIZE}&offset=0`;
 
-export function useObjectives(initialData = null) {
-  const userId = getCookieUserId();
+export function useObjectives(initialData = null, userIdOverride = null) {
+  const userId = userIdOverride ?? getCookieUserId();
   const swrKey = userId ? [OBJECTIVES_PAGE1_KEY, userId] : null;
 
   const { data, error, isLoading, mutate } = useSWR(swrKey, fetcher, {
-    fallbackData: initialData ?? undefined,
+    fallbackData: initialData ?? { objectives: [], total: 0 },
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     revalidateOnMount: true,

@@ -182,7 +182,7 @@ const ProfileBody = ({
             <div className="flex flex-col gap-1 *:duration-300 *:w-fit">
               <Link
                 className="text-teal-500 hover:text-teal-300 leading-none"
-                href={`/${locale}/profile/my-achievements`}
+                href={`/${locale}/game-settings/achievements`}
               >
                 Badges
               </Link>

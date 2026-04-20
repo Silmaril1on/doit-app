@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-const AppImage = ({
+const ImageTag = ({
   src,
   alt = "",
   width,
@@ -41,4 +41,4 @@ const AppImage = ({
   );
 };
 
-export default AppImage;
+export default ImageTag;

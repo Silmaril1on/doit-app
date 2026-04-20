@@ -132,6 +132,10 @@ export async function acceptFriendRequest(friendshipId) {
   const userId = await getCallerId();
   if (!userId) throw new Error("Unauthorized");
 
+  console.log(
+    `[acceptFriendRequest] CALLED — friendshipId=${friendshipId} by userId=${userId}`,
+  );
+
   const { data, error } = await supabaseAdmin
     .from("friendships")
     .update({ status: "accepted" })
@@ -143,14 +147,18 @@ export async function acceptFriendRequest(friendshipId) {
 
   if (error) throw new Error(error.message);
 
-  // Feed events — each side sees the other as the new friend
+  console.log(
+    `[acceptFriendRequest] DB updated OK — requester_id=${data.requester_id} addressee_id=${data.addressee_id}`,
+  );
+
+  // Single feed event — stored under the requester's user_id only
   const { insertFeedEvent } =
     await import("@/app/[locale]/lib/services/tasks/feed/feedEvents");
+  console.log(
+    `[acceptFriendRequest] Calling insertFeedEvent ONCE with userId=${data.requester_id} friend_id=${data.addressee_id}`,
+  );
   insertFeedEvent(data.requester_id, "friendship", {
     friend_id: data.addressee_id,
-  });
-  insertFeedEvent(data.addressee_id, "friendship", {
-    friend_id: data.requester_id,
   });
 
   // Notify the requester — fire and forget

@@ -205,8 +205,6 @@ const resolveCountryAndCity = ({ data, countryName, cityName }) => {
   };
 };
 
-// Use case:
-// <CountryFlags data={countryAndCity} title={true} size="sm" />
 export const CountryFlags = ({
   data,
   title = false,
@@ -245,7 +243,7 @@ export const CountryFlags = ({
 
   return (
     <span
-      className={`flex justify-start items-center gap-1 *:leading-none capitalize secondary text-cream ${className}`}
+      className={`flex w-fit justify-start items-center gap-1 *:leading-none capitalize secondary text-cream ${className}`}
     >
       {countryCode && (
         <ReactCountryFlag

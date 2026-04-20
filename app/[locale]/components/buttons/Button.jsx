@@ -2,6 +2,7 @@
 import Link from "next/link";
 import React from "react";
 import BorderSvg from "../elements/BorderSvg";
+import Spinner from "../elements/Spinner";
 
 const variantClassMap = {
   fill: "bg-teal-500  text-black",
@@ -22,6 +23,7 @@ const Button = ({
   href,
   type = "button",
   disabled = false,
+  loading = false,
   className = "",
   form,
 }) => {
@@ -31,8 +33,14 @@ const Button = ({
 
   const content = (
     <div className=" center gap-1.5">
-      {icon && <span>{icon}</span>}
-      <h1>{text}</h1>
+      {loading ? (
+        <Spinner size={size === "sm" ? 11 : 14} />
+      ) : (
+        <>
+          {icon && <span>{icon}</span>}
+          <h1>{text}</h1>
+        </>
+      )}
     </div>
   );
 
@@ -49,7 +57,7 @@ const Button = ({
     <button
       type={type}
       form={form}
-      disabled={disabled}
+      disabled={disabled || loading}
       className={sharedClassName}
       onClick={onClick}
     >

@@ -33,6 +33,10 @@ const Feed = ({ initialItems = [], total = 0 }) => {
   } = usePagination({ pageSize: PAGE_SIZE });
 
   const allItems = [...initialItems, ...extraItems];
+  const uniqueItems = allItems.filter((item, index, arr) => {
+    const key = `${item._type}-${item.id}`;
+    return arr.findIndex((i) => `${i._type}-${i.id}` === key) === index;
+  });
   const hasMore = allItems.length < total;
 
   const fetchNextPage = useCallback(
@@ -53,7 +57,7 @@ const Feed = ({ initialItems = [], total = 0 }) => {
         </p>
       </div>
 
-      {allItems.length === 0 && (
+      {uniqueItems.length === 0 && (
         <ItemCard className="p-6 text-center">
           <p className="secondary text-sm text-chino/80">
             Nothing in your feed yet — add some friends to get started.
@@ -61,9 +65,9 @@ const Feed = ({ initialItems = [], total = 0 }) => {
         </ItemCard>
       )}
 
-      {allItems.length > 0 && (
+      {uniqueItems.length > 0 && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {allItems.map((item) => (
+          {uniqueItems.map((item) => (
             <FeedItem key={item.id} item={item} />
           ))}
         </div>

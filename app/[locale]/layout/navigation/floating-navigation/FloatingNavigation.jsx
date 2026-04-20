@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import ActionButton from "../../../components/buttons/ActionButton";
 import ArrowUpDown from "../../../components/elements/ArrowUpDown";
 import UserProfile from "./UserProfile";
@@ -12,6 +13,8 @@ const FloatingNavigation = () => {
   const [isOpen, setIsOpen] = useState(true);
   const user = useSelector(selectCurrentUser);
   const [open, setOpen] = useState(false);
+  const params = useParams();
+  const locale = typeof params?.locale === "string" ? params.locale : "en";
 
   if (!user) {
     return null;
@@ -42,26 +45,26 @@ const FloatingNavigation = () => {
             <div key="listory" className="absolute -top-25 flex flex-col gap-1">
               <ActionButton
                 variant="home"
-                href="/tasks/objectives"
+                href={`/${locale}/tasks/objectives`}
                 animation="bottom"
                 delay={0}
               />
               <ActionButton
                 variant="profile"
-                href="/tasks/active-quests"
+                href={`/${locale}/tasks/active-quests`}
                 animation="bottom"
                 delay={0.08}
               />
               <ActionButton
                 variant="achievements"
-                href="/tasks/achievements"
+                href={`/${locale}/tasks/achievements`}
                 animation="bottom"
                 delay={0.16}
               />
             </div>
           )}
         </AnimatePresence>
-        <ActionButton variant="home" text="Feed" href="/feed" />
+        <ActionButton variant="home" text="Feed" href={`/${locale}/feed`} />
       </div>
       <div className="flex items-center gap-2 ">
         <NotificationsBadge />

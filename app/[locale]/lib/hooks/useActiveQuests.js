@@ -21,12 +21,12 @@ const fetcher = ([url]) =>
 
 export const ACTIVE_QUESTS_PAGE1_KEY = `/api/user/task/active-quests?limit=${PAGE_SIZE}&offset=0`;
 
-export function useActiveQuests(initialData = null) {
-  const userId = getCookieUserId();
+export function useActiveQuests(initialData = null, userIdOverride = null) {
+  const userId = userIdOverride ?? getCookieUserId();
   const swrKey = userId ? [ACTIVE_QUESTS_PAGE1_KEY, userId] : null;
 
   const { data, error, isLoading, mutate } = useSWR(swrKey, fetcher, {
-    fallbackData: initialData ?? undefined,
+    fallbackData: initialData ?? { quests: [], total: 0 },
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     revalidateOnMount: true,

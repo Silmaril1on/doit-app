@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import BorderSvg from "../elements/BorderSvg";
 import { MdEdit, MdClose, MdHeartBroken, MdMenu } from "react-icons/md";
 import { FaTrash, FaHouseDamage, FaUser, FaUserPlus } from "react-icons/fa";
@@ -82,9 +83,15 @@ const ActionButton = ({
   return (
     <Motion className={className} animation={animation} delay={delay}>
       {href ? (
-        <a href={href} className={baseClass}>
-          {content}
-        </a>
+        disabled ? (
+          <span className={baseClass} aria-disabled="true">
+            {content}
+          </span>
+        ) : (
+          <Link href={href} className={baseClass} onClick={onClick}>
+            {content}
+          </Link>
+        )
       ) : (
         <button
           type={type ?? "button"}

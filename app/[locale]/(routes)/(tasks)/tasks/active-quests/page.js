@@ -15,7 +15,7 @@ const ActiveQuestsPage = async () => {
     }
   }
 
-  return <ActiveQuests initialData={initialData} />;
+  return <ActiveQuests initialData={initialData} userId={userId} />;
 };
 
 export default ActiveQuestsPage;

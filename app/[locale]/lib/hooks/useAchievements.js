@@ -21,12 +21,12 @@ const fetcher = ([url]) =>
 
 export const ACHIEVEMENTS_PAGE1_KEY = `/api/user/task/achievements?limit=${PAGE_SIZE}&offset=0`;
 
-export function useAchievements(initialData = null) {
-  const userId = getCookieUserId();
+export function useAchievements(initialData = null, userIdOverride = null) {
+  const userId = userIdOverride ?? getCookieUserId();
   const swrKey = userId ? [ACHIEVEMENTS_PAGE1_KEY, userId] : null;
 
   const { data, error, isLoading, mutate } = useSWR(swrKey, fetcher, {
-    fallbackData: initialData ?? undefined,
+    fallbackData: initialData ?? { achievements: [], total: 0 },
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
     revalidateOnMount: true,

@@ -33,7 +33,7 @@ export async function getUnifiedFriendsFeed({ offset = 0, limit = 20 } = {}) {
     // Re-use existing service; fetch up to 200 to allow proper merge+sort.
     // We pass offset=0 and a large limit here; real pagination is done below.
     getFriendsFeedTasks({ offset: 0, limit: 200 }),
-    getFriendFeedEvents(friendIds, { limit: 200 }),
+    getFriendFeedEvents(friendIds, userId, { limit: 200 }),
   ]);
 
   // Normalise tasks so they carry the same shape used by the renderer.

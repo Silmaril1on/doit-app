@@ -1,75 +1,33 @@
 import React from "react";
-import Image from "next/image";
-import { IoPersonAddOutline } from "react-icons/io5";
-import BorderSvg from "@/app/[locale]/components/elements/BorderSvg";
-
-function formatTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-const UserAvatar = ({ user, size = 32 }) =>
-  user?.image_url ? (
-    <Image
-      src={user.image_url}
-      alt={user.display_name ?? "user"}
-      width={size}
-      height={size}
-      className="rounded-full object-cover shrink-0"
-    />
-  ) : (
-    <div
-      className="rounded-full bg-teal-500/20 flex items-center justify-center shrink-0"
-      style={{ width: size, height: size }}
-    >
-      <span className="text-xs font-bold text-teal-300 uppercase">
-        {(user?.display_name ?? "?")[0]}
-      </span>
-    </div>
-  );
+import AvatarTag from "@/app/[locale]/components/elements/AvatarTag";
+import ItemCard from "../../components/container/ItemCard";
+import { FaHandshake } from "react-icons/fa6";
+import { timeAgo } from "@/app/[locale]/lib/utils/utils";
 
 const FriendshipCard = ({ item }) => {
   const { user, friend, occurred_at } = item;
 
   return (
-    <div className="rounded-lg p-3 bg-teal-400/10 backdrop-blur-lg relative overflow-hidden">
-      <BorderSvg strokeWidth={0.6} />
-      <div className="absolute left-0 top-0 w-[40%] h-[30%] rounded-full blur-[70px] -z-1 bg-teal-400 opacity-30" />
-
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
-        <UserAvatar user={user} />
-        <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold text-cream secondary">
-            {user?.display_name ?? "Someone"}
-          </span>
-          <span className="text-[10px] text-chino/60 secondary">
-            {formatTime(occurred_at)}
-          </span>
-        </div>
+    <ItemCard>
+      <div className="leading-none">
+        <p className="text-cream font-bold tracking-wide">NEW FRIENDSHIP</p>
+        <p className="text-[10px] secondary text-chino mb-3">
+          {timeAgo(occurred_at)}
+        </p>
       </div>
-
-      {/* Body */}
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-full border border-teal-500/40 bg-teal-500/10 text-teal-300 flex items-center justify-center shrink-0">
-          <IoPersonAddOutline size={20} />
-        </div>
-        <div className="flex items-center gap-2">
-          <div>
-            <p className="text-sm font-semibold text-cream leading-tight">
-              New friendship!
-            </p>
-            <p className="text-xs secondary text-chino/70 mt-0.5">
-              Now friends with{" "}
-              <span className="font-semibold text-teal-300">
-                {friend?.display_name ?? "someone"}
-              </span>
-            </p>
+      <div className="flex items-center justify-between gap-2">
+        <AvatarTag user={user} size="md" label={true} className="w-[38%]" />
+        <div className="flex flex-col items-center gap-1 w-[24%]">
+          <div className="h-11 w-11 rounded-full border border-teal-500/40 bg-teal-500/10 text-teal-300 flex items-center justify-center">
+            <FaHandshake size={22} />
           </div>
-          {friend && <UserAvatar user={friend} size={28} />}
+          <p className="text-[9px] secondary text-teal-400/70 text-center leading-tight">
+            Now friends
+          </p>
         </div>
+        <AvatarTag user={friend} size="md" label={true} className="w-[38%]" />
       </div>
-    </div>
+    </ItemCard>
   );
 };
 

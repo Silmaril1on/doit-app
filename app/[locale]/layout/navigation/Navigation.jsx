@@ -17,7 +17,7 @@ const Navigation = () => {
   const currentUser = useSelector(selectCurrentUser);
 
   return (
-    <nav className="p-3 flex w-full items-center justify-between bg-black">
+    <nav className="px-3 py-1 flex w-full items-center justify-between bg-black">
       <Logo size="sm" />
       <UserSearch />
       <DarkModeSection isDark={isDark} toggle={toggle} />

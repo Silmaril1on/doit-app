@@ -1,10 +1,10 @@
 "use client";
 import { clearUser, setUser } from "@/app/[locale]/lib/features/userSlice";
 import { setXp } from "@/app/[locale]/lib/features/xpSlice";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Provider } from "react-redux";
 import { useDispatch } from "react-redux";
-import { store } from "./store";
+import { makeStore } from "./store";
 
 const getCookieValue = (name) => {
   if (typeof document === "undefined") return null;
@@ -69,9 +69,17 @@ const StoreHydrator = ({ children }) => {
   return children;
 };
 
-export const StoreProvider = ({ children }) => {
+export const StoreProvider = ({ children, initialUser = null }) => {
+  const storeRef = useRef(null);
+
+  if (!storeRef.current) {
+    storeRef.current = makeStore({
+      user: { currentUser: initialUser },
+    });
+  }
+
   return (
-    <Provider store={store}>
+    <Provider store={storeRef.current}>
       <StoreHydrator>{children}</StoreHydrator>
     </Provider>
   );

@@ -1,202 +1,196 @@
 "use client";
-
 import { useState } from "react";
+import useSWR from "swr";
 import { useDispatch } from "react-redux";
-import AppImage from "@/app/[locale]/components/elements/ImageTag";
+import { setToast } from "@/app/[locale]/lib/features/toastSlice";
+import { CountryFlags } from "@/app/[locale]/components/elements/CountryFlags";
 import Button from "@/app/[locale]/components/buttons/Button";
+import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
+import AvatarTag from "@/app/[locale]/components/elements/AvatarTag";
+import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import {
   acceptFriendRequest,
   declineFriendRequest,
 } from "@/app/[locale]/lib/services/user/friendships";
-import { setToast } from "@/app/[locale]/lib/features/toastSlice";
+import { timeAgo } from "@/app/[locale]/lib/utils/utils";
 
-// ─── shared ──────────────────────────────────────────────────────────────────
-
-const Avatar = ({ imageUrl, displayName, initials }) => (
-  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-teal-500/30 bg-black/40">
-    {imageUrl ? (
-      <AppImage
-        src={imageUrl}
-        alt={displayName}
-        fill
-        className="object-cover"
-      />
-    ) : (
-      <div className="flex h-full w-full items-center justify-center text-sm font-bold text-teal-400">
-        {initials || "?"}
-      </div>
-    )}
-  </div>
-);
-
-const LocationLine = ({ city, country }) => {
-  const location = [city, country].filter(Boolean).join(", ");
-  if (!location) return null;
-  return <p className="secondary text-xs text-cream/30 truncate">{location}</p>;
-};
-
-// ─── request card ─────────────────────────────────────────────────────────────
-
-const RequestCard = ({ req, onAction }) => {
-  const [loading, setLoading] = useState(null);
-  const { requester } = req;
-
-  const fullName = [requester?.first_name, requester?.last_name]
+const PersonCard = ({ person, children }) => {
+  const fullName = [person?.first_name, person?.last_name]
     .filter(Boolean)
     .join(" ");
-  const initials = [requester?.first_name, requester?.last_name]
+  const initials = [person?.first_name, person?.last_name]
     .filter(Boolean)
     .map((n) => n[0])
     .join("");
 
+  return (
+    <ItemCard className="gap-3 center">
+      <AvatarTag
+        imageUrl={person?.image_url}
+        displayName={person?.display_name}
+        initials={initials}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="secondary capitalize text-sm font-semibold text-cream">
+          {fullName || person?.display_name}
+        </p>
+        <CountryFlags
+          title
+          countryName={person?.country}
+          cityName={person?.city}
+          size="sm"
+        />
+      </div>
+      {children}
+    </ItemCard>
+  );
+};
+
+const RequestCard = ({ req, onAction }) => {
+  const [loading, setLoading] = useState(null);
+
   const handle = async (action) => {
     setLoading(action);
-    await onAction(req.id, action);
+    await onAction(req, action);
     setLoading(null);
   };
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-teal-500/15 bg-teal-500/5 px-4 py-3 transition-colors duration-200">
-      <Avatar
-        imageUrl={requester?.image_url}
-        displayName={requester?.display_name}
-        initials={initials}
-      />
-
-      <div className="min-w-0 flex-1">
-        {fullName && (
-          <p className="secondary text-sm font-semibold text-cream truncate">
-            {fullName}
-          </p>
-        )}
-        <p className="secondary text-xs text-teal-400 truncate">
-          @{requester?.display_name ?? "unknown"}
-        </p>
-        {requester?.email && (
-          <p className="secondary text-xs text-cream/40 truncate">
-            {requester.email}
-          </p>
-        )}
-        <LocationLine city={requester?.city} country={requester?.country} />
-      </div>
-
+    <PersonCard person={req.requester}>
       <div className="flex gap-2 shrink-0">
         <Button
-          text={loading === "accept" ? "…" : "Accept"}
+          text="Accept"
           size="sm"
           variant="fill"
+          loading={loading === "accept"}
           disabled={loading !== null}
           onClick={() => handle("accept")}
         />
         <Button
-          text={loading === "decline" ? "…" : "Decline"}
+          text="Decline"
           size="sm"
           variant="outline"
+          loading={loading === "decline"}
           disabled={loading !== null}
           onClick={() => handle("decline")}
         />
       </div>
-    </div>
+    </PersonCard>
   );
 };
 
-// ─── friend card ──────────────────────────────────────────────────────────────
-
 const FriendCard = ({ entry }) => {
-  const { friend, friends_since } = entry;
-
-  const fullName = [friend?.first_name, friend?.last_name]
-    .filter(Boolean)
-    .join(" ");
-  const initials = [friend?.first_name, friend?.last_name]
-    .filter(Boolean)
-    .map((n) => n[0])
-    .join("");
-
-  const since = friends_since
-    ? new Date(friends_since).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : null;
+  const since = entry.friends_since;
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-teal-500/15 bg-teal-500/5 px-4 py-3 transition-colors duration-200">
-      <Avatar
-        imageUrl={friend?.image_url}
-        displayName={friend?.display_name}
-        initials={initials}
-      />
-
-      <div className="min-w-0 flex-1">
-        {fullName && (
-          <p className="secondary text-sm font-semibold text-cream truncate">
-            {fullName}
-          </p>
-        )}
-        <p className="secondary text-xs text-teal-400 truncate">
-          @{friend?.display_name ?? "unknown"}
-        </p>
-        {friend?.email && (
-          <p className="secondary text-xs text-cream/40 truncate">
-            {friend.email}
-          </p>
-        )}
-        <LocationLine city={friend?.city} country={friend?.country} />
-      </div>
-
+    <PersonCard person={entry.friend}>
       {since && (
         <p className="secondary text-xs text-cream/30 shrink-0 text-right">
           Friends since
           <br />
-          <span className="text-teal-400/60">{since}</span>
+          <span className="text-teal-400/60">{timeAgo(since)}</span>
         </p>
       )}
-    </div>
+    </PersonCard>
   );
 };
 
-// ─── main ─────────────────────────────────────────────────────────────────────
+const fetcher = (url) =>
+  fetch(url).then((res) => {
+    if (!res.ok) throw new Error("Failed to fetch");
+    return res.json();
+  });
 
 const Friendship = ({ requests, friends }) => {
-  const [requestList, setRequestList] = useState(requests);
+  const { data: requestsData, mutate: mutateRequests } = useSWR(
+    "/api/add-friend",
+    fetcher,
+    {
+      fallbackData: { requests },
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 600000,
+    },
+  );
+
+  const { data: friendsData, mutate: mutateFriends } = useSWR(
+    "/api/friends",
+    fetcher,
+    {
+      fallbackData: { friends },
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 600000,
+    },
+  );
+
+  const requestList = requestsData?.requests ?? [];
+  const friendsList = friendsData?.friends ?? [];
   const dispatch = useDispatch();
 
-  const handleAction = async (friendshipId, action) => {
+  const handleAction = async (req, action) => {
+    const friendshipId = req.id;
     try {
       if (action === "accept") {
+        mutateRequests(
+          (current) => {
+            const next = (current?.requests ?? []).filter(
+              (r) => r.id !== friendshipId,
+            );
+            return { ...(current ?? {}), requests: next };
+          },
+          { revalidate: false },
+        );
+
+        mutateFriends(
+          (current) => {
+            const prev = current?.friends ?? [];
+            const exists = prev.some((f) => f.id === friendshipId);
+            if (exists) return current;
+            const optimisticFriend = {
+              id: friendshipId,
+              friends_since: new Date().toISOString(),
+              friend: req.requester ?? null,
+            };
+            return { ...(current ?? {}), friends: [optimisticFriend, ...prev] };
+          },
+          { revalidate: false },
+        );
+
         await acceptFriendRequest(friendshipId);
         dispatch(
           setToast({ msg: "Friend request accepted!", type: "success" }),
         );
+        mutateRequests();
+        mutateFriends();
       } else {
         await declineFriendRequest(friendshipId);
         dispatch(
           setToast({ msg: "Friend request declined.", type: "success" }),
         );
+        mutateRequests();
       }
-      setRequestList((prev) => prev.filter((r) => r.id !== friendshipId));
     } catch (err) {
+      mutateRequests();
+      mutateFriends();
       dispatch(setToast({ msg: err.message, type: "error" }));
     }
   };
 
   return (
-    <div className="page-wrapper  max-w-xl mx-auto flex flex-col gap-10">
+    <div className="page-wrapper flex flex-col gap-5">
       {/* ── Pending requests ── */}
-      <section>
-        <h1 className="primary text-2xl text-cream mb-1">Friend Requests</h1>
-        <p className="secondary text-xs text-cream/40 mb-6">
-          {requestList.length} pending
-        </p>
-
+      <section className="space-y-2 ">
+        <SectionHeadline
+          title="Friend Requests"
+          subtitle={`${requestList.length} pending`}
+        />
         {requestList.length === 0 ? (
           <p className="secondary text-sm text-cream/40 text-center py-8">
             No pending friend requests.
           </p>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 pb-2">
             {requestList.map((req) => (
               <RequestCard key={req.id} req={req} onAction={handleAction} />
             ))}
@@ -205,19 +199,18 @@ const Friendship = ({ requests, friends }) => {
       </section>
 
       {/* ── Friends list ── */}
-      <section>
-        <h2 className="primary text-2xl text-cream mb-1">Friends</h2>
-        <p className="secondary text-xs text-cream/40 mb-6">
-          {friends.length} connected
-        </p>
-
-        {friends.length === 0 ? (
+      <section className="space-y-2">
+        <SectionHeadline
+          title="Friends"
+          subtitle={`${friendsList.length} connected`}
+        />
+        {friendsList.length === 0 ? (
           <p className="secondary text-sm text-cream/40 text-center py-8">
             No friends yet. Start connecting!
           </p>
         ) : (
-          <div className="flex flex-col gap-3">
-            {friends.map((entry) => (
+          <div className="flex flex-col gap-3 pb-2">
+            {friendsList.map((entry) => (
               <FriendCard key={entry.id} entry={entry} />
             ))}
           </div>

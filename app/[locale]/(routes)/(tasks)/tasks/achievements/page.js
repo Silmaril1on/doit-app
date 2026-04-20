@@ -15,7 +15,7 @@ const AchievementsPage = async () => {
     }
   }
 
-  return <Achievements initialData={initialData} />;
+  return <Achievements initialData={initialData} userId={userId} />;
 };
 
 export default AchievementsPage;

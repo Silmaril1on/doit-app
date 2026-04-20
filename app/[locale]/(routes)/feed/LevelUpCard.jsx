@@ -1,7 +1,9 @@
 import React from "react";
-import Image from "next/image";
 import { IoFlashOutline } from "react-icons/io5";
-import BorderSvg from "@/app/[locale]/components/elements/BorderSvg";
+import { timeAgo } from "../../lib/utils/utils";
+import ItemCard from "../../components/container/ItemCard";
+import AvatarTag from "@/app/[locale]/components/elements/AvatarTag";
+import FormatedTime from "../../components/elements/FormatedTime";
 
 const TIER_COLORS = {
   bronze: {
@@ -39,11 +41,6 @@ const BADGE_BY_LEVEL = {
   30: "legend",
 };
 
-function formatTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
 const LevelUpCard = ({ item }) => {
   const { payload, user, occurred_at } = item;
   const level = payload?.current_level ?? payload?.new_level ?? null;
@@ -61,56 +58,29 @@ const LevelUpCard = ({ item }) => {
     : "Badge";
 
   return (
-    <div className="rounded-lg p-3 bg-teal-400/10 backdrop-blur-lg relative overflow-hidden">
-      <BorderSvg strokeWidth={0.6} />
-      <div
-        className={`absolute left-0 top-0 w-[40%] h-[30%] rounded-full blur-[70px] -z-1 opacity-20 ${colors.glow}`}
-      />
-
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
-        {user?.image_url ? (
-          <Image
-            src={user.image_url}
-            alt={user.display_name ?? "user"}
-            width={32}
-            height={32}
-            className="rounded-full object-cover shrink-0"
-          />
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center shrink-0">
-            <span className="text-xs font-bold text-teal-300 uppercase">
-              {(user?.display_name ?? "?")[0]}
-            </span>
+    <ItemCard>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="flex gap-1">
+            <AvatarTag user={user} size="md" />
+            <div className="flex flex-col justify-end">
+              <FormatedTime time={timeAgo(occurred_at)} />
+              <p className="text-sm secondary text-cream font-light">
+                <b className="font-bold">{user?.display_name}</b> has reached
+                level {level} and acquired the{" "}
+                <span className={`font-bold ${textClass}`}>{badgeLabel}</span>{" "}
+                badge!
+              </p>
+            </div>
           </div>
-        )}
-        <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold text-cream secondary">
-            {user?.display_name ?? "Someone"}
-          </span>
-          <span className="text-[10px] text-chino/60 secondary">
-            {formatTime(occurred_at)}
-          </span>
         </div>
-      </div>
-
-      {/* Body */}
-      <div className="flex items-center gap-3">
         <div
-          className={`h-12 w-12 rounded-full border flex items-center justify-center shrink-0 ${colors.ring}`}
+          className={`h-12 w-12 rounded-md border flex items-center justify-center shrink-0 ${colors.ring}`}
         >
           <IoFlashOutline size={20} />
         </div>
-        <div>
-          <p className="text-sm font-semibold text-cream leading-tight">
-            {user?.display_name ?? "Someone"} has reached level {level} and
-            acquired the{" "}
-            <span className={`font-bold ${textClass}`}>{badgeLabel}</span>{" "}
-            badge!
-          </p>
-        </div>
       </div>
-    </div>
+    </ItemCard>
   );
 };
 

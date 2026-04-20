@@ -4,6 +4,8 @@ import {
 } from "@/app/[locale]/lib/services/user/friendships";
 import Friendship from "./Friendship";
 
+export const dynamic = "force-dynamic";
+
 const ProfileFriendshipPage = async () => {
   const [requests, friends] = await Promise.all([
     getPendingFriendRequests().catch(() => []),

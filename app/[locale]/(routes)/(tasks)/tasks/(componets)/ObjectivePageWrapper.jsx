@@ -1,10 +1,16 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import Button from "@/app/[locale]/components/buttons/Button";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
+import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
+import SearchBar from "@/app/[locale]/components/forms/SearchBar";
+import DonutChart from "@/app/[locale]/components/elements/DonutChart";
 import ObjectiveCard from "./ObjectiveCard";
 import ObjectivesSideBar from "./ObjectivesSideBar";
+import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { MdFilterAltOff } from "react-icons/md";
+import { IoIosAdd } from "react-icons/io";
 import { clearToast } from "@/app/[locale]/lib/features/toastSlice";
 import { selectModal } from "@/app/[locale]/lib/features/modalSlice";
 import { useModal } from "@/app/[locale]/lib/hooks/useModal";
@@ -14,7 +20,6 @@ import {
   searchItems,
   OBJECTIVE_SEARCH_FIELDS,
 } from "@/app/[locale]/lib/utils/filterConfig";
-import ObjectivesHeader from "./ObjectivesHeader";
 
 const ObjectivePageWrapper = ({
   items = [],
@@ -44,7 +49,6 @@ const ObjectivePageWrapper = ({
   const { open } = useModal();
   const { modalType } = useSelector(selectModal);
   const lastModalTypeRef = useRef(modalType);
-
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [searchQuery, setSearchQuery] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -79,24 +83,40 @@ const ObjectivePageWrapper = ({
 
   const searched = searchItems(items, searchQuery, OBJECTIVE_SEARCH_FIELDS);
   const filteredItems = applyObjectivesFilters(searched, filters);
+  const hasActiveFilters = Object.values(filters).some((v) => v?.length > 0);
 
   return (
-    <section className="w-full grow px-3 pb-28 flex flex-col gap-3 bg-black">
+    <section className="w-full grow pb-28 flex flex-col gap-3 bg-black">
+      <SectionHeadline title={title} subtitle={subtitle} />
       {showHeader && (
-        <ObjectivesHeader
-          items={items}
-          title={title}
-          subtitle={subtitle}
-          buttonLabel={derivedButtonLabel}
-          showCreateButton={showCreateButton}
-          showControls={true}
-          onCreateClick={showCreateButton ? handleOpenCreate : undefined}
-          onOpenSidebar={() => setSidebarOpen(true)}
-          filters={filters}
-          onClearFilters={() => setFilters(EMPTY_FILTERS)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
+        <>
+          <ItemCard className="w-full">
+            <DonutChart items={items} showLegend />
+          </ItemCard>
+          <div className="flex items-center gap-2">
+            <ActionButton variant="menu" onClick={() => setSidebarOpen(true)} />
+            {hasActiveFilters && (
+              <ActionButton
+                icon={<MdFilterAltOff />}
+                onClick={() => setFilters(EMPTY_FILTERS)}
+                ariaLabel="Clear filters"
+              />
+            )}
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search objectives…"
+              className="flex-1"
+            />
+            {showCreateButton && (
+              <Button
+                icon={<IoIosAdd size={20} />}
+                text={derivedButtonLabel}
+                onClick={handleOpenCreate}
+              />
+            )}
+          </div>
+        </>
       )}
 
       {showSidebar && (
@@ -109,7 +129,7 @@ const ObjectivePageWrapper = ({
         />
       )}
 
-      {isLoading && (
+      {isLoading && items.length === 0 && (
         <p className="secondary text-sm text-chino/70">
           Loading {title.toLowerCase()}...
         </p>
@@ -129,7 +149,7 @@ const ObjectivePageWrapper = ({
         </ItemCard>
       )}
 
-      {!isLoading && filteredItems.length > 0 && (
+      {filteredItems.length > 0 && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {filteredItems.map((item) =>
             renderCardBefore ? (
@@ -165,7 +185,7 @@ const ObjectivePageWrapper = ({
         </div>
       )}
 
-      {!isLoading && hasMore && (
+      {hasMore && (
         <div className="flex justify-center pt-2">
           <Button
             text={isLoadingMore ? "Loading..." : "Load More"}

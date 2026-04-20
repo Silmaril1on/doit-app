@@ -1,10 +1,17 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 
-// segments: { key, value, color, label?, percent? }[]
-// size, strokeWidth, gap, showLegend — optional
+export const PRIORITY_CONFIG = [
+  { key: "low", label: "Low", color: "#0ea5e9" },
+  { key: "medium", label: "Medium", color: "#8b5cf6" },
+  { key: "high", label: "High", color: "#dc143c" },
+];
+
+export const GAP = 3;
+
 const DonutChart = ({
-  segments = [],
+  segments: segmentsProp = [],
+  items,
   size = 110,
   strokeWidth = 16,
   gap = 3,
@@ -12,6 +19,16 @@ const DonutChart = ({
   centerSubLabel = "total",
   showLegend = false,
 }) => {
+  const segments = items
+    ? PRIORITY_CONFIG.map((cfg) => {
+        const total = items.length;
+        const value = items.filter(
+          (o) => (o.priority || "medium") === cfg.key,
+        ).length;
+        const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+        return { ...cfg, value, percent };
+      })
+    : segmentsProp;
   const radius = (size - strokeWidth) / 2;
   const cx = size / 2;
   const cy = size / 2;

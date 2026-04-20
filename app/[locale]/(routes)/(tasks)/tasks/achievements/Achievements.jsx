@@ -11,10 +11,10 @@ import ObjectivePageWrapper from "../(componets)/ObjectivePageWrapper";
 
 const REVALIDATE_MODALS = ["editObjective", "uploadGallery"];
 
-const Achievements = ({ initialData = null }) => {
+const Achievements = ({ initialData = null, userId: userIdProp = null }) => {
   const dispatch = useDispatch();
   const currentUser = useSelector(selectCurrentUser);
-  const userId = currentUser?.id ?? null;
+  const userId = userIdProp ?? currentUser?.id ?? null;
   const {
     achievements: swrAchievements,
     hasMore,
@@ -22,7 +22,7 @@ const Achievements = ({ initialData = null }) => {
     isLoadingMore,
     loadMore,
     mutate,
-  } = useAchievements(initialData);
+  } = useAchievements(initialData, userIdProp);
 
   const [achievements, setAchievements] = useState(swrAchievements);
   useEffect(() => {

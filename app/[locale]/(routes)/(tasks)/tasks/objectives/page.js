@@ -19,7 +19,7 @@ const ObjectivesPage = async () => {
     }
   }
 
-  return <Objectives initialData={initialData} />;
+  return <Objectives initialData={initialData} userId={userId} />;
 };
 
 export default ObjectivesPage;

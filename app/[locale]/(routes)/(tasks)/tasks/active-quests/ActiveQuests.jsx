@@ -12,10 +12,10 @@ import ObjectivePageWrapper from "../(componets)/ObjectivePageWrapper";
 
 const REVALIDATE_MODALS = ["editObjective"];
 
-const ActiveQuests = ({ initialData = null }) => {
+const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
   const dispatch = useDispatch();
   const currentUser = useSelector(selectCurrentUser);
-  const userId = currentUser?.id ?? null;
+  const userId = userIdProp ?? currentUser?.id ?? null;
   const {
     quests: swrQuests,
     hasMore,
@@ -23,29 +23,24 @@ const ActiveQuests = ({ initialData = null }) => {
     isLoadingMore,
     loadMore,
     mutate,
-  } = useActiveQuests(initialData);
-
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  // Fallback: re-fetch XP from the API and sync Redux when xpUpdate is missing
-  const refreshXp = useCallback(async () => {
-    try {
-      const res = await fetch("/api/user/xp", { cache: "no-store" });
-      if (res.ok) {
-        const xpData = await res.json();
-        console.log("[Client] Refreshed XP from API:", xpData?.xp);
-        if (xpData?.xp) dispatch(setXp(xpData.xp));
-      }
-    } catch (err) {
-      console.error("[Client] XP refresh failed:", err);
-    }
-  }, [dispatch]);
+  } = useActiveQuests(initialData, userIdProp);
 
   const [quests, setQuests] = useState(() => initialData?.quests ?? []);
   useEffect(() => {
     setQuests(swrQuests);
   }, [swrQuests]);
+
+  const refreshXp = useCallback(async () => {
+    try {
+      const res = await fetch("/api/user/xp", { cache: "no-store" });
+      if (res.ok) {
+        const xpData = await res.json();
+        if (xpData?.xp) dispatch(setXp(xpData.xp));
+      }
+    } catch {
+      // silently ignore
+    }
+  }, [dispatch]);
 
   const handleToggleSubtask = useCallback(
     async (quest, subtaskIndex) => {
@@ -255,7 +250,7 @@ const ActiveQuests = ({ initialData = null }) => {
     <ObjectivePageWrapper
       items={quests}
       hasMore={hasMore}
-      isLoading={mounted && isLoading}
+      isLoading={isLoading}
       isLoadingMore={isLoadingMore}
       loadMore={loadMore}
       title="Active Quests"

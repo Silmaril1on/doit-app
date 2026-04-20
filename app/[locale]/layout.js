@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { Teko, Jost } from "next/font/google";
 import "./globals.css";
 import Footer from "./layout/footer/Footer";
@@ -40,6 +41,18 @@ export default async function RootLayout({ children, params }) {
 
   setRequestLocale(locale);
 
+  const cookieStore = await cookies();
+  const rawUser = cookieStore.get("doit-user")?.value ?? null;
+  let initialUser = null;
+
+  if (rawUser) {
+    try {
+      initialUser = JSON.parse(decodeURIComponent(rawUser));
+    } catch {
+      initialUser = null;
+    }
+  }
+
   return (
     <html
       lang={locale}
@@ -47,9 +60,8 @@ export default async function RootLayout({ children, params }) {
     >
       <body className="min-h-full flex flex-col items-center relative overflow-x-hidden">
         <NextIntlClientProvider>
-          <StoreProvider>
+          <StoreProvider initialUser={initialUser}>
             <DarkModeProvider>
-              {/* <Navigation /> */}
               <NavigationWrapper />
               <div className="center w-full flex-col *:w-full grow *:grow ">
                 {children}

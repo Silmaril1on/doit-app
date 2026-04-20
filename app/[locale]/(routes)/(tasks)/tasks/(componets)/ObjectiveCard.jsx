@@ -14,6 +14,8 @@ import { IoMdClose, IoMdArrowDropright, IoIosCheckmark } from "react-icons/io";
 import { AiFillFire, AiOutlineFire } from "react-icons/ai";
 import { MdOutlineReviews, MdReviews } from "react-icons/md";
 import { IoBookmarkOutline, IoBookmark } from "react-icons/io5";
+import Image from "next/image";
+import AvatarTag from "@/app/[locale]/components/elements/AvatarTag";
 
 const priorityColorMap = {
   low: "blue",
@@ -102,8 +104,15 @@ const ObjectiveCard = ({
     );
   }, [dispatch, objective.id, objective.task_title, subtasks]);
 
+  const owner = readOnly ? objective.user : null;
+
   return (
     <>
+      {owner && (
+        <div className="flex items-center justify-start">
+          <AvatarTag user={owner} size="sm" />
+        </div>
+      )}
       <ItemCard className="space-y-3 rounded-xl border border-teal-500/20 bg-black/45 p-4">
         <CardHeader
           objective={objective}
@@ -168,30 +177,11 @@ const CardHeader = ({
   menuRef,
   onEdit,
   onDelete,
-  readOnly,
+  onUploadGallery,
 }) => {
-  const owner = readOnly ? objective.user : null;
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="leading-none mb-5 w-full">
-        {owner && (
-          <div className="flex items-center gap-2 mb-2">
-            {owner.image_url ? (
-              <img
-                src={owner.image_url}
-                alt={owner.display_name}
-                className="h-6 w-6 rounded-full object-cover"
-              />
-            ) : (
-              <span className="h-6 w-6 rounded-full bg-teal-500 center text-[10px] font-bold uppercase text-black flex items-center justify-center">
-                {owner.display_name?.[0] ?? "?"}
-              </span>
-            )}
-            <span className="secondary text-xs font-semibold text-teal-400 capitalize">
-              {owner.display_name}
-            </span>
-          </div>
-        )}
         <h2 className="text-2xl capitalize font-bold text-cream">
           {objective.task_title}
         </h2>

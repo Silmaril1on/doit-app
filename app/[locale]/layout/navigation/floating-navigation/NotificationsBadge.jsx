@@ -1,17 +1,16 @@
 "use client";
-
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IoIosNotifications } from "react-icons/io";
 import { IoMdClose } from "react-icons/io";
-import ActionButton from "../../../components/buttons/ActionButton";
-import Button from "../../../components/buttons/Button";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
-import Motion from "../../../components/motion/Motion";
+import { supabaseClient } from "@/app/[locale]/lib/supabase/supabaseClient";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
-import { supabaseClient } from "@/app/[locale]/lib/supabase/supabaseClient";
+import ActionButton from "../../../components/buttons/ActionButton";
+import Button from "../../../components/buttons/Button";
+import Link from "next/link";
+import Motion from "../../../components/motion/Motion";
 
 const LIMIT = 5;
 
@@ -22,7 +21,8 @@ const NotificationsBadge = () => {
   const containerRef = useRef(null);
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
-  const user = useSelector(selectCurrentUser);
+  const currentUser = useSelector(selectCurrentUser);
+  const userId = currentUser?.id ?? null;
 
   const hasUnread = notifications.some((n) => !n.has_read);
 
@@ -45,21 +45,25 @@ const NotificationsBadge = () => {
 
   // Supabase Realtime — listen for new notifications inserted for this user
   useEffect(() => {
-    if (!user?.id) return;
-
+    if (!userId) return;
     const channel = supabaseClient
-      .channel(`notifications-user-${user.id}`)
+      .channel(`notifications-user-${userId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          setNotifications((prev) => [payload.new, ...prev].slice(0, LIMIT));
-          setHasMore((prev) => prev); // preserve existing hasMore
+          // Filter client-side — server-side row filter requires REPLICA IDENTITY FULL
+          if (payload.new.user_id !== userId) return;
+          setNotifications((prev) => {
+            if (prev.some((n) => n.id === payload.new.id)) return prev;
+            const next = [payload.new, ...prev];
+            if (next.length > LIMIT) setHasMore(true);
+            return next.slice(0, LIMIT);
+          });
         },
       )
       .subscribe();
@@ -67,18 +71,7 @@ const NotificationsBadge = () => {
     return () => {
       supabaseClient.removeChannel(channel);
     };
-  }, [user?.id]);
-
-  // Auto mark-all-read when the panel is closed after being opened
-  const wasOpenRef = useRef(false);
-  useEffect(() => {
-    if (wasOpenRef.current && !isOpen) {
-      // Panel just closed — silently mark all as read
-      fetch("/api/admin/notifications", { method: "PATCH" }).catch(() => {});
-      setNotifications((prev) => prev.map((n) => ({ ...n, has_read: true })));
-    }
-    wasOpenRef.current = isOpen;
-  }, [isOpen]);
+  }, [userId]);
 
   // Close panel on outside click
   useEffect(() => {

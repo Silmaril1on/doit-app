@@ -11,10 +11,10 @@ import ObjectivePageWrapper from "../(componets)/ObjectivePageWrapper";
 
 const REVALIDATE_MODALS = ["createObjective", "editObjective"];
 
-const Objectives = ({ initialData = null }) => {
+const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
   const dispatch = useDispatch();
   const currentUser = useSelector(selectCurrentUser);
-  const userId = currentUser?.id ?? null;
+  const userId = userIdProp ?? currentUser?.id ?? null;
   const {
     objectives: swrObjectives,
     hasMore,
@@ -22,13 +22,8 @@ const Objectives = ({ initialData = null }) => {
     isLoadingMore,
     loadMore,
     mutate,
-  } = useObjectives(initialData);
+  } = useObjectives(initialData, userIdProp);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-
-  // Initialize from the serialized server prop so server and client agree on the
-  // first render. After mount, the useEffect below keeps it in sync with SWR.
   const [objectives, setObjectives] = useState(
     () => initialData?.objectives ?? [],
   );
@@ -150,7 +145,7 @@ const Objectives = ({ initialData = null }) => {
     <ObjectivePageWrapper
       items={objectives}
       hasMore={hasMore}
-      isLoading={mounted && isLoading}
+      isLoading={isLoading}
       isLoadingMore={isLoadingMore}
       loadMore={loadMore}
       title="Objectives"
