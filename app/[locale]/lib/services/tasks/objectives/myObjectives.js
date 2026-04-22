@@ -280,3 +280,26 @@ export async function deleteObjective(userId, objectiveId) {
 
   return data;
 }
+
+export async function getObjectiveStatsByUserId(userId) {
+  if (!userId) return { byStatus: {}, byPriority: {}, total: 0 };
+
+  const { data, error } = await supabaseAdmin
+    .from(TABLE_NAME)
+    .select("status,priority")
+    .eq("user_id", userId);
+
+  if (error) return { byStatus: {}, byPriority: {}, total: 0 };
+
+  const byStatus = { todo: 0, in_progress: 0, completed: 0 };
+  const byPriority = { low: 0, medium: 0, high: 0 };
+  let total = 0;
+
+  for (const row of data ?? []) {
+    total++;
+    if (row.status in byStatus) byStatus[row.status]++;
+    if (row.priority in byPriority) byPriority[row.priority]++;
+  }
+
+  return { byStatus, byPriority, total };
+}

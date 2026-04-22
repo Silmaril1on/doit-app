@@ -3,9 +3,7 @@ import React, { useCallback } from "react";
 import { usePagination } from "@/app/[locale]/lib/hooks/usePagination";
 import { getUnifiedFriendsFeed } from "@/app/[locale]/lib/services/tasks/feed/feedService";
 import ObjectiveCard from "@/app/[locale]/(routes)/(tasks)/tasks/(componets)/ObjectiveCard";
-import LevelUpCard from "./LevelUpCard";
-import BadgeCard from "./BadgeCard";
-import FriendshipCard from "./FriendshipCard";
+import FeedCard from "./FeedCard";
 import Button from "@/app/[locale]/components/buttons/Button";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 
@@ -14,11 +12,9 @@ const PAGE_SIZE = 20;
 const FeedItem = ({ item }) => {
   switch (item._type) {
     case "levelup":
-      return <LevelUpCard item={item} />;
     case "badge":
-      return <BadgeCard item={item} />;
     case "friendship":
-      return <FriendshipCard item={item} />;
+      return <FeedCard item={item} />;
     case "task":
     default:
       return <ObjectiveCard objective={item} readOnly />;
@@ -49,8 +45,8 @@ const Feed = ({ initialItems = [], total = 0 }) => {
   }, [hasMore, _loadMore, fetchNextPage]);
 
   return (
-    <section className="w-full grow px-3 pb-28 flex flex-col gap-3 bg-black">
-      <div className="pt-4 px-1">
+    <section className="w-full grow px-3 pb-20 pt-15 flex flex-col gap-3 bg-black ">
+      <div className="px-1 ">
         <h1 className="text-lg font-bold text-cream">Friends Feed</h1>
         <p className="text-xs secondary text-chino/60">
           See what your friends are up to.

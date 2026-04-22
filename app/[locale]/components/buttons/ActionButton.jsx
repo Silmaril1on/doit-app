@@ -5,6 +5,7 @@ import { MdEdit, MdClose, MdHeartBroken, MdMenu } from "react-icons/md";
 import { FaTrash, FaHouseDamage, FaUser, FaUserPlus } from "react-icons/fa";
 import { IoMdClose, IoIosSend } from "react-icons/io";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { IoQrCode } from "react-icons/io5";
 import { RiImageAddFill } from "react-icons/ri";
 import Motion from "../motion/Motion";
 
@@ -22,6 +23,7 @@ const VARIANTS = {
   uploadImage: { icon: RiImageAddFill, color: "teal" },
   add: { icon: FaUserPlus, color: "teal" },
   send: { icon: IoIosSend, color: "teal" },
+  qr: { icon: IoQrCode, color: "teal" },
 };
 
 const COLOR_CLASSES = {

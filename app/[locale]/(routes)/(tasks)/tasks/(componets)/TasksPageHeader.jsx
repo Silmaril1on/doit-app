@@ -2,7 +2,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, useMotionValue, animate } from "framer-motion";
-import { CountryFlags } from "@/app/[locale]/components/elements/CountryFlags";
 import { setXp } from "@/app/[locale]/lib/features/xpSlice";
 import { selectXp } from "@/app/[locale]/lib/features/xpSlice";
 import { XP_PER_LEVEL } from "@/app/[locale]/lib/services/xp/xpConfig";
@@ -25,25 +24,9 @@ const TasksPageHeader = ({ profile, initialXp }) => {
 
   return (
     <ItemCard>
-      <div className="flex gap-3">
-        <AvatarTag
-          imageUrl={profile.image_url}
-          displayName={profile.display_name}
-          size="xl"
-        />
-        <div className="w-full py-1 flex flex-col grow">
-          <div>
-            <p className="text-cream font-semibold text-lg">
-              {profile.display_name}
-            </p>
-            <CountryFlags
-              data={{ country: profile.country, city: profile.city }}
-              title={true}
-              size="sm"
-            />
-          </div>
-          <LevelBar />
-        </div>
+      <div className="flex flex-col gap-3">
+        <AvatarTag user={profile} size="xl" />
+        <LevelBar />
       </div>
     </ItemCard>
   );
@@ -58,8 +41,6 @@ const LevelBar = () => {
   // useLayoutEffect fires synchronously before paint — no visible 1-frame delay
   useLayoutEffect(() => {
     const p = prev.current;
-
-    // First real render after hydration — set without animation
     if (p.pct === null) {
       p.pct = pct;
       p.level = level;
@@ -87,7 +68,7 @@ const LevelBar = () => {
   }, [pct, level, width]);
 
   return (
-    <div className="flex items-center gap-2 flex-1 w-full">
+    <div className="flex px-1 items-center gap-2 flex-1 w-full">
       <span className="text-[10px] font-bold text-teal-400 secondary shrink-0 leading-none">
         Lv.{level}
       </span>

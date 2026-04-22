@@ -1,4 +1,8 @@
+import Link from "next/link";
 import ImageTag from "@/app/[locale]/components/elements/ImageTag";
+import { getUserInitials } from "../../lib/utils/utils";
+import { CountryFlags } from "./CountryFlags";
+import Button from "../buttons/Button";
 
 const sizes = {
   sm: "h-8 w-8 text-xs",
@@ -9,62 +13,63 @@ const sizes = {
 
 const AvatarTag = ({
   user,
-  imageUrl,
-  displayName,
-  firstName,
-  lastName,
-  initials,
-  label,
   size = "md",
   className = "",
+  href,
+  onClick,
+  text,
 }) => {
-  // Resolve values — user object takes precedence over individual props
-  const resolvedImage = user?.image_url ?? imageUrl;
-  const resolvedFirst = user?.first_name ?? firstName;
-  const resolvedLast = user?.last_name ?? lastName;
-  const resolvedDisplay = user?.display_name ?? displayName;
-
-  const fullName = [resolvedFirst, resolvedLast].filter(Boolean).join(" ");
-  const altText = fullName || resolvedDisplay || "user";
-
-  const resolvedInitials =
-    initials ??
-    (resolvedFirst || resolvedLast
-      ? [resolvedFirst, resolvedLast]
-          .filter(Boolean)
-          .map((n) => n[0].toUpperCase())
-          .join("")
-      : (resolvedDisplay?.[0]?.toUpperCase() ?? "?"));
-
   const sizeClasses = sizes[size] ?? sizes.md;
+  const initials = getUserInitials(user);
+  const userName =
+    user?.first_name && user?.last_name
+      ? `${user.first_name} ${user.last_name}`
+      : `${user?.display_name}`;
 
-  const resolvedLabel =
-    label === true ? fullName || resolvedDisplay || null : label || null;
+  const wrapperClassName = `flex items-start gap-1 ${className}`;
+  const Wrapper = href ? Link : "div";
+  const wrapperProps = href
+    ? { href, className: wrapperClassName, "aria-label": userName, onClick }
+    : { className: wrapperClassName, onClick };
 
   return (
-    <div className={`flex flex-col items-center gap-1 ${className}`}>
+    <Wrapper {...wrapperProps}>
       <div
         className={`relative shrink-0 overflow-hidden rounded-md border border-teal-500/30 bg-black/40 ${sizeClasses}`}
       >
-        {resolvedImage ? (
+        {user?.image_url ? (
           <ImageTag
-            src={resolvedImage}
-            alt={altText}
+            src={user.image_url}
+            alt="user avatar"
             fill
             className="object-cover"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center font-bold text-teal-400">
-            {resolvedInitials}
+            {initials}
           </div>
         )}
       </div>
-      {resolvedLabel && (
-        <p className="text-xs font-semibold text-cream secondary capitalize text-center leading-tight">
-          {resolvedLabel}
-        </p>
-      )}
-    </div>
+      <article className="py-1 ">
+        <h1 className="secondary text-[10px] text-chino">
+          {user?.display_name}
+        </h1>
+        <h1 className="text-cream capitalize text-lg leading-none font-bold">
+          {userName}
+        </h1>
+        {(user?.country || user?.city) && (
+          <CountryFlags
+            size="sm"
+            title
+            countryName={user?.country}
+            cityName={user?.city}
+          />
+        )}
+        {text && (
+          <Button text={text} size="sm" variant="outline" onClick={onClick} />
+        )}
+      </article>
+    </Wrapper>
   );
 };
 

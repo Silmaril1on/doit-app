@@ -104,16 +104,16 @@ const UploadImageInput = ({
         type="button"
         disabled={disabled || processing}
         onClick={() => inputRef.current?.click()}
-        className={`group relative p-2 ${preview ? "w-fit" : "w-full"} h-40 rounded-xl border border-dashed border-teal-500/30 bg-teal-500/5 hover:bg-teal-500/10 duration-200 flex flex-col items-center justify-center gap-2 overflow-hidden cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+        className={`group relative p-2 ${preview ? "w-fit" : "w-full"} h-34 rounded-xl border border-dashed border-teal-500/30 bg-teal-500/5 hover:bg-teal-500/10 duration-200 flex flex-col items-center justify-center gap-2 overflow-hidden cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {preview ? (
           <>
             <ImageTag
-              width={150}
-              height={150}
+              width={120}
+              height={120}
               src={preview}
               alt="Preview"
-              className="object-cover"
+              className="object-cover rounded-lg"
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 duration-200 flex flex-col items-center justify-center gap-1">
               <MdOutlineAddAPhoto size={24} className="text-cream" />

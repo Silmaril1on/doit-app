@@ -30,7 +30,7 @@ const LayoutToggle = ({ options = [], value, onChange, size = "md" }) => {
             key={val}
             type="button"
             onClick={() => onChange?.(val)}
-            className={`rounded-md font-semibold uppercase duration-300 primary cursor-pointer ${textSize} ${
+            className={`rounded-sm font-semibold uppercase duration-300 primary cursor-pointer ${textSize} ${
               active
                 ? "bg-teal-500 hover:bg-teal-400 text-black"
                 : " text-white hover:text-white/80"

@@ -17,6 +17,7 @@ import { AnimatePresence } from "framer-motion";
 import Motion from "../../../components/motion/Motion";
 import { useModal } from "@/app/[locale]/lib/hooks/useModal";
 import { ACCOUNT_VERIFICATION_MODAL } from "@/app/[locale]/components/modals/AccountVerificationModal";
+import { SHOW_MY_ID_MODAL } from "@/app/[locale]/components/modals/ShowMyIdModal";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -180,6 +181,16 @@ const ProfileBody = ({
             </div>
 
             <div className="flex flex-col gap-1 *:duration-300 *:w-fit">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  open(SHOW_MY_ID_MODAL);
+                }}
+                className="text-teal-500 hover:text-teal-300 leading-none text-left cursor-pointer"
+              >
+                Show My ID
+              </button>
               <Link
                 className="text-teal-500 hover:text-teal-300 leading-none"
                 href={`/${locale}/game-settings/achievements`}
@@ -192,6 +203,13 @@ const ProfileBody = ({
                 onClick={() => setIsMenuOpen(false)}
               >
                 Game Settings
+              </Link>
+              <Link
+                className="text-teal-500 hover:text-teal-300 leading-none"
+                href={`/${locale}/${user?.display_name}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                My Profile
               </Link>
               <Button
                 text="Logout"

@@ -4,9 +4,6 @@ import React from "react";
 const SettingsPage = () => {
   return (
     <div className="page-wrapper center flex-col *:text-6xl *:font-bold gap-3">
-      <Link href="/game-settings/basic-information" className="text-teal-500">
-        My Profile
-      </Link>
       <Link href="/game-settings/security" className="text-teal-500">
         Security
       </Link>

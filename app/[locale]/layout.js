@@ -1,6 +1,6 @@
+import "./globals.css";
 import { cookies } from "next/headers";
 import { Teko, Jost } from "next/font/google";
-import "./globals.css";
 import Footer from "./layout/footer/Footer";
 import FloatingNavigation from "./layout/navigation/floating-navigation/FloatingNavigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
@@ -12,6 +12,7 @@ import { StoreProvider } from "./lib/store/StoreProvider";
 import ModalRoot from "./components/modals/ModalRoot";
 import Toast from "./components/elements/Toast";
 import NavigationWrapper from "./layout/NavigationWrapper";
+import TopEdgeModal from "./components/modals/TopEdgeModal";
 
 const josh = Jost({
   variable: "--font-jost",
@@ -68,6 +69,7 @@ export default async function RootLayout({ children, params }) {
               </div>
               <ModalRoot />
               <FloatingNavigation />
+              <TopEdgeModal />
               <Toast />
               <Footer />
             </DarkModeProvider>

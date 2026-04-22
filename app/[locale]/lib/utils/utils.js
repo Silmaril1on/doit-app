@@ -10,17 +10,14 @@ export const formatDate = (value) => {
 
 export const getUserInitials = (user) => {
   if (!user) return "U";
-
   const first = String(user.first_name || "")
     .trim()
     .slice(0, 1);
   const last = String(user.last_name || "")
     .trim()
     .slice(0, 1);
-
   const initials = `${first}${last}`.toUpperCase();
   if (initials) return initials;
-
   return String(user.display_name || user.email || "U")
     .trim()
     .slice(0, 1)

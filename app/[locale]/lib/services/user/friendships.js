@@ -126,6 +126,19 @@ export async function getFriends() {
   });
 }
 
+export async function getFriendsCountByUserId(userId) {
+  if (!userId) throw new Error("userId is required");
+
+  const { count, error } = await supabaseAdmin
+    .from("friendships")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "accepted")
+    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`);
+
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
 // ─── accept ──────────────────────────────────────────────────────────────────
 
 export async function acceptFriendRequest(friendshipId) {

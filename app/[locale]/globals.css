@@ -63,3 +63,21 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+.inverted {
+  clip-path: path(
+    "M0,0H180A0,0 0,0,1 180,0V0A0,0 0,0,1 180,0H150A30,30 0,0,0 120,30V30A26,26 0,0,1 94,56H0A0,0 0,0,1 0,56V0A0,0 0,0,1 0,0Z"
+  );
+  width: 180px;
+  height: 56px;
+  aspect-ratio: 45 / 14;
+}
+
+.inverted-left {
+  clip-path: path(
+    "M0,0H180A0,0 0,0,1 180,0V56A0,0 0,0,1 180,56H80A20,20 0,0,1 60,36V26A26,26 0,0,0 34,0H0A0,0 0,0,1 0,0V0A0,0 0,0,1 0,0Z"
+  );
+  width: 180px;
+  height: 56px;
+  aspect-ratio: 45 / 14;
+}
