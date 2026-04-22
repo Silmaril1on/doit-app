@@ -193,6 +193,7 @@ const SubmissionForm = ({
   disabled = false,
   className = "",
   imageField = null, // { value: string|null, onChange: fn }
+  wallpaperField = null, // { value: string|null, onChange: fn }
   formId,
   onSubmit,
 }) => {
@@ -270,12 +271,29 @@ const SubmissionForm = ({
 
   const content = isGrouped ? (
     <div className={`space-y-3 ${className}`}>
-      {imageField && (
-        <UploadImageInput
-          value={imageField.value}
-          onChange={imageField.onChange}
-          disabled={disabled}
-        />
+      {(imageField || wallpaperField) && (
+        <div className="flex gap-3 items-start">
+          {imageField && (
+            <div className="shrink-0">
+              <UploadImageInput
+                value={imageField.value}
+                onChange={imageField.onChange}
+                disabled={disabled}
+                label="Profile Picture"
+              />
+            </div>
+          )}
+          {wallpaperField && (
+            <div className="flex-1">
+              <UploadImageInput
+                value={wallpaperField.value}
+                onChange={wallpaperField.onChange}
+                disabled={disabled}
+                label="Cover Photo"
+              />
+            </div>
+          )}
+        </div>
       )}
       {fields.map((row, rowIndex) => (
         <div
@@ -290,12 +308,29 @@ const SubmissionForm = ({
     </div>
   ) : (
     <div className={`space-y-3  ${className}`}>
-      {imageField && (
-        <UploadImageInput
-          value={imageField.value}
-          onChange={imageField.onChange}
-          disabled={disabled}
-        />
+      {(imageField || wallpaperField) && (
+        <div className="flex gap-3 items-start">
+          {imageField && (
+            <div className="shrink-0">
+              <UploadImageInput
+                value={imageField.value}
+                onChange={imageField.onChange}
+                disabled={disabled}
+                label="Profile Picture"
+              />
+            </div>
+          )}
+          {wallpaperField && (
+            <div className="flex-1">
+              <UploadImageInput
+                value={wallpaperField.value}
+                onChange={wallpaperField.onChange}
+                disabled={disabled}
+                label="Cover Photo"
+              />
+            </div>
+          )}
+        </div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {fields.map((field) => (
