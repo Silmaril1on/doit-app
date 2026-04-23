@@ -124,7 +124,7 @@ const UploadImageInput = ({
           <>
             <MdOutlineAddAPhoto size={26} className="text-teal-500/50" />
             <span className="secondary text-xs text-chino/60">
-              {processing ? "Processing…" : "Click to pick image"}
+              {processing ? "Processing…" : "Upload cover photo"}
             </span>
             <span className="secondary text-[10px] text-chino/40">
               Max {Math.round(maxSizeBytes / (1024 * 1024))}MB · Auto-compressed

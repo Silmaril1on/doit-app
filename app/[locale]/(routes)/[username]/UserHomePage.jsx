@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import AppImage from "../../components/elements/ImageTag";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { sendFriendRequest } from "../../lib/services/user/friendships";
 import { setToast } from "../../lib/features/toastSlice";
 import Button from "../../components/buttons/Button";
@@ -13,10 +13,26 @@ import ItemCard from "../../components/container/ItemCard";
 import AvatarTag from "../../components/elements/AvatarTag";
 import ActionButton from "../../components/buttons/ActionButton";
 import { useModal } from "../../lib/hooks/useModal";
+import { useUserProfile } from "../../lib/hooks/userProfileHook";
+import { selectCurrentUser } from "../../lib/features/userSlice";
+import {
+  TASK_CATEGORIES,
+  CATEGORY_ACHIEVEMENT_TIERS,
+  getTierByLevel,
+} from "../../lib/local-bd/categoryTypesData";
+import SectionHeadline from "../../components/elements/SectionHeadline";
 
-const UserHomePage = ({ user, xp, friendsCount, objectiveStats }) => {
+const UserHomePage = ({ user: serverUser, xp, friendsCount, objectiveStats, badgeProgress = [] }) => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const currentUser = useSelector(selectCurrentUser);
+  const isOwner = currentUser?.id && serverUser?.id && currentUser.id === serverUser.id;
+
+  // Only subscribe to SWR when viewing your own profile so live updates work
+  const { profile: liveProfile } = useUserProfile(isOwner ? serverUser : null);
+
+  // For the owner, overlay fresh SWR data on top of the SSR prop
+  const user = isOwner && liveProfile ? { ...serverUser, ...liveProfile } : serverUser;
 
   const totalXp = xp?.total_xp ?? 0;
   const formattedXp = totalXp.toLocaleString();
@@ -44,6 +60,7 @@ const UserHomePage = ({ user, xp, friendsCount, objectiveStats }) => {
       />
       <UserAvatarSection user={user} handleAdd={handleAdd} loading={loading} />
       <ProfileSection user={user} />
+      <BadgesSection badgeProgress={badgeProgress} />
       <Stats objectiveStats={objectiveStats} />
     </div>
   );
@@ -62,7 +79,18 @@ const UserAvatarSection = ({ user, handleAdd, loading }) => {
         />
       </div>
       <div className="absolute w-[85%] right-0 h-44 z-0">
-        <ItemCard className="h-full">hey</ItemCard>
+        <ItemCard className="h-full overflow-hidden p-0">
+          {user?.wallpaper_image_url ? (
+            <div className="relative w-full h-full">
+              <AppImage
+                fill
+                src={user.wallpaper_image_url}
+                alt="Cover photo"
+                className="object-cover"
+              />
+            </div>
+          ) : null}
+        </ItemCard>
       </div>
       <ItemCard className="z-2 bg-black/50 backdrop-blur-lg">
         <AvatarTag
@@ -170,8 +198,79 @@ const ProfileSection = ({ user }) => {
 
 const SEGMENTS = 5;
 
+const BadgesSection = ({ badgeProgress }) => {
+  const earned = badgeProgress.filter((p) => p.current_level > 0);
+  if (earned.length === 0) return null;
+
+  return (
+    <ItemCard className="space-y-3">
+      <SectionHeadline
+        title="Badges"
+        subtitle={`${earned.length} categor${earned.length !== 1 ? "ies" : "y"} unlocked`}
+      />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {earned.map((p) => {
+          const tier = getTierByLevel(p.category_id, p.current_level);
+          const tiers = CATEGORY_ACHIEVEMENT_TIERS[p.category_id] ?? [];
+          const nextTier = tiers.find((t) => t.level === p.current_level + 1) ?? null;
+          const category = TASK_CATEGORIES.find((c) => c.id === p.category_id);
+
+          return (
+            <div
+              key={p.category_id}
+              className="flex flex-col items-center gap-2 rounded-xl border border-teal-500/40 bg-teal-500/10 p-4 text-center"
+            >
+              {/* Badge level circle */}
+              <div className="h-12 w-12 rounded-full border border-teal-400 bg-teal-500 flex items-center justify-center shrink-0">
+                <span className="text-black font-bold text-lg leading-none">
+                  {p.current_level}
+                </span>
+              </div>
+
+              {/* Tier title + category */}
+              <div>
+                <p className="text-cream text-xs font-bold leading-tight">
+                  {tier?.title ?? `Level ${p.current_level}`}
+                </p>
+                <p className="text-chino/60 text-[10px] secondary mt-0.5">
+                  {category?.label ?? ""}
+                </p>
+              </div>
+
+              {/* Completed count */}
+              <p className="text-teal-400 text-[10px] font-mono">
+                {p.completed_count} completed
+              </p>
+
+              {/* Progress to next tier */}
+              {nextTier && (
+                <div className="w-full space-y-1">
+                  <div className="flex justify-between text-[9px] secondary text-chino/50">
+                    <span>Next: {nextTier.title}</span>
+                    <span>{p.completed_count}/{nextTier.required_count}</span>
+                  </div>
+                  <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      className="h-full bg-teal-500 rounded-full transition-all"
+                      style={{
+                        width: `${Math.min(100, (p.completed_count / nextTier.required_count) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </ItemCard>
+  );
+};
+
+const SEGMENTS_COUNT = 5;
+
 const GameBar = ({ label, count, total, color }) => {
-  const filled = total > 0 ? Math.round((count / total) * SEGMENTS) : 0;
+  const filled = total > 0 ? Math.round((count / total) * SEGMENTS_COUNT) : 0;
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-baseline">
@@ -181,7 +280,7 @@ const GameBar = ({ label, count, total, color }) => {
         <span className="text-[10px] text-teal-400 font-mono ">{count}</span>
       </div>
       <div className="flex gap-0.5">
-        {Array.from({ length: SEGMENTS }, (_, i) => (
+        {Array.from({ length: SEGMENTS_COUNT }, (_, i) => (
           <div
             key={i}
             className={`h-1.5 flex-1 rounded-sm transition-all ${

@@ -68,6 +68,7 @@ const ProfileFormModal = () => {
 
   const [form, setForm] = useState(() => createInitialForm(profile));
   const [imageFile, setImageFile] = useState(null);
+  const [wallpaperFile, setWallpaperFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -77,6 +78,7 @@ const ProfileFormModal = () => {
     }
     setForm(createInitialForm(profile));
     setImageFile(null);
+    setWallpaperFile(null);
     setSubmitting(false);
     setError(null);
   }, [isOpen, profile]);
@@ -85,6 +87,7 @@ const ProfileFormModal = () => {
     dispatch(closeModal());
     setSubmitting(false);
     setError(null);
+    setWallpaperFile(null);
   };
 
   const handleChange = (key, value) => {
@@ -109,6 +112,20 @@ const ProfileFormModal = () => {
         const avatarData = await avatarRes.json();
         if (!avatarRes.ok)
           throw new Error(avatarData.error || "Failed to upload avatar");
+      }
+
+      // Upload wallpaper if a new one was selected
+      if (wallpaperFile) {
+        const fd = new FormData();
+        fd.append("file", wallpaperFile);
+
+        const wallpaperRes = await fetch("/api/user/wallpaper", {
+          method: "POST",
+          body: fd,
+        });
+        const wallpaperData = await wallpaperRes.json();
+        if (!wallpaperRes.ok)
+          throw new Error(wallpaperData.error || "Failed to upload cover photo");
       }
 
       const response = await fetch("/api/user/profile", {
@@ -156,6 +173,10 @@ const ProfileFormModal = () => {
         imageField={{
           value: profile?.image_url ?? null,
           onChange: setImageFile,
+        }}
+        wallpaperField={{
+          value: profile?.wallpaper_image_url ?? null,
+          onChange: setWallpaperFile,
         }}
       />
     </GlobalModal>

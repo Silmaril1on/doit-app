@@ -3,6 +3,7 @@ import { getUserByDisplayName } from "@/app/[locale]/lib/services/user/userProfi
 import { getUserXp } from "@/app/[locale]/lib/services/xp/xpProgress";
 import { getFriendsCountByUserId } from "@/app/[locale]/lib/services/user/friendships";
 import { getObjectiveStatsByUserId } from "@/app/[locale]/lib/services/tasks/objectives/myObjectives";
+import { getAllCategoryProgress } from "@/app/[locale]/lib/services/achievement-badges/categoryProgress";
 import UserHomePage from "./UserHomePage";
 
 const UsersProfilePage = async ({ params }) => {
@@ -16,7 +17,7 @@ const UsersProfilePage = async ({ params }) => {
     notFound();
   }
 
-  const [xp, friendsCount, objectiveStats] = await Promise.all([
+  const [xp, friendsCount, objectiveStats, badgeProgress] = await Promise.all([
     getUserXp(user?.id).catch(() => ({ total_xp: 0, current_level: 1 })),
     getFriendsCountByUserId(user?.id).catch(() => 0),
     getObjectiveStatsByUserId(user?.id).catch(() => ({
@@ -24,6 +25,7 @@ const UsersProfilePage = async ({ params }) => {
       byPriority: {},
       total: 0,
     })),
+    getAllCategoryProgress(user?.id).catch(() => []),
   ]);
 
   return (
@@ -32,6 +34,7 @@ const UsersProfilePage = async ({ params }) => {
       xp={xp}
       friendsCount={friendsCount}
       objectiveStats={objectiveStats}
+      badgeProgress={badgeProgress}
     />
   );
 };
