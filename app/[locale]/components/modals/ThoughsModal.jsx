@@ -66,7 +66,7 @@ const ReviewItem = ({ review, onDelete, onEdit }) => {
     <div className="flex my-4 gap-2.5 group">
       <ReviewAvatar user={review.user} />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <div className="center gap-2">
             <span className="text-sm font-bold text-cream secondary truncate">
               {review.user?.display_name}
@@ -129,7 +129,7 @@ const ReviewItem = ({ review, onDelete, onEdit }) => {
             </div>
           </div>
         ) : (
-          <p className="text-xs text-chino/85 secondary leading-none">
+          <p className="text-xs text-chino/85 secondary tracking-wide leading-none">
             {capitalizeFirst(review.review)}
           </p>
         )}

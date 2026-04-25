@@ -4,6 +4,8 @@ import {
   getAllAchievements,
   updateAchievement,
 } from "@/app/[locale]/lib/services/tasks/achivements/myAchievements";
+import { batchGetTaskLikesStatus } from "@/app/[locale]/lib/services/tasks/feed/taskLikes";
+import { batchGetTaskReviewCounts } from "@/app/[locale]/lib/services/tasks/feed/taskReviews";
 
 async function getUserId() {
   const cookieStore = await cookies();
@@ -13,10 +15,7 @@ async function getUserId() {
 function getAchievementId(request) {
   const sp = request.nextUrl.searchParams;
   return (
-    sp.get("id") ||
-    sp.get("achievementId") ||
-    sp.get("achievement_id") ||
-    null
+    sp.get("id") || sp.get("achievementId") || sp.get("achievement_id") || null
   );
 }
 
@@ -33,7 +32,26 @@ export async function GET(request) {
       limit,
       offset,
     });
-    return NextResponse.json({ achievements, total }, { status: 200 });
+
+    // Enrich with like and review counts in a single extra round-trip each
+    const taskIds = achievements.map((a) => a.id);
+    const [likesStatus, reviewsStatus] = await Promise.all([
+      batchGetTaskLikesStatus(taskIds),
+      batchGetTaskReviewCounts(taskIds),
+    ]);
+
+    const enriched = achievements.map((a) => ({
+      ...a,
+      like_count: likesStatus[a.id]?.like_count ?? 0,
+      is_liked: likesStatus[a.id]?.is_liked ?? false,
+      review_count: reviewsStatus[a.id]?.review_count ?? 0,
+      is_reviewed: reviewsStatus[a.id]?.is_reviewed ?? false,
+    }));
+
+    return NextResponse.json(
+      { achievements: enriched, total },
+      { status: 200 },
+    );
   } catch (err) {
     return NextResponse.json(
       { error: err.message || "Internal server error" },

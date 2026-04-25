@@ -8,10 +8,12 @@ import {
 import {
   recordXpGain,
   recordFixedXpGain,
+  grantTokens,
 } from "@/app/[locale]/lib/services/xp/xpProgress";
 import {
   BADGE_MILESTONE_COUNT,
   BADGE_MILESTONE_XP,
+  TOKEN_REWARDS,
 } from "@/app/[locale]/lib/services/xp/xpConfig";
 import { badgesCacheTag } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
@@ -191,6 +193,21 @@ export async function updateActiveQuest(userId, questId, updates) {
     } catch (xpErr) {
       // XP failure must never break task completion.
       console.error(`[Task] XP gain failed for userId=${userId}:`, xpErr);
+    }
+  }
+
+  // Tokens for task completion — based on priority
+  if (!wasCompleted && isNowCompleted && !alreadyRewarded) {
+    try {
+      const priority = String(existing.priority ?? "low").toLowerCase();
+      const tokenAmount =
+        TOKEN_REWARDS.TASK[priority] ?? TOKEN_REWARDS.TASK.low;
+      await grantTokens(userId, tokenAmount);
+    } catch (tokenErr) {
+      console.error(
+        `[Task] Token grant failed for userId=${userId}:`,
+        tokenErr,
+      );
     }
   }
 

@@ -18,6 +18,8 @@ const AvatarTag = ({
   href,
   onClick,
   text,
+  buttonDisabled = false,
+  buttonLoading = false,
 }) => {
   const sizeClasses = sizes[size] ?? sizes.md;
   const initials = getUserInitials(user);
@@ -26,11 +28,19 @@ const AvatarTag = ({
       ? `${user.first_name} ${user.last_name}`
       : `${user?.display_name}`;
 
-  const wrapperClassName = `flex items-start gap-1 ${className}`;
+  const wrapperClassName = `flex items-start gap-1.5 ${className}`;
   const Wrapper = href ? Link : "div";
+  // When there's an inner Button (text present), only the Button handles the click.
+  // Passing onClick to both the wrapper div and the Button would cause the handler
+  // to fire twice due to event bubbling.
   const wrapperProps = href
-    ? { href, className: wrapperClassName, "aria-label": userName, onClick }
-    : { className: wrapperClassName, onClick };
+    ? {
+        href,
+        className: wrapperClassName,
+        "aria-label": userName,
+        onClick: text ? undefined : onClick,
+      }
+    : { className: wrapperClassName, onClick: text ? undefined : onClick };
 
   return (
     <Wrapper {...wrapperProps}>
@@ -66,7 +76,14 @@ const AvatarTag = ({
           />
         )}
         {text && (
-          <Button text={text} size="sm" variant="outline" onClick={onClick} />
+          <Button
+            text={text}
+            size="sm"
+            variant="outline"
+            onClick={onClick}
+            disabled={buttonDisabled}
+            loading={buttonLoading}
+          />
         )}
       </article>
     </Wrapper>

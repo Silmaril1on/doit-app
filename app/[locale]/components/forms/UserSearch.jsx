@@ -9,6 +9,7 @@ import AppImage from "../elements/ImageTag";
 import { searchUsersByDisplayName } from "@/app/[locale]/lib/services/user/userProfiles";
 import { sendFriendRequest } from "@/app/[locale]/lib/services/user/friendships";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
+import { setTopEdgeCollapsed } from "@/app/[locale]/lib/features/topEdgeSlice";
 
 const UserCard = ({ user, onAdd, onNavigate }) => {
   const initials = [user.first_name, user.last_name]
@@ -119,6 +120,7 @@ const UserSearch = () => {
   const handleNavigate = (displayName) => {
     setIsOpen(false);
     setQuery("");
+    dispatch(setTopEdgeCollapsed(true));
     router.push(`/${locale}/${displayName}`);
   };
 

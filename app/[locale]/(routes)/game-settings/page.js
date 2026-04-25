@@ -13,8 +13,8 @@ const SettingsPage = () => {
       <Link href="/game-settings/statistics" className="text-teal-500">
         Statistics
       </Link>
-      <Link href="/game-settings/friendship" className="text-teal-500">
-        Friendship
+      <Link href="/game-settings/customization" className="text-teal-500">
+        Customization
       </Link>
     </div>
   );

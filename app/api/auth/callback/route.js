@@ -56,6 +56,7 @@ export async function GET(request) {
       email,
       display_name: googleDisplayName,
       image_url: googleAvatar,
+      email_verified: true,
     },
     { onConflict: "id", ignoreDuplicates: true },
   );

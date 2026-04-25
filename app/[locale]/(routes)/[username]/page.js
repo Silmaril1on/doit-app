@@ -4,7 +4,7 @@ import { getUserXp } from "@/app/[locale]/lib/services/xp/xpProgress";
 import { getFriendsCountByUserId } from "@/app/[locale]/lib/services/user/friendships";
 import { getObjectiveStatsByUserId } from "@/app/[locale]/lib/services/tasks/objectives/myObjectives";
 import { getAllCategoryProgress } from "@/app/[locale]/lib/services/achievement-badges/categoryProgress";
-import UserHomePage from "./UserHomePage";
+import MyProfile from "./MyProfile";
 
 const UsersProfilePage = async ({ params }) => {
   const { username } = await params;
@@ -29,12 +29,13 @@ const UsersProfilePage = async ({ params }) => {
   ]);
 
   return (
-    <UserHomePage
+    <MyProfile
       user={user}
       xp={xp}
       friendsCount={friendsCount}
       objectiveStats={objectiveStats}
       badgeProgress={badgeProgress}
+      tokens={user?.token ?? 0}
     />
   );
 };

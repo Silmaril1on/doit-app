@@ -12,6 +12,8 @@ import {
 } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
 import { insertFeedEvent } from "@/app/[locale]/lib/services/tasks/feed/feedEvents";
+import { grantTokens } from "@/app/[locale]/lib/services/xp/xpProgress";
+import { TOKEN_REWARDS } from "@/app/[locale]/lib/services/xp/xpConfig";
 
 const PROGRESS_TABLE = "user_category_progress";
 
@@ -140,6 +142,16 @@ export async function recordCategoryCompletion(userId, rawCategoryId) {
       category_id: categoryId,
       category_label: category?.label ?? "Unknown",
     });
+
+    // Grant tokens for badge tier acquisition
+    try {
+      await grantTokens(userId, TOKEN_REWARDS.BADGE);
+    } catch (tokenErr) {
+      console.error(
+        `[Badge] Token grant failed for userId=${userId}:`,
+        tokenErr,
+      );
+    }
   }
 
   return { progress: upserted, newTier: tierEarned, totalBadges };

@@ -22,7 +22,7 @@ const TasksLayout = async ({ children }) => {
   }
 
   return (
-    <main className="bg-black px-3 space-y-2 pb-20 pt-17 ">
+    <main className="page-wrapper space-y-2 ">
       <TasksPageHeader profile={profile} initialXp={initialXp} />
       {children}
     </main>

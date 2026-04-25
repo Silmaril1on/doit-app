@@ -39,7 +39,7 @@ export async function getFriendsFeedTasks({ offset = 0, limit = 20 } = {}) {
       { count: "exact" },
     )
     .in("user_id", friendIds)
-    .in("status", ["todo", "completed"])
+    .eq("status", "completed")
     .eq("is_public", true)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);

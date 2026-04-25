@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { mutate as globalMutate } from "swr";
 import GlobalModal from "./GlobalModal";
 import ProgressBar from "../elements/ProgressBar";
+import Button from "../buttons/Button";
 import { useModal } from "@/app/[locale]/lib/hooks/useModal";
 import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
 
@@ -15,8 +16,8 @@ const PROFILE_FIELDS = [
   { key: "last_name", label: "Last Name", type: "text" },
   { key: "country", label: "Country", type: "text" },
   { key: "city", label: "City", type: "text" },
-  { key: "address", label: "Address", type: "text" },
   { key: "zip", label: "ZIP Code", type: "text" },
+  { key: "address", label: "Address", type: "text" },
   { key: "phone_number", label: "Phone Number", type: "text" },
   { key: "date", label: "Date of Birth", type: "date" },
   {
@@ -25,11 +26,18 @@ const PROFILE_FIELDS = [
     type: "select",
     options: ["", "Male", "Female", "Other"],
   },
-  { key: "image_url", label: "Profile Picture URL", type: "text" },
 ];
 
-// 11 total: email_verified + 10 profile fields
+// 10 total: email_verified + 9 profile fields
 const TOTAL_FIELDS = PROFILE_FIELDS.length + 1;
+
+// Grouped layout rows: [cols, fields[]]
+const FIELD_ROWS = [
+  [2, ["first_name", "last_name"]],
+  [3, ["country", "city", "zip"]],
+  [2, ["address", "phone_number"]],
+  [2, ["sex", "date"]],
+];
 
 function calcProgress(form, emailVerified) {
   let filled = emailVerified ? 1 : 0;
@@ -149,6 +157,41 @@ const AccountVerificationModal = () => {
     }
   };
 
+  const fieldMap = Object.fromEntries(PROFILE_FIELDS.map((f) => [f.key, f]));
+
+  const renderField = (key) => {
+    const field = fieldMap[key];
+    if (!field) return null;
+    return (
+      <div key={field.key}>
+        <label htmlFor={`avf-${field.key}`}>{field.label}</label>
+        {field.type === "select" ? (
+          <select
+            id={`avf-${field.key}`}
+            value={form[field.key] ?? ""}
+            onChange={handleChange(field.key)}
+            disabled={submitting}
+          >
+            {field.options.map((o) => (
+              <option key={o} value={o}>
+                {o || "Select..."}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            id={`avf-${field.key}`}
+            type={field.type}
+            value={form[field.key] ?? ""}
+            onChange={handleChange(field.key)}
+            placeholder={`Enter ${field.label.toLowerCase()}`}
+            disabled={submitting}
+          />
+        )}
+      </div>
+    );
+  };
+
   return (
     <GlobalModal
       isOpen={isOpen}
@@ -253,12 +296,12 @@ const AccountVerificationModal = () => {
             </div>
 
             <div className="flex justify-end">
-              <button
+              <Button
+                text="Next →"
+                variant="outline"
+                size="sm"
                 onClick={() => setStep(2)}
-                className="secondary text-[10px] uppercase tracking-[0.14em] border border-teal-500/30 text-teal-400 hover:bg-teal-500/10 transition-colors duration-200 px-5 py-2.5 rounded-lg"
-              >
-                Next →
-              </button>
+              />
             </div>
           </div>
         )}
@@ -266,33 +309,13 @@ const AccountVerificationModal = () => {
         {/* Step 2 — profile fields */}
         {step === 2 && (
           <div className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {PROFILE_FIELDS.map((field) => (
-                <div key={field.key}>
-                  <label htmlFor={`avf-${field.key}`}>{field.label}</label>
-                  {field.type === "select" ? (
-                    <select
-                      id={`avf-${field.key}`}
-                      value={form[field.key] ?? ""}
-                      onChange={handleChange(field.key)}
-                      disabled={submitting}
-                    >
-                      {field.options.map((o) => (
-                        <option key={o} value={o}>
-                          {o || "Select..."}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      id={`avf-${field.key}`}
-                      type={field.type}
-                      value={form[field.key] ?? ""}
-                      onChange={handleChange(field.key)}
-                      placeholder={`Enter ${field.label.toLowerCase()}`}
-                      disabled={submitting}
-                    />
-                  )}
+            <div className="space-y-3">
+              {FIELD_ROWS.map(([cols, keys]) => (
+                <div
+                  key={keys.join("-")}
+                  className={`grid gap-3 grid-cols-${cols}`}
+                >
+                  {keys.map((key) => renderField(key))}
                 </div>
               ))}
             </div>
@@ -316,13 +339,14 @@ const AccountVerificationModal = () => {
                 >
                   Skip
                 </button>
-                <button
+                <Button
+                  text="Save Profile"
+                  variant="outline"
+                  size="sm"
                   onClick={handleSave}
                   disabled={submitting}
-                  className="secondary cursor-pointer text-[10px] uppercase tracking-[0.14em] border border-teal-500/30 text-teal-400 hover:bg-teal-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-200 px-5 py-2.5 rounded-lg"
-                >
-                  {submitting ? "Saving..." : "Save Profile"}
-                </button>
+                  loading={submitting}
+                />
               </div>
             </div>
           </div>

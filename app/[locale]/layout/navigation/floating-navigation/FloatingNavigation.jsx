@@ -48,23 +48,31 @@ const FloatingNavigation = () => {
                 href={`/${locale}/tasks/objectives`}
                 animation="bottom"
                 delay={0}
+                onClick={() => setOpen(false)}
               />
               <ActionButton
                 variant="profile"
                 href={`/${locale}/tasks/active-quests`}
                 animation="bottom"
                 delay={0.08}
+                onClick={() => setOpen(false)}
               />
               <ActionButton
                 variant="achievements"
                 href={`/${locale}/tasks/achievements`}
                 animation="bottom"
                 delay={0.16}
+                onClick={() => setOpen(false)}
               />
             </div>
           )}
         </AnimatePresence>
-        <ActionButton variant="home" text="Feed" href={`/${locale}/feed`} />
+        <ActionButton
+          // onClick={handleOpen}
+          variant="home"
+          text="Feed"
+          href={`/${locale}/feed`}
+        />
       </div>
       <div className="flex items-center gap-2 ">
         <NotificationsBadge />

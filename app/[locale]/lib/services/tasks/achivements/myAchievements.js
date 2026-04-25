@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 
 const TABLE_NAME = "objectives";
 const ACHIEVEMENT_LIST_COLUMNS =
-  "id,user_id,task_title,task_description,task_category,subtasks,country,city,priority,is_public,status,created_at,update_at,completed_at";
+  "id,user_id,task_title,task_description,task_category,subtasks,country,city,priority,is_public,status,created_at,update_at,completed_at,recreate_count";
 const ALLOWED_STATUS = new Set(["todo", "in_progress", "completed"]);
 const ALLOWED_PRIORITY = new Set(["low", "medium", "high"]);
 

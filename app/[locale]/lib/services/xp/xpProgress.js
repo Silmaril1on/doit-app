@@ -3,6 +3,7 @@
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 import {
   PRIORITY_XP,
+  TOKEN_REWARDS,
   resolveXpState,
 } from "@/app/[locale]/lib/services/xp/xpConfig";
 import { LEVEL_TIERS } from "@/app/[locale]/lib/local-bd/levelProgressData";
@@ -10,6 +11,29 @@ import { insertFeedEvent } from "@/app/[locale]/lib/services/tasks/feed/feedEven
 import { createLevelBadgeNotification } from "@/app/[locale]/lib/services/notifications/notificationsTypes";
 
 const XP_TABLE = "user_xp";
+
+export async function grantTokens(userId, amount) {
+  if (!userId || !amount || amount <= 0) return;
+
+  const { data: userData, error: fetchError } = await supabaseAdmin
+    .from("users")
+    .select("token")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (fetchError) throw new Error(fetchError.message);
+
+  const current = userData?.token ?? 0;
+  const { error: updateError } = await supabaseAdmin
+    .from("users")
+    .update({ token: current + amount })
+    .eq("id", userId);
+
+  if (updateError) throw new Error(updateError.message);
+  console.log(
+    `[Tokens] userId=${userId} | +${amount} → ${current + amount} total`,
+  );
+}
 
 export async function getUserXp(userId) {
   if (!userId) throw new Error("userId is required");
@@ -42,7 +66,9 @@ export async function recordXpGain(userId, priority, displayName) {
   if (fetchError) throw new Error(fetchError.message);
 
   const prevXp = existing?.total_xp ?? 0;
-  const prevLevel = existing?.current_level ?? 0;
+  // New users have no DB row yet — they start at level 1, not 0.
+  // Using 0 as fallback would falsely trigger a level-up on first XP gain.
+  const prevLevel = existing?.current_level ?? 1;
   const { total_xp, current_level } = resolveXpState(prevXp + xpGained);
 
   console.log(
@@ -120,6 +146,14 @@ export async function recordXpGain(userId, priority, displayName) {
           feedErr,
         );
       }
+    }
+
+    // Grant 250 tokens per level gained
+    try {
+      const levelsGained = current_level - prevLevel;
+      await grantTokens(userId, levelsGained * TOKEN_REWARDS.LEVEL_UP);
+    } catch (tokenErr) {
+      console.error(`[XP] Token grant failed for userId=${userId}:`, tokenErr);
     }
   }
 

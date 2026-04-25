@@ -21,7 +21,7 @@ const UserSlot = ({ u, reverse = false }) => {
 
   return (
     <Link
-      href={u?.username ? `/${u.username}` : "#"}
+      href={u?.display_name ? `/${u.display_name}` : "#"}
       className={`flex items-center gap-2.5 hover:opacity-75 transition-opacity ${reverse ? "flex-row-reverse" : ""}`}
     >
       <div className="h-12 w-12 shrink-0 relative overflow-hidden rounded-md border border-teal-500/30 bg-black/40">
@@ -73,13 +73,13 @@ const FeedCard = ({ item }) => {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-[1.5fr_1.9fr] gap-3">
         {/* Left — always the friend's data */}
         <UserSlot u={_type === "friendship" ? friend : user} />
 
         {/* Right — per event type */}
         {_type === "friendship" && (
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-between">
             <div className="flex flex-col items-center gap-1 shrink-0">
               <div className="h-9 w-9 rounded-full border border-teal-500/40 bg-teal-500/10 text-teal-300 flex items-center justify-center">
                 <FaHandshake size={16} />

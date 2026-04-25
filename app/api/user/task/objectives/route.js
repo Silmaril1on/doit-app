@@ -7,6 +7,7 @@ import {
   updateObjective,
 } from "@/app/[locale]/lib/services/tasks/objectives/myObjectives";
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
+import { insertTaskRecreate } from "@/app/[locale]/lib/services/tasks/feed/taskRecreates";
 
 async function getUserId() {
   const cookieStore = await cookies();
@@ -63,7 +64,7 @@ export async function POST(request) {
     if (originalTaskId) {
       const { data: source } = await supabaseAdmin
         .from("objectives")
-        .select("recreate_count")
+        .select("user_id, recreate_count")
         .eq("id", originalTaskId)
         .maybeSingle();
 
@@ -72,6 +73,18 @@ export async function POST(request) {
           .from("objectives")
           .update({ recreate_count: (source.recreate_count ?? 0) + 1 })
           .eq("id", originalTaskId);
+
+        // Persist who recreated what in task_recreates
+        try {
+          await insertTaskRecreate(
+            userId,
+            originalTaskId,
+            source.user_id,
+            objective.id,
+          );
+        } catch {
+          // Tracking failure must never break task creation
+        }
       }
     }
 

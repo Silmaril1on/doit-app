@@ -7,6 +7,7 @@ import ItemCard from "./ItemCard";
 import useSWR from "swr";
 import ToggleButton from "../buttons/ToggleButton";
 import { timeAgo } from "../../lib/utils/utils";
+import UserSearch from "../forms/UserSearch";
 
 const fetcher = async (url) => {
   const response = await fetch(url);
@@ -155,13 +156,14 @@ const FriendShipContainer = ({ onUserNavigate }) => {
     <div className="h-full relative flex flex-col bg-[#031c1a] rounded-br-3xl w-full shadow-[2px_0_10px_2px_rgba(0,0,0,1)]">
       <div className="absolute z-0 -bottom-14 left-0 bg-[#031c1a] inverted" />
       {/* Tab Toggle */}
-      <div className="flex justify-center pt-4 pb-2 shrink-0">
+      <div className="flex flex-col items-center gap-3 py-3 shrink-0 ">
         <ToggleButton
           variant="layout"
           options={["friends", "requests"]}
           value={tab}
           onChange={setTab}
         />
+        <UserSearch />
       </div>
 
       <h1 className="text-chino secondary text-sm text-start pl-4">

@@ -15,6 +15,35 @@ export async function sendFriendRequest(addresseeId) {
   if (requesterId === addresseeId)
     throw new Error("Cannot send a friend request to yourself");
 
+  // Check for existing friendship to avoid unique constraint violation
+  const { data: existing } = await supabaseAdmin
+    .from("friendships")
+    .select("id, status, requester_id")
+    .or(
+      `and(requester_id.eq.${requesterId},addressee_id.eq.${addresseeId}),and(requester_id.eq.${addresseeId},addressee_id.eq.${requesterId})`,
+    )
+    .maybeSingle();
+
+  if (existing) {
+    if (existing.status === "pending")
+      throw new Error("Friend request already sent");
+    if (existing.status === "accepted")
+      throw new Error("You are already friends");
+    // Declined — allow re-request by updating back to pending
+    const { data: updated, error: updateError } = await supabaseAdmin
+      .from("friendships")
+      .update({
+        status: "pending",
+        requester_id: requesterId,
+        addressee_id: addresseeId,
+      })
+      .eq("id", existing.id)
+      .select()
+      .single();
+    if (updateError) throw new Error(updateError.message);
+    return updated;
+  }
+
   const { data, error } = await supabaseAdmin
     .from("friendships")
     .insert({ requester_id: requesterId, addressee_id: addresseeId })
@@ -239,4 +268,50 @@ export async function declineFriendRequest(friendshipId) {
   }
 
   return data;
+}
+
+// ─── get friendship status between caller and another user ───────────────────
+
+export async function getFriendshipStatus(profileUserId) {
+  const callerId = await getCallerId();
+  if (!callerId || !profileUserId) return { status: "none" };
+  if (callerId === profileUserId) return { status: "self" };
+
+  const { data, error } = await supabaseAdmin
+    .from("friendships")
+    .select("id, status, requester_id")
+    .or(
+      `and(requester_id.eq.${callerId},addressee_id.eq.${profileUserId}),and(requester_id.eq.${profileUserId},addressee_id.eq.${callerId})`,
+    )
+    .maybeSingle();
+
+  if (error || !data) return { status: "none" };
+
+  if (data.status === "accepted")
+    return { status: "accepted", friendshipId: data.id };
+
+  if (data.status === "pending") {
+    return {
+      status:
+        data.requester_id === callerId ? "pending_sent" : "pending_received",
+      friendshipId: data.id,
+    };
+  }
+
+  return { status: "none" };
+}
+
+// ─── remove an accepted friendship ───────────────────────────────────────────
+
+export async function removeFriend(friendshipId) {
+  const callerId = await getCallerId();
+  if (!callerId) throw new Error("Unauthorized");
+
+  const { error } = await supabaseAdmin
+    .from("friendships")
+    .delete()
+    .eq("id", friendshipId)
+    .or(`requester_id.eq.${callerId},addressee_id.eq.${callerId}`);
+
+  if (error) throw new Error(error.message);
 }

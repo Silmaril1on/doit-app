@@ -150,7 +150,7 @@ const ObjectiveCard = ({
           readOnly={readOnly}
           onViewClick={handleOpenViewGallery}
         />
-        {readOnly && (
+        {(readOnly || completedView) && (
           <CardFeedActions
             objective={objective}
             objectiveId={objective.id}

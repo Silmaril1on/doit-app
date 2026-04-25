@@ -9,6 +9,16 @@ export const PRIORITY_XP = {
   high: 130,
 };
 
+export const TOKEN_REWARDS = {
+  LEVEL_UP: 250,
+  BADGE: 180,
+  TASK: {
+    low: 50,
+    medium: 80,
+    high: 150,
+  },
+};
+
 export const resolveXpState = (totalXp) => {
   const xp = Math.max(0, totalXp ?? 0);
   return {

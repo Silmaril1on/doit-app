@@ -24,10 +24,6 @@ const UploadGalleryModal = () => {
   const { modalType, modalProps } = useSelector(selectModal);
   const isOpen = modalType === MODAL_TYPE;
   const objective = modalProps?.objective ?? null;
-  const incomingGallery = Array.isArray(modalProps?.gallery)
-    ? modalProps.gallery
-    : [];
-
   const subtasks = Array.isArray(objective?.subtasks) ? objective.subtasks : [];
   const hasSubtasks = subtasks.length > 0;
 
@@ -38,7 +34,7 @@ const UploadGalleryModal = () => {
   ];
   const displaySlots = hasSubtasks ? subtasks : NO_SUBTASK_SLOTS;
 
-  const [gallery, setGallery] = useState(incomingGallery);
+  const [gallery, setGallery] = useState([]);
   // selectedId is the subtask.id value (number), null when none selected
   const [selectedId, setSelectedId] = useState(null);
   const [file, setFile] = useState(null);
@@ -51,6 +47,9 @@ const UploadGalleryModal = () => {
     if (!isOpen) {
       return;
     }
+    const incomingGallery = Array.isArray(modalProps?.gallery)
+      ? modalProps.gallery
+      : [];
     setGallery(incomingGallery);
     setSelectedId(null);
     setFile(null);
@@ -86,7 +85,7 @@ const UploadGalleryModal = () => {
     return () => {
       isAlive = false;
     };
-  }, [isOpen, incomingGallery, objective?.id]);
+  }, [isOpen, objective?.id, modalProps?.gallery]);
 
   const handleClose = () => {
     dispatch(closeModal());

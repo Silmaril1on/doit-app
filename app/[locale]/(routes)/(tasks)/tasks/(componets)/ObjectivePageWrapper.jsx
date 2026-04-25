@@ -20,6 +20,7 @@ import {
   searchItems,
   OBJECTIVE_SEARCH_FIELDS,
 } from "@/app/[locale]/lib/utils/filterConfig";
+import { FaHome } from "react-icons/fa";
 
 const ObjectivePageWrapper = ({
   items = [],
@@ -86,7 +87,7 @@ const ObjectivePageWrapper = ({
   const hasActiveFilters = Object.values(filters).some((v) => v?.length > 0);
 
   return (
-    <section className="w-full grow pb-28 flex flex-col gap-3 bg-black">
+    <section className="w-full grow flex flex-col gap-3 bg-black">
       <SectionHeadline title={title} subtitle={subtitle} />
       {showHeader && (
         <>
@@ -136,9 +137,9 @@ const ObjectivePageWrapper = ({
       )}
 
       {!isLoading && items.length === 0 && (
-        <div className="rounded-xl border border-dashed border-teal-500/25 bg-black/35 p-6 text-center">
+        <ItemCard className="rounded-xl  border border-dashed border-teal-500/25 bg-black/35 p-6 text-center">
           <p className="secondary text-sm text-chino/80">{emptyMessage}</p>
-        </div>
+        </ItemCard>
       )}
 
       {!isLoading && items.length > 0 && filteredItems.length === 0 && (

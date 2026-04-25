@@ -140,6 +140,35 @@ const ProfileBody = ({
   locale,
   open,
 }) => {
+  const menuLinks = [
+    {
+      type: "button",
+      label: "Show My ID",
+      onClick: () => {
+        setIsMenuOpen(false);
+        open(SHOW_MY_ID_MODAL);
+      },
+    },
+    {
+      type: "link",
+      label: "Badges",
+      href: `/${locale}/game-settings/achievements`,
+      onClick: () => setIsMenuOpen(false),
+    },
+    {
+      type: "link",
+      label: "Game Settings",
+      href: `/${locale}/game-settings`,
+      onClick: () => setIsMenuOpen(false),
+    },
+    {
+      type: "link",
+      label: "My Profile",
+      href: `/${locale}/${user?.display_name}`,
+      onClick: () => setIsMenuOpen(false),
+    },
+  ];
+
   return (
     <AnimatePresence>
       {isMenuOpen && (
@@ -181,36 +210,27 @@ const ProfileBody = ({
             </div>
 
             <div className="flex flex-col gap-1 *:duration-300 *:w-fit">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  open(SHOW_MY_ID_MODAL);
-                }}
-                className="text-teal-500 hover:text-teal-300 leading-none text-left cursor-pointer"
-              >
-                Show My ID
-              </button>
-              <Link
-                className="text-teal-500 hover:text-teal-300 leading-none"
-                href={`/${locale}/game-settings/achievements`}
-              >
-                Badges
-              </Link>
-              <Link
-                className="text-teal-500 hover:text-teal-300 leading-none"
-                href={`/${locale}/game-settings`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Game Settings
-              </Link>
-              <Link
-                className="text-teal-500 hover:text-teal-300 leading-none"
-                href={`/${locale}/${user?.display_name}`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                My Profile
-              </Link>
+              {menuLinks.map((item) =>
+                item.type === "link" ? (
+                  <Link
+                    key={item.label}
+                    className="text-teal-500 hover:text-teal-300 leading-none"
+                    href={item.href}
+                    onClick={item.onClick}
+                  >
+                    {item.label}
+                  </Link>
+                ) : (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={item.onClick}
+                    className="text-teal-500 hover:text-teal-300 leading-none text-left cursor-pointer"
+                  >
+                    {item.label}
+                  </button>
+                ),
+              )}
               <Button
                 text="Logout"
                 variant="outline"

@@ -12,7 +12,7 @@ const BadgesSlug = async () => {
     : [];
 
   const unseenCategoryIds = allProgress
-    .filter((p) => p.has_seen === false)
+    .filter((p) => p.has_seen === false && p.current_level > 0)
     .map((p) => p.category_id);
 
   return (

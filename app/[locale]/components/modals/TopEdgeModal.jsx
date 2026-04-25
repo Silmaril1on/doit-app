@@ -1,72 +1,107 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, usePathname } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { FaUserFriends, FaHouseDamage } from "react-icons/fa";
 import { RiArrowUpWideFill } from "react-icons/ri";
+import { motion } from "framer-motion";
 import useSWR from "swr";
+
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
+import {
+  selectTopEdgeCollapsed,
+  setTopEdgeCollapsed,
+} from "@/app/[locale]/lib/features/topEdgeSlice";
 import FriendShipContainer from "../container/FriendShipContainer";
 
 const FOOTER_H = 56;
 
 const fetcher = async (url) => {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error("Failed to load data");
-  return response.json();
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to load data");
+  return res.json();
 };
 
 const swrOptions = {
   revalidateOnFocus: true,
   revalidateOnReconnect: true,
-  dedupingInterval: 30000,
-  focusThrottleInterval: 30000,
+  dedupingInterval: 60000,
+  focusThrottleInterval: 60000,
   keepPreviousData: true,
-  refreshInterval: 15000,
 };
 
 const TopEdgeModal = () => {
   const pathname = usePathname();
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : null;
+  const dispatch = useDispatch();
+
   const user = useSelector(selectCurrentUser);
+  const collapsed = useSelector(selectTopEdgeCollapsed);
+
   const [activeView, setActiveView] = useState("friends");
-  const [collapsed, setCollapsed] = useState(true);
+  const containerRef = useRef(null);
+
   const requestsSWR = useSWR(
     user ? "/api/add-friend" : null,
     fetcher,
     swrOptions,
   );
+
   const requestsCount = requestsSWR.data?.requests?.length ?? 0;
   const hasRequests = requestsCount > 0;
 
   const normalizedPath = (pathname ?? "").replace(/\/$/, "");
   const homePath = locale ? `/${locale}` : "";
+
   const isHomeRoute =
     !normalizedPath || normalizedPath === "/" || normalizedPath === homePath;
+
   const isHiddenRoute =
     normalizedPath.endsWith("/login") ||
     normalizedPath.endsWith("/register") ||
     normalizedPath.endsWith("/reset-password") ||
-    normalizedPath.endsWith("/feed") ||
     normalizedPath.endsWith("/reset-password/update-password");
+
+  // Close when user clicks outside the panel (only while expanded)
+  useEffect(() => {
+    if (collapsed) return;
+
+    const handlePointerDown = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        dispatch(setTopEdgeCollapsed(true));
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [collapsed, dispatch]);
 
   if (!user || isHomeRoute || isHiddenRoute) return null;
 
   return (
-    <div
-      className={`w-full z-50 bg-teal-950/30 backdrop-blur-sm flex flex-col fixed overflow-hidden rounded-b-3xl transition-transform duration-500 ease-in-out `}
-      style={{
-        height: "85vh",
-        transform: collapsed
-          ? `translateY(calc(-85vh + ${FOOTER_H}px))`
-          : "translateY(0)",
+    <motion.div
+      ref={containerRef}
+      initial={{ y: "-100%" }}
+      animate={{
+        y: collapsed ? `calc(-85vh + ${FOOTER_H}px)` : "0%",
       }}
+      transition={{
+        type: "spring",
+        stiffness: 120,
+        damping: 18,
+      }}
+      className="w-full z-50 bg-teal-950/30 backdrop-blur-sm flex flex-col fixed overflow-hidden rounded-b-3xl"
+      style={{ height: "85vh" }}
     >
       {activeView === "friends" && (
-        <FriendShipContainer onUserNavigate={() => setCollapsed(true)} />
+        <FriendShipContainer
+          onUserNavigate={() => dispatch(setTopEdgeCollapsed(true))}
+        />
       )}
+
       {activeView === "tasks" && <TasksList />}
+
       <div
         className="flex items-center justify-between px-12 shrink-0"
         style={{ height: FOOTER_H }}
@@ -75,7 +110,6 @@ const TopEdgeModal = () => {
           type="button"
           onClick={() => setActiveView("friends")}
           className="relative z-3"
-          aria-label="Friends"
         >
           <FaUserFriends
             className={`cursor-pointer text-2xl transition-colors duration-200 ${
@@ -86,10 +120,13 @@ const TopEdgeModal = () => {
             <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500" />
           )}
         </button>
+
         <button
-          onClick={() => setCollapsed((c) => !c)}
+          onClick={() => dispatch(setTopEdgeCollapsed(!collapsed))}
           className="cursor-pointer text-teal-500 hover:text-teal-300 text-3xl transition-transform duration-500"
-          style={{ transform: collapsed ? "rotate(180deg)" : "rotate(0deg)" }}
+          style={{
+            transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
+          }}
         >
           <RiArrowUpWideFill />
         </button>
@@ -101,11 +138,9 @@ const TopEdgeModal = () => {
           onClick={() => setActiveView("tasks")}
         />
       </div>
-    </div>
+    </motion.div>
   );
 };
-
-// ─── Tasks List ──────────────────────────────────────────────────────────────
 
 const TasksList = () => {
   return (
