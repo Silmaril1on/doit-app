@@ -1,8 +1,12 @@
+"use client";
 import Link from "next/link";
 import ImageTag from "@/app/[locale]/components/elements/ImageTag";
 import { getUserInitials } from "../../lib/utils/utils";
 import { CountryFlags } from "./CountryFlags";
 import Button from "../buttons/Button";
+import { useSelector } from "react-redux";
+import { selectColorValue } from "@/app/[locale]/lib/features/configSlice";
+import { THEME } from "@/app/[locale]/lib/utils/themeClasses";
 
 const sizes = {
   sm: "h-8 w-8 text-xs",
@@ -21,6 +25,8 @@ const AvatarTag = ({
   buttonDisabled = false,
   buttonLoading = false,
 }) => {
+  const colorTheme = useSelector(selectColorValue) ?? "teal";
+  const t = THEME[colorTheme] ?? THEME.teal;
   const sizeClasses = sizes[size] ?? sizes.md;
   const initials = getUserInitials(user);
   const userName =
@@ -45,7 +51,7 @@ const AvatarTag = ({
   return (
     <Wrapper {...wrapperProps}>
       <div
-        className={`relative shrink-0 overflow-hidden rounded-md border border-teal-500/30 bg-black/40 ${sizeClasses}`}
+        className={`relative shrink-0 overflow-hidden rounded-md border ${t.borderMed} bg-black/40 ${sizeClasses}`}
       >
         {user?.image_url ? (
           <ImageTag
@@ -55,7 +61,9 @@ const AvatarTag = ({
             className="object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center font-bold text-teal-400">
+          <div
+            className={`flex h-full w-full items-center justify-center font-bold ${t.progressText}`}
+          >
             {initials}
           </div>
         )}
@@ -64,7 +72,9 @@ const AvatarTag = ({
         <h1 className="secondary text-[10px] text-chino">
           {user?.display_name}
         </h1>
-        <h1 className="text-cream capitalize text-lg leading-none font-bold">
+        <h1
+          className={`${t.titleText} capitalize text-lg leading-none font-bold`}
+        >
           {userName}
         </h1>
         {(user?.country || user?.city) && (

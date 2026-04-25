@@ -44,7 +44,7 @@
   input,
   select,
   textarea {
-    @apply border text-xs lg:text-sm border-teal-500/15 px-3 lg:px-4 py-3 text-cream/80 bg-black/30 placeholder:text-cream/40 rounded-xl outline-none focus:border-teal-500/60 duration-300 focus:ring-2 focus:ring-teal-400/20 w-full;
+    @apply border text-xs lg:text-sm border-white/10 px-3 lg:px-4 py-3 text-cream/80 bg-black/30 placeholder:text-cream/40 rounded-xl outline-none duration-300 w-full;
     font-family: var(--font-jost);
   }
 

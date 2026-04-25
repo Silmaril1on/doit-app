@@ -4,6 +4,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import ActionButton from "../buttons/ActionButton";
 import Button from "../buttons/Button";
 import BorderSvg from "../elements/BorderSvg";
+import { useSelector } from "react-redux";
+import { selectColorValue } from "@/app/[locale]/lib/features/configSlice";
+import { THEME } from "@/app/[locale]/lib/utils/themeClasses";
 
 const Spinner = () => (
   <div className="flex flex-col items-center gap-3 py-16">
@@ -27,6 +30,8 @@ const GlobalModal = ({
   isEmpty = false,
   emptyMessage = "Nothing here yet.",
 }) => {
+  const colorTheme = useSelector(selectColorValue) ?? "teal";
+  const t = THEME[colorTheme] ?? THEME.teal;
   const isSubmitFooter = footerMode === "submit";
   const isCloseFooter = footerMode === "close";
   const shouldRenderFooter =
@@ -52,14 +57,20 @@ const GlobalModal = ({
             onClick={(e) => e.stopPropagation()}
             className={`w-full  ${maxWidth}`}
           >
-            {/* FromContainer-style card */}
-            <div className="relative bg-teal-400/10 backdrop-blur-lg overflow-hidden rounded-lg border border-teal-500/20 p-6">
+            {/* Card */}
+            <div
+              className={`relative ${t.cardBg} backdrop-blur-lg overflow-hidden rounded-lg border ${t.modalBorder} p-6`}
+            >
               <BorderSvg strokeWidth={1} fadeAt={0.7} />
-              <div className="absolute left-0 top-0 w-[40%] h-[30%] rounded-full bg-teal-500/40 blur-[90px] pointer-events-none" />
+              <div
+                className={`absolute left-0 top-0 w-[40%] h-[30%] rounded-full ${t.formGlow} blur-[90px] pointer-events-none`}
+              />
 
               {/* Header */}
               <div className="flex items-start justify-between gap-2 relative z-10">
-                <h1 className="primary text-4xl uppercase leading-none text-teal-500">
+                <h1
+                  className={`primary text-4xl uppercase leading-none ${t.titleText}`}
+                >
                   {title}
                 </h1>
                 <ActionButton variant="close" onClick={onClose} />

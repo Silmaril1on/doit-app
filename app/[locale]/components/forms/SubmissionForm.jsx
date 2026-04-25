@@ -2,7 +2,6 @@ import Input from "./Input";
 import UploadImageInput from "./UploadImageInput";
 import ToggleButton from "../buttons/ToggleButton";
 import { FaCheck, FaChevronDown } from "react-icons/fa";
-import ActionButton from "../buttons/ActionButton";
 import { MdClose } from "react-icons/md";
 
 const normalizeOptions = (options = []) =>

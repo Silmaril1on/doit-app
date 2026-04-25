@@ -2,12 +2,11 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import useSWR from "swr";
-import { mutate as globalMutate } from "swr";
 import { sendFriendRequest } from "../../lib/services/user/friendships";
 import { setToast } from "../../lib/features/toastSlice";
 import Button from "../../components/buttons/Button";
 import { CountryFlags } from "../../components/elements/CountryFlags";
-import { timeAgo, formatDate } from "../../lib/utils/utils";
+import { formatDate } from "../../lib/utils/utils";
 import { FaUsers, FaGamepad, FaCoins } from "react-icons/fa";
 import { MdFavorite } from "react-icons/md";
 import ItemCard from "../../components/container/ItemCard";
@@ -22,8 +21,10 @@ import {
   getTierByLevel,
 } from "../../lib/local-bd/categoryTypesData";
 import { getEarnedTiers } from "../../lib/local-bd/levelProgressData";
-import SectionHeadline from "../../components/elements/SectionHeadline";
 import ImageTag from "../../components/elements/ImageTag";
+import IconTag from "../../components/elements/IconTag";
+import { selectColorValue } from "../../lib/features/configSlice";
+import { THEME } from "../../lib/utils/themeClasses";
 
 const friendshipFetcher = (url) => fetch(url).then((r) => r.json());
 
@@ -187,6 +188,9 @@ const UserAvatarSection = ({
 };
 
 const HeaderSection = ({ totalXp, currentLevel, friendsCount, tokens }) => {
+  const colorTheme = useSelector(selectColorValue) ?? "teal";
+  const t = THEME[colorTheme] ?? THEME.teal;
+
   const stats = [
     {
       label: "Tokens",
@@ -203,9 +207,9 @@ const HeaderSection = ({ totalXp, currentLevel, friendsCount, tokens }) => {
       {stats.map(({ label, value, icon }) => (
         <div
           key={label}
-          className="rounded-xl center gap-2 border px-2 border-teal-500/15 bg-teal-500/30"
+          className={`rounded-xl center gap-2 border px-2 ${t.statBorder} ${t.statBg}`}
         >
-          <span className="text-teal-500">{icon}</span>
+          <IconTag icon={icon} />
           <p className="secondary pt-0.5 text-[10px] text-chino uppercase">
             {label}
           </p>

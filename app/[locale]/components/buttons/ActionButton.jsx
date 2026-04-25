@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import Link from "next/link";
 import BorderSvg from "../elements/BorderSvg";
@@ -8,6 +9,9 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { IoQrCode } from "react-icons/io5";
 import { RiImageAddFill } from "react-icons/ri";
 import Motion from "../motion/Motion";
+import { useSelector } from "react-redux";
+import { selectColorValue } from "../../lib/features/configSlice";
+import { THEME } from "../../lib/utils/themeClasses";
 
 const VARIANTS = {
   edit: { icon: MdEdit, color: "teal" },
@@ -26,14 +30,13 @@ const VARIANTS = {
   qr: { icon: IoQrCode, color: "teal" },
 };
 
+// Explicit colors (non-theme) stay fixed
 const COLOR_CLASSES = {
-  teal: "text-teal-400 bg-teal-500/30 hover:bg-teal-500/50",
   red: "text-red-400 bg-red-500/20 hover:bg-red-500/40",
   orange: "text-orange-400 bg-orange-500/20 hover:bg-orange-500/30",
   yellow: "text-yellow-400 bg-yellow-500/20 hover:bg-yellow-500/30",
   cyan: "text-cyan-400 bg-cyan-500/20 hover:bg-cyan-500/30",
   sky: "text-sky-400 bg-sky-500/20 hover:bg-sky-500/30",
-  violet: "text-violet-400 bg-violet-500/20 hover:bg-violet-500/30",
 };
 
 const ActionButton = ({
@@ -52,10 +55,20 @@ const ActionButton = ({
   animation,
   delay = 0,
 }) => {
+  const colorTheme = useSelector(selectColorValue) ?? "teal";
   const config = variant ? VARIANTS[variant] : null;
   const Icon = config?.icon ?? null;
   const resolvedColor = color ?? config?.color ?? "teal";
-  const colorClass = COLOR_CLASSES[resolvedColor] ?? COLOR_CLASSES.teal;
+  // "teal" means "follow theme"; explicit non-teal colors are fixed
+  const colorClass =
+    resolvedColor === "teal"
+      ? (THEME[colorTheme] ?? THEME.teal).action
+      : (COLOR_CLASSES[resolvedColor] ??
+        (THEME[colorTheme] ?? THEME.teal).action);
+  const borderColor =
+    resolvedColor === "teal"
+      ? (THEME[colorTheme] ?? THEME.teal).borderKey
+      : resolvedColor;
   const resolvedIcon =
     active && activeIcon ? activeIcon : (icon ?? (Icon && <Icon size={15} />));
   const hasPill = count != null || !!text;
@@ -69,7 +82,7 @@ const ActionButton = ({
           strokeWidth={1}
           radius={radius}
           fadeAt={30}
-          color={resolvedColor}
+          color={borderColor}
         />
       )}
       {resolvedIcon}

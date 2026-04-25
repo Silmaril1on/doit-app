@@ -1,8 +1,12 @@
+"use client";
 import React from "react";
 import Button from "../buttons/Button";
 import Input from "../forms/Input";
 import { getPasswordStrength } from "@/app/[locale]/lib/utils/regValidation";
 import BorderSvg from "../elements/BorderSvg";
+import { useSelector } from "react-redux";
+import { selectColorValue } from "@/app/[locale]/lib/features/configSlice";
+import { THEME } from "@/app/[locale]/lib/utils/themeClasses";
 
 const FromContainer = ({
   title,
@@ -26,16 +30,22 @@ const FromContainer = ({
   maxWidthClass = "max-w-xl",
   passwordValue = "",
 }) => {
+  const colorTheme = useSelector(selectColorValue) ?? "teal";
+  const t = THEME[colorTheme] ?? THEME.teal;
   const passwordStrength = getPasswordStrength(passwordValue);
   const shouldShowStrength = passwordValue.length > 0;
   return (
     <section
-      className={`${maxWidthClass} relative bg-teal-400/10 backdrop-blur-lg overflow-hidden rounded-lg p-3 lg:p-5 `}
+      className={`${maxWidthClass} relative ${t.cardBg} backdrop-blur-lg overflow-hidden rounded-lg p-3 lg:p-5 `}
     >
       <BorderSvg strokeWidth={0.6} />
-      <div className="absolute left-0 top-0 w-[40%] h-[30%] rounded-full bg-teal-500/40 blur-[80px]" />
+      <div
+        className={`absolute left-0 top-0 w-[40%] h-[30%] rounded-full ${t.formGlow} blur-[80px]`}
+      />
       {title && (
-        <h1 className="primary mt-3 text-5xl uppercase leading-none text-teal-500">
+        <h1
+          className={`primary mt-3 text-5xl uppercase leading-none ${t.titleText}`}
+        >
           {title}
         </h1>
       )}
@@ -95,7 +105,9 @@ const FromContainer = ({
         ) : null}
 
         {successMessage ? (
-          <div className="rounded-2xl border border-teal-400/35 bg-teal-500/10 px-4 py-3 text-sm text-teal-200">
+          <div
+            className={`rounded-2xl border px-4 py-3 text-sm ${t.successBorder} ${t.successBg} ${t.successText}`}
+          >
             {successMessage}
           </div>
         ) : null}
@@ -111,11 +123,11 @@ const FromContainer = ({
         {oauthSlot && (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
-              <span className="h-px flex-1 bg-teal-500/20" />
+              <span className={`h-px flex-1 ${t.modalBorder} border-t`} />
               <span className="secondary text-xs text-white/40 uppercase tracking-widest">
                 or
               </span>
-              <span className="h-px flex-1 bg-teal-500/20" />
+              <span className={`h-px flex-1 ${t.modalBorder} border-t`} />
             </div>
             {oauthSlot}
           </div>
@@ -123,7 +135,9 @@ const FromContainer = ({
       </form>
 
       {footerText && footerLinkLabel && footerLinkHref ? (
-        <div className="mt-6 items-center flex justify-between rounded-xl border border-teal-500/20 bg-black/30 p-5">
+        <div
+          className={`mt-6 items-center flex justify-between rounded-xl border ${t.modalBorder} bg-black/30 p-5`}
+        >
           <p className="secondary text-md text-cream font-light">
             {footerText}
           </p>

@@ -6,23 +6,29 @@ import {
 } from "@/app/[locale]/lib/features/toastSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { selectColorValue } from "@/app/[locale]/lib/features/configSlice";
+import { THEME } from "@/app/[locale]/lib/utils/themeClasses";
 
-const styleByType = {
-  success: {
-    wrapper: "border-teal-400/45 bg-teal-500/15 text-teal-100",
-    dot: "bg-teal-300",
-    title: "Success",
-  },
-  error: {
-    wrapper: "border-crimson/50 bg-crimson/15 text-red-100",
-    dot: "bg-red-300",
-    title: "Error",
-  },
+const ERROR_STYLE = {
+  wrapper: "border-crimson/50 bg-crimson/15 text-red-100",
+  dot: "bg-red-300",
+  title: "Error",
 };
 
 const Toast = () => {
   const dispatch = useDispatch();
   const { isVisible, msg, type } = useSelector(selectToast);
+  const colorTheme = useSelector(selectColorValue) ?? "teal";
+  const t = THEME[colorTheme] ?? THEME.teal;
+
+  const styleByType = {
+    success: {
+      wrapper: t.toastWrapper,
+      dot: t.toastDot,
+      title: "Success",
+    },
+    error: ERROR_STYLE,
+  };
 
   useEffect(() => {
     if (!isVisible) {

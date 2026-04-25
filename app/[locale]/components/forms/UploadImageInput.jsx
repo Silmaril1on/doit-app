@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { MdOutlineAddAPhoto } from "react-icons/md";
 import NextImage from "next/image";
 import ImageTag from "../elements/ImageTag";
+import { useSelector } from "react-redux";
+import { selectColorValue } from "@/app/[locale]/lib/features/configSlice";
+import { THEME } from "@/app/[locale]/lib/utils/themeClasses";
 
 const UploadImageInput = ({
   value,
@@ -17,6 +20,8 @@ const UploadImageInput = ({
   const [preview, setPreview] = useState(value || null);
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const colorTheme = useSelector(selectColorValue) ?? "teal";
+  const t = THEME[colorTheme] ?? THEME.teal;
 
   useEffect(() => {
     setPreview(value || null);
@@ -104,7 +109,7 @@ const UploadImageInput = ({
         type="button"
         disabled={disabled || processing}
         onClick={() => inputRef.current?.click()}
-        className={`group relative p-2 ${preview ? "w-fit" : "w-full"} h-34 rounded-xl border border-dashed border-teal-500/30 bg-teal-500/5 hover:bg-teal-500/10 duration-200 flex flex-col items-center justify-center gap-2 overflow-hidden cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
+        className={`group relative p-2 ${preview ? "w-fit" : "w-full"} h-34 rounded-xl border border-dashed ${t.uploadZone} duration-200 flex flex-col items-center justify-center gap-2 overflow-hidden cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {preview ? (
           <>
@@ -122,7 +127,7 @@ const UploadImageInput = ({
           </>
         ) : (
           <>
-            <MdOutlineAddAPhoto size={26} className="text-teal-500/50" />
+            <MdOutlineAddAPhoto size={26} className={t.uploadIcon} />
             <span className="secondary text-xs text-chino/60">
               {processing ? "Processing…" : "Upload cover photo"}
             </span>

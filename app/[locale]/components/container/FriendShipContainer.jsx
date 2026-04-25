@@ -6,8 +6,8 @@ import AvatarTag from "../elements/AvatarTag";
 import ItemCard from "./ItemCard";
 import useSWR from "swr";
 import ToggleButton from "../buttons/ToggleButton";
-import { timeAgo } from "../../lib/utils/utils";
 import UserSearch from "../forms/UserSearch";
+import TimeNow from "../elements/TimeNow";
 
 const fetcher = async (url) => {
   const response = await fetch(url);
@@ -102,9 +102,7 @@ const FriendShipContainer = ({ onUserNavigate }) => {
             <p className="secondary text-xs text-cream/30 shrink-0 text-right">
               Friends since
               <br />
-              <span className="text-teal-400/60">
-                {timeAgo(item.friends_since)}
-              </span>
+              <TimeNow date={item.friends_since} />
             </p>
           )}
           {tab === "requests" && (

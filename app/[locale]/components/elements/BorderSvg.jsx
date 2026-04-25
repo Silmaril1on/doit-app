@@ -1,4 +1,8 @@
+"use client";
 import React, { useId } from "react";
+import { useSelector } from "react-redux";
+import { selectColorValue } from "../../lib/features/configSlice";
+import { THEME } from "../../lib/utils/themeClasses";
 
 const BORDER_COLORS = {
   teal: [
@@ -43,6 +47,41 @@ const BORDER_COLORS = {
     "rgba(14, 165, 233, 0.55)",
     "rgba(14, 165, 233, 0.2)",
   ],
+  gold: [
+    "rgba(252, 185, 19, 0.95)",
+    "rgba(252, 185, 19, 0.5)",
+    "rgba(252, 185, 19, 0)",
+    "rgba(252, 185, 19, 0.55)",
+    "rgba(252, 185, 19, 0.2)",
+  ],
+  blue: [
+    "rgba(9, 87, 195, 0.95)",
+    "rgba(9, 87, 195, 0.5)",
+    "rgba(9, 87, 195, 0)",
+    "rgba(9, 87, 195, 0.55)",
+    "rgba(9, 87, 195, 0.2)",
+  ],
+  crimson: [
+    "rgba(217, 26, 23, 0.95)",
+    "rgba(217, 26, 23, 0.5)",
+    "rgba(217, 26, 23, 0)",
+    "rgba(217, 26, 23, 0.55)",
+    "rgba(217, 26, 23, 0.2)",
+  ],
+  grey: [
+    "rgba(122, 143, 160, 0.95)",
+    "rgba(122, 143, 160, 0.5)",
+    "rgba(122, 143, 160, 0)",
+    "rgba(122, 143, 160, 0.55)",
+    "rgba(122, 143, 160, 0.2)",
+  ],
+  coffee: [
+    "rgba(214, 164, 97, 0.95)",
+    "rgba(214, 164, 97, 0.5)",
+    "rgba(214, 164, 97, 0)",
+    "rgba(214, 164, 97, 0.55)",
+    "rgba(214, 164, 97, 0.2)",
+  ],
   violet: [
     "rgba(167, 139, 250, 0.95)",
     "rgba(167, 139, 250, 0.5)",
@@ -57,11 +96,14 @@ const BorderSvg = ({
   radius = 8,
   strokeWidth = 1.4,
   fadeAt = null,
-  color = "teal",
+  color,
 }) => {
+  const themeColor = useSelector(selectColorValue) ?? "teal";
+  const resolvedColor = color ?? THEME[themeColor]?.borderKey ?? "teal";
   const id = useId().replace(/:/g, "");
   const gradientId = `gradient-${id}`;
-  const [c0, c1, c2, c3, c4] = BORDER_COLORS[color] ?? BORDER_COLORS.teal;
+  const [c0, c1, c2, c3, c4] =
+    BORDER_COLORS[resolvedColor] ?? BORDER_COLORS.teal;
 
   return (
     <svg

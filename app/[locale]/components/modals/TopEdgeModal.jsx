@@ -13,6 +13,7 @@ import {
   setTopEdgeCollapsed,
 } from "@/app/[locale]/lib/features/topEdgeSlice";
 import FriendShipContainer from "../container/FriendShipContainer";
+import IconTag from "../elements/IconTag";
 
 const FOOTER_H = 56;
 
@@ -106,37 +107,27 @@ const TopEdgeModal = () => {
         className="flex items-center justify-between px-12 shrink-0"
         style={{ height: FOOTER_H }}
       >
-        <button
-          type="button"
+        <div
           onClick={() => setActiveView("friends")}
-          className="relative z-3"
+          className="cursor-pointer relative z-3 text-2xl"
         >
-          <FaUserFriends
-            className={`cursor-pointer text-2xl transition-colors duration-200 ${
-              activeView === "friends" ? "text-teal-400" : "text-teal-600"
-            }`}
-          />
-          {hasRequests && (
-            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500" />
-          )}
-        </button>
-
-        <button
-          onClick={() => dispatch(setTopEdgeCollapsed(!collapsed))}
-          className="cursor-pointer text-teal-500 hover:text-teal-300 text-3xl transition-transform duration-500"
+          <IconTag icon={<FaUserFriends />} />
+        </div>
+        <div
           style={{
             transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
           }}
+          onClick={() => dispatch(setTopEdgeCollapsed(!collapsed))}
+          className="cursor-pointer relative z-3 text-2xl"
         >
-          <RiArrowUpWideFill />
-        </button>
-
-        <FaHouseDamage
-          className={`cursor-pointer relative z-3 text-2xl transition-colors duration-200 ${
-            activeView === "tasks" ? "text-teal-400" : "text-teal-600"
-          }`}
+          <IconTag icon={<RiArrowUpWideFill />} />
+        </div>
+        <div
           onClick={() => setActiveView("tasks")}
-        />
+          className="cursor-pointer relative z-3 text-2xl"
+        >
+          <IconTag icon={<FaHouseDamage />} />
+        </div>
       </div>
     </motion.div>
   );
