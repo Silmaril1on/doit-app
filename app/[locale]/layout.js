@@ -13,6 +13,7 @@ import ModalRoot from "./components/modals/ModalRoot";
 import Toast from "./components/elements/Toast";
 import NavigationWrapper from "./layout/NavigationWrapper";
 import TopEdgeModal from "./components/modals/TopEdgeModal";
+import ThemeProvider from "./lib/providers/ThemeProvider";
 
 const josh = Jost({
   variable: "--font-jost",
@@ -63,15 +64,17 @@ export default async function RootLayout({ children, params }) {
         <NextIntlClientProvider>
           <StoreProvider initialUser={initialUser}>
             <DarkModeProvider>
-              <NavigationWrapper />
-              <div className="center w-full flex-col *:w-full grow *:grow ">
-                {children}
-              </div>
-              <ModalRoot />
-              <FloatingNavigation />
-              <TopEdgeModal />
-              <Toast />
-              <Footer />
+              <ThemeProvider>
+                <NavigationWrapper />
+                <div className="center w-full flex-col *:w-full grow *:grow ">
+                  {children}
+                </div>
+                <ModalRoot />
+                <FloatingNavigation />
+                <TopEdgeModal />
+                <Toast />
+                <Footer />
+              </ThemeProvider>
             </DarkModeProvider>
           </StoreProvider>
         </NextIntlClientProvider>

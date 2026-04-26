@@ -1,7 +1,4 @@
 "use client";
-import { useSelector } from "react-redux";
-import { selectColorValue } from "../../lib/features/configSlice";
-import { THEME } from "../../lib/utils/themeClasses";
 
 const sizes = {
   sm: {
@@ -18,19 +15,12 @@ const sizes = {
   },
 };
 
-const LayoutToggle = ({
-  options = [],
-  value,
-  onChange,
-  size = "md",
-  theme,
-}) => {
-  const t = theme ?? THEME.teal;
+const LayoutToggle = ({ options = [], value, onChange, size = "md" }) => {
   const textSize = size === "sm" ? "text-xs px-3 py-1" : "text-sm px-5 py-2";
 
   return (
     <div
-      className={`inline-flex rounded-md border p-0.5 gap-0.5 ${t.layoutBg}`}
+      className={`inline-flex rounded-md border p-0.5 gap-0.5 bg-primary/20 border-primary/40`}
     >
       {options.map((opt) => {
         const label = typeof opt === "string" ? opt : opt.label;
@@ -43,7 +33,9 @@ const LayoutToggle = ({
             type="button"
             onClick={() => onChange?.(val)}
             className={`rounded-sm font-semibold uppercase duration-300 primary cursor-pointer ${textSize} ${
-              active ? t.layoutActive : "text-white hover:text-white/80"
+              active
+                ? "bg-primary hover:bg-primary/80 text-black"
+                : "text-white hover:text-white/80"
             }`}
           >
             {label}
@@ -62,9 +54,6 @@ const ToggleButton = ({
   options,
   value,
 }) => {
-  const colorTheme = useSelector(selectColorValue) ?? "teal";
-  const t = THEME[colorTheme] ?? THEME.teal;
-
   if (variant === "layout") {
     return (
       <LayoutToggle
@@ -72,7 +61,6 @@ const ToggleButton = ({
         value={value}
         onChange={onChange}
         size={size}
-        theme={t}
       />
     );
   }
@@ -85,10 +73,10 @@ const ToggleButton = ({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange?.(!checked)}
-      className={`relative inline-flex shrink-0 cursor-pointer rounded-full duration-300 ${checked ? t.switchOn : t.switchOff} ${s.track}`}
+      className={`relative inline-flex shrink-0 cursor-pointer rounded-full duration-300 ${checked ? "bg-primary/50" : "bg-primary hover:bg-primary/80"} ${s.track}`}
     >
       <span
-        className={`absolute ${s.offset} inline-block rounded-full ${checked ? t.thumbOn : t.thumbOff} shadow transition-transform duration-300 ${s.thumb} ${
+        className={`absolute ${s.offset} inline-block rounded-full ${checked ? "bg-primary" : "bg-black/60"} shadow transition-transform duration-300 ${s.thumb} ${
           checked ? s.translate : "translate-x-0"
         }`}
       />

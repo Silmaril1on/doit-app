@@ -92,7 +92,7 @@ const TopEdgeModal = () => {
         stiffness: 120,
         damping: 18,
       }}
-      className="w-full z-50 bg-teal-950/30 backdrop-blur-sm flex flex-col fixed overflow-hidden rounded-b-3xl"
+      className="w-full z-50 bg-black backdrop-blur-sm flex flex-col fixed overflow-hidden rounded-b-3xl"
       style={{ height: "85vh" }}
     >
       {activeView === "friends" && (

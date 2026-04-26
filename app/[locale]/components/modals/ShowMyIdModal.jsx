@@ -129,7 +129,7 @@ const ShowMyIdModal = () => {
         )}
         <p className="secondary text-xs text-chino/60 text-center leading-relaxed">
           Share this code so others can visit{" "}
-          <span className="text-teal-400 font-semibold">Your Profile</span>
+          <span className="text-primary font-semibold">Your Profile</span>
         </p>
       </div>
     </GlobalModal>

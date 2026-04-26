@@ -29,7 +29,7 @@ const FloatingNavigation = () => {
       initial={false}
       animate={{ bottom: isOpen ? 10 : -50 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="fixed left-1/2 z-20 flex justify-between w-[95%] -translate-x-1/2 rounded-full border border-teal-500/20 bg-teal-700/20 p-2 shadow-[2px_2px_10px_rgba(0,0,0,1)] lg:hidden"
+      className="fixed left-1/2 z-20 flex justify-between w-[95%] -translate-x-1/2 rounded-full border border-primary/30 bg-primary/20 p-2 shadow-[2px_2px_10px_rgba(0,0,0,1)] lg:hidden"
     >
       {/* Blur lives on its own layer so child popups can use their own backdrop-blur freely */}
       <div className="absolute inset-0 -z-10 rounded-full backdrop-blur-xl pointer-events-none" />
@@ -94,7 +94,7 @@ const EdgeButton = ({ isOpen, onClick }) => {
       className={`absolute cursor-pointer -top-3 right-10 flex-col items-center justify-center`}
     >
       <span
-        className={`flex h-3 w-20 items-center justify-center rounded-t-full bg-teal-700/20 text-white  duration-300 hover:bg-teal-700/80`}
+        className={`flex h-3 w-20 items-center justify-center rounded-t-full bg-primary/20 text-white  duration-300 hover:bg-primary/80`}
       >
         <ArrowUpDown isOpen={isOpen} size={10} className="text-white" />
       </span>

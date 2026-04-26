@@ -1,14 +1,9 @@
 "use client";
 import React from "react";
 import BorderSvg from "../elements/BorderSvg";
-import { useSelector } from "react-redux";
-import { selectColorValue } from "../../lib/features/configSlice";
-import { THEME } from "../../lib/utils/themeClasses";
 
 const ItemCard = ({ children, className, bg }) => {
-  const colorTheme = useSelector(selectColorValue) ?? "teal";
-  const t = THEME[colorTheme] ?? THEME.teal;
-  const bgClass = bg ?? t.cardBg;
+  const bgClass = bg ?? "bg-primary/10";
 
   return (
     <div
@@ -16,7 +11,7 @@ const ItemCard = ({ children, className, bg }) => {
     >
       <BorderSvg strokeWidth={0.6} />
       <div
-        className={`absolute left-0 top-0 w-[40%] h-[30%] rounded-full ${t.cardGlow} blur-[70px] -z-1`}
+        className={`absolute left-0 top-0 w-[40%] h-[30%] rounded-full bg-primary blur-[70px] -z-1`}
       />
       {children}
     </div>

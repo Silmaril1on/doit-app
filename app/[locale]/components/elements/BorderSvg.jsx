@@ -1,8 +1,5 @@
 "use client";
-import React, { useId } from "react";
-import { useSelector } from "react-redux";
-import { selectColorValue } from "../../lib/features/configSlice";
-import { THEME } from "../../lib/utils/themeClasses";
+import React, { useId, useState, useEffect } from "react";
 
 const BORDER_COLORS = {
   teal: [
@@ -98,8 +95,22 @@ const BorderSvg = ({
   fadeAt = null,
   color,
 }) => {
-  const themeColor = useSelector(selectColorValue) ?? "teal";
-  const resolvedColor = color ?? THEME[themeColor]?.borderKey ?? "teal";
+  const [themeKey, setThemeKey] = useState("teal");
+
+  useEffect(() => {
+    const update = () =>
+      setThemeKey(
+        document.documentElement.getAttribute("data-theme") ?? "teal",
+      );
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, {
+      attributeFilter: ["data-theme"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  const resolvedColor = color ?? themeKey;
   const id = useId().replace(/:/g, "");
   const gradientId = `gradient-${id}`;
   const [c0, c1, c2, c3, c4] =

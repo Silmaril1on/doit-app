@@ -151,8 +151,8 @@ const FriendShipContainer = ({ onUserNavigate }) => {
   }
 
   return (
-    <div className="h-full relative flex flex-col bg-[#031c1a] rounded-br-3xl w-full shadow-[2px_0_10px_2px_rgba(0,0,0,1)]">
-      <div className="absolute z-0 -bottom-14 left-0 bg-[#031c1a] inverted" />
+    <div className="h-full relative flex flex-col bg-primary/15 rounded-br-3xl w-full shadow-[2px_0_10px_2px_rgba(var(--color-shadow),0.6)]">
+      <div className="absolute z-0 -bottom-14 left-0 bg-primary/15 inverted" />
       {/* Tab Toggle */}
       <div className="flex flex-col items-center gap-3 py-3 shrink-0 ">
         <ToggleButton

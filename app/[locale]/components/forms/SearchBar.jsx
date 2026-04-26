@@ -3,9 +3,6 @@
 import React, { useRef } from "react";
 import { IoSearch } from "react-icons/io5";
 import { IoMdClose } from "react-icons/io";
-import { useSelector } from "react-redux";
-import { selectColorValue } from "@/app/[locale]/lib/features/configSlice";
-import { THEME } from "@/app/[locale]/lib/utils/themeClasses";
 
 const SearchBar = ({
   value = "",
@@ -15,8 +12,6 @@ const SearchBar = ({
   ariaLabel,
 }) => {
   const inputRef = useRef(null);
-  const colorTheme = useSelector(selectColorValue) ?? "teal";
-  const t = THEME[colorTheme] ?? THEME.teal;
 
   const handleChange = (e) => onChange?.(e.target.value);
 
@@ -29,7 +24,7 @@ const SearchBar = ({
     <div className={`relative flex items-center ${className}`}>
       <IoSearch
         size={15}
-        className={`pointer-events-none absolute left-3 ${t.iconMuted}`}
+        className={`pointer-events-none absolute left-3 text-primary/60`}
         aria-hidden
       />
       <input
@@ -39,14 +34,14 @@ const SearchBar = ({
         onChange={handleChange}
         placeholder={placeholder}
         aria-label={ariaLabel ?? placeholder}
-        className={`secondary w-full rounded-full border ${t.borderMed} bg-black/40 py-2 pl-9 pr-8 text-sm text-cream/80 outline-none placeholder:text-cream/40 duration-300 ${t.inputFocusBorder} focus:ring-1 ${t.inputFocusRing}`}
+        className={`secondary w-full rounded-full border border-primary/30 bg-black/40 py-2 pl-9 pr-8 text-sm text-cream/80 outline-none placeholder:text-cream/40 duration-300 focus:border-primary/60 focus:ring-1 focus:ring-primary/30`}
       />
       {value && (
         <button
           type="button"
           onClick={handleClear}
           aria-label="Clear search"
-          className={`absolute right-2.5 cursor-pointer ${t.iconMuted} duration-200 ${t.hoverIconMuted}`}
+          className={`absolute right-2.5 cursor-pointer text-primary/60 duration-200 hover:text-primary`}
         >
           <IoMdClose size={14} />
         </button>

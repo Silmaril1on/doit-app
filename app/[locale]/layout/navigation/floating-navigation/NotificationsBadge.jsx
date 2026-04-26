@@ -125,22 +125,21 @@ const NotificationsBadge = () => {
         {isOpen && (
           <Motion
             animation="right"
-            className="absolute bottom-[calc(100%+15px)] -right-20 w-80 z-50 rounded-2xl border border-teal-500/20 bg-black/80 backdrop-blur-2xl overflow-hidden"
+            className="absolute bottom-[calc(100%+24px)] -right-18 w-80 z-50 rounded-2xl border border-primary/20 bg-black/80 backdrop-blur-2xl overflow-hidden"
           >
             {/* header */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-teal-500/15">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-primary/15">
               <p className="text-sm font-semibold text-cream tracking-wide">
                 Notifications
               </p>
               <div className="flex items-center gap-2">
                 {hasMore && (
-                  <Link
+                  <Button
+                    size="sm"
+                    text="View All"
+                    variant="outline"
                     href={`/${locale}/notifications`}
-                    onClick={() => setIsOpen(false)}
-                    className="secondary text-xs text-teal-400 border border-teal-500/30 rounded px-2 py-0.5 hover:bg-teal-500/10 duration-200"
-                  >
-                    View All
-                  </Link>
+                  />
                 )}
                 {hasUnread && (
                   <Button

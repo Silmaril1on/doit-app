@@ -69,12 +69,12 @@ const LevelBar = () => {
 
   return (
     <div className="flex px-1 items-center gap-2 flex-1 w-full">
-      <span className="text-[10px] font-bold text-teal-400 secondary shrink-0 leading-none">
+      <span className="text-[10px] font-bold text-primary secondary shrink-0 leading-none">
         Lv.{level}
       </span>
-      <div className="relative flex-1 h-3 rounded-full bg-teal-500/10 border border-teal-500/20 overflow-hidden">
+      <div className="relative flex-1 h-3 rounded-full bg-primary/10 border border-primary/20 overflow-hidden">
         <motion.div
-          className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-teal-600 to-teal-400"
+          className="absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-primary to-primary/60"
           style={{ width }}
         />
       </div>

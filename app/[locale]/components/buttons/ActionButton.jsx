@@ -9,12 +9,9 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { IoQrCode } from "react-icons/io5";
 import { RiImageAddFill } from "react-icons/ri";
 import Motion from "../motion/Motion";
-import { useSelector } from "react-redux";
-import { selectColorValue } from "../../lib/features/configSlice";
-import { THEME } from "../../lib/utils/themeClasses";
 
 const VARIANTS = {
-  edit: { icon: MdEdit, color: "teal" },
+  edit: { icon: MdEdit },
   delete: { icon: FaTrash, color: "red" },
   close: { icon: MdClose, color: "teal" },
   remove: { icon: IoMdClose, color: "teal" },
@@ -55,20 +52,17 @@ const ActionButton = ({
   animation,
   delay = 0,
 }) => {
-  const colorTheme = useSelector(selectColorValue) ?? "teal";
   const config = variant ? VARIANTS[variant] : null;
   const Icon = config?.icon ?? null;
   const resolvedColor = color ?? config?.color ?? "teal";
-  // "teal" means "follow theme"; explicit non-teal colors are fixed
+  // "teal" means follow CSS theme var; explicit non-teal colors are fixed
   const colorClass =
     resolvedColor === "teal"
-      ? (THEME[colorTheme] ?? THEME.teal).action
+      ? "text-primary bg-primary/30 hover:bg-primary/50"
       : (COLOR_CLASSES[resolvedColor] ??
-        (THEME[colorTheme] ?? THEME.teal).action);
-  const borderColor =
-    resolvedColor === "teal"
-      ? (THEME[colorTheme] ?? THEME.teal).borderKey
-      : resolvedColor;
+        "text-primary bg-primary/30 hover:bg-primary/50");
+  // Don't pass borderColor when using theme — BorderSvg reads data-theme itself
+  const borderColor = resolvedColor === "teal" ? undefined : resolvedColor;
   const resolvedIcon =
     active && activeIcon ? activeIcon : (icon ?? (Icon && <Icon size={15} />));
   const hasPill = count != null || !!text;

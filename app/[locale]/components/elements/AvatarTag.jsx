@@ -4,9 +4,6 @@ import ImageTag from "@/app/[locale]/components/elements/ImageTag";
 import { getUserInitials } from "../../lib/utils/utils";
 import { CountryFlags } from "./CountryFlags";
 import Button from "../buttons/Button";
-import { useSelector } from "react-redux";
-import { selectColorValue } from "@/app/[locale]/lib/features/configSlice";
-import { THEME } from "@/app/[locale]/lib/utils/themeClasses";
 
 const sizes = {
   sm: "h-8 w-8 text-xs",
@@ -25,8 +22,6 @@ const AvatarTag = ({
   buttonDisabled = false,
   buttonLoading = false,
 }) => {
-  const colorTheme = useSelector(selectColorValue) ?? "teal";
-  const t = THEME[colorTheme] ?? THEME.teal;
   const sizeClasses = sizes[size] ?? sizes.md;
   const initials = getUserInitials(user);
   const userName =
@@ -51,7 +46,7 @@ const AvatarTag = ({
   return (
     <Wrapper {...wrapperProps}>
       <div
-        className={`relative shrink-0 overflow-hidden rounded-md border ${t.borderMed} bg-black/40 ${sizeClasses}`}
+        className={`relative shrink-0 overflow-hidden rounded-md border border-primary/30 bg-black/40 ${sizeClasses}`}
       >
         {user?.image_url ? (
           <ImageTag
@@ -62,7 +57,7 @@ const AvatarTag = ({
           />
         ) : (
           <div
-            className={`flex h-full w-full items-center justify-center font-bold ${t.progressText}`}
+            className={`flex h-full w-full items-center justify-center font-bold text-primary`}
           >
             {initials}
           </div>
@@ -73,7 +68,7 @@ const AvatarTag = ({
           {user?.display_name}
         </h1>
         <h1
-          className={`${t.titleText} capitalize text-lg leading-none font-bold`}
+          className={`text-primary capitalize text-lg leading-none font-bold`}
         >
           {userName}
         </h1>

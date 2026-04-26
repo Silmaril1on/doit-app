@@ -6,8 +6,6 @@ import {
 } from "@/app/[locale]/lib/features/toastSlice";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { selectColorValue } from "@/app/[locale]/lib/features/configSlice";
-import { THEME } from "@/app/[locale]/lib/utils/themeClasses";
 
 const ERROR_STYLE = {
   wrapper: "border-crimson/50 bg-crimson/15 text-red-100",
@@ -18,13 +16,11 @@ const ERROR_STYLE = {
 const Toast = () => {
   const dispatch = useDispatch();
   const { isVisible, msg, type } = useSelector(selectToast);
-  const colorTheme = useSelector(selectColorValue) ?? "teal";
-  const t = THEME[colorTheme] ?? THEME.teal;
 
   const styleByType = {
     success: {
-      wrapper: t.toastWrapper,
-      dot: t.toastDot,
+      wrapper: "border-primary/45 bg-primary/15 text-cream/80",
+      dot: "bg-primary",
       title: "Success",
     },
     error: ERROR_STYLE,

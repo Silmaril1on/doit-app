@@ -174,7 +174,7 @@ const ProfileBody = ({
       {isMenuOpen && (
         <Motion
           animation="right"
-          className="absolute bottom-[calc(100%+15px)] -right-3 z-30 min-w-40 backdrop-blur-2xl overflow-hidden rounded-2xl border border-teal-500/20 bg-teal-500/10 backdro-blur-lg"
+          className="absolute bottom-[calc(100%+15px)] -right-3 z-30 min-w-40 backdrop-blur-2xl overflow-hidden rounded-2xl border border-primary/30 bg-primary/10 backdro-blur-lg"
         >
           <div className=" p-2">
             <div className="mb-3 pb-1 border-b border-teal-500/15">
@@ -191,7 +191,7 @@ const ProfileBody = ({
                     setIsMenuOpen(false);
                     open(ACCOUNT_VERIFICATION_MODAL);
                   }}
-                  className="secondary cursor-pointer text-[10px] uppercase tracking-widest text-teal-400 hover:text-teal-300 transition-colors duration-200 text-left"
+                  className="secondary cursor-pointer text-[10px] uppercase tracking-widest text-primary/80 hover:text-primary transition-colors duration-200 text-left"
                 >
                   Verify Account?
                 </button>
@@ -202,7 +202,7 @@ const ProfileBody = ({
                     setIsMenuOpen(false);
                     open(ACCOUNT_VERIFICATION_MODAL);
                   }}
-                  className="secondary cursor-pointer text-[10px] uppercase tracking-widest text-teal-500/70 hover:text-teal-500 duration-300"
+                  className="secondary cursor-pointer text-[10px] uppercase tracking-widest text-primary/80 hover:text-primary duration-300"
                 >
                   Account Verified
                 </p>
@@ -214,7 +214,7 @@ const ProfileBody = ({
                 item.type === "link" ? (
                   <Link
                     key={item.label}
-                    className="text-teal-500 hover:text-teal-300 leading-none"
+                    className="text-primary/80 hover:text-primary leading-none"
                     href={item.href}
                     onClick={item.onClick}
                   >
@@ -225,7 +225,7 @@ const ProfileBody = ({
                     key={item.label}
                     type="button"
                     onClick={item.onClick}
-                    className="text-teal-500 hover:text-teal-300 leading-none text-left cursor-pointer"
+                    className="text-primary/80 hover:text-primary leading-none text-left cursor-pointer"
                   >
                     {item.label}
                   </button>

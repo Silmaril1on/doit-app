@@ -1,17 +1,9 @@
 "use client";
-import { useSelector } from "react-redux";
-import { selectColorValue } from "@/app/[locale]/lib/features/configSlice";
-import { THEME } from "@/app/[locale]/lib/utils/themeClasses";
 
 const SectionHeadline = ({ title, subtitle }) => {
-  const colorTheme = useSelector(selectColorValue) ?? "teal";
-  const t = THEME[colorTheme] ?? THEME.teal;
-
   return (
     <div className="*:leading-none ">
-      <h1
-        className={`${t.titleText} capitalize text-2xl lg:text-4xl font-bold`}
-      >
+      <h1 className="text-primary capitalize text-2xl lg:text-4xl font-bold">
         {title}
       </h1>
       <p className="secondary text-chino text-xs">{subtitle}</p>

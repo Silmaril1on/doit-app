@@ -23,6 +23,45 @@
   --color-pink: #ff3d81;
   --color-chocolate: #201405;
   --color-grey: #7a8fa0;
+
+  --color-primary: var(--color-gold);
+  --color-primary-foreground: 0 0% 0%;
+}
+
+/* Dynamic theme colors */
+[data-theme="teal"] {
+  --color-primary: #14b8a6;
+  --color-primary-foreground: 0 0% 0%;
+}
+
+[data-theme="gold"] {
+  --color-primary: var(--color-gold);
+  --color-primary-foreground: 0 0% 0%;
+}
+
+[data-theme="blue"] {
+  --color-primary: var(--color-blue);
+  --color-primary-foreground: 240 7% 94%;
+}
+
+[data-theme="crimson"] {
+  --color-primary: var(--color-crimson);
+  --color-primary-foreground: 240 7% 94%;
+}
+
+[data-theme="grey"] {
+  --color-primary: var(--color-grey);
+  --color-primary-foreground: 0 0% 0%;
+}
+
+[data-theme="violet"] {
+  --color-primary: var(--color-violet);
+  --color-primary-foreground: 240 7% 94%;
+}
+
+[data-theme="coffee"] {
+  --color-primary: var(--color-choco);
+  --color-primary-foreground: 0 0% 0%;
 }
 
 .primary {

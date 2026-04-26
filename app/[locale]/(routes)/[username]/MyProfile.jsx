@@ -1,30 +1,26 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import useSWR from "swr";
 import { sendFriendRequest } from "../../lib/services/user/friendships";
 import { setToast } from "../../lib/features/toastSlice";
-import Button from "../../components/buttons/Button";
 import { CountryFlags } from "../../components/elements/CountryFlags";
 import { formatDate } from "../../lib/utils/utils";
 import { FaUsers, FaGamepad, FaCoins } from "react-icons/fa";
 import { MdFavorite } from "react-icons/md";
+import { getEarnedTiers } from "../../lib/local-bd/levelProgressData";
+import { useUserProfile } from "../../lib/hooks/userProfileHook";
+import { useModal } from "../../lib/hooks/useModal";
+import { selectCurrentUser } from "../../lib/features/userSlice";
+import useSWR from "swr";
 import ItemCard from "../../components/container/ItemCard";
 import AvatarTag from "../../components/elements/AvatarTag";
 import ActionButton from "../../components/buttons/ActionButton";
-import { useModal } from "../../lib/hooks/useModal";
-import { useUserProfile } from "../../lib/hooks/userProfileHook";
-import { selectCurrentUser } from "../../lib/features/userSlice";
 import {
   TASK_CATEGORIES,
   CATEGORY_ACHIEVEMENT_TIERS,
-  getTierByLevel,
 } from "../../lib/local-bd/categoryTypesData";
-import { getEarnedTiers } from "../../lib/local-bd/levelProgressData";
 import ImageTag from "../../components/elements/ImageTag";
 import IconTag from "../../components/elements/IconTag";
-import { selectColorValue } from "../../lib/features/configSlice";
-import { THEME } from "../../lib/utils/themeClasses";
 
 const friendshipFetcher = (url) => fetch(url).then((r) => r.json());
 
@@ -41,14 +37,9 @@ const MyProfile = ({
   const currentUser = useSelector(selectCurrentUser);
   const isOwner =
     currentUser?.id && serverUser?.id && currentUser.id === serverUser.id;
-
-  // Only subscribe to SWR when viewing your own profile so live updates work
   const { profile: liveProfile } = useUserProfile(isOwner ? serverUser : null);
-
-  // For the owner, overlay fresh SWR data on top of the SSR prop
   const user =
     isOwner && liveProfile ? { ...serverUser, ...liveProfile } : serverUser;
-
   const totalXp = xp?.total_xp ?? 0;
   const formattedXp = totalXp.toLocaleString();
   const currentLevel = xp?.current_level ?? 1;
@@ -125,6 +116,38 @@ const MyProfile = ({
   );
 };
 
+const HeaderSection = ({ totalXp, currentLevel, friendsCount, tokens }) => {
+  const stats = [
+    {
+      label: "Tokens",
+      value: (tokens ?? 0).toLocaleString(),
+      icon: <FaCoins />,
+    },
+    { label: "Total XP", value: totalXp, icon: <FaGamepad /> },
+    { label: "Level", value: currentLevel, icon: <MdFavorite /> },
+    { label: "Friends", value: friendsCount, icon: <FaUsers /> },
+  ];
+
+  return (
+    <div className="flex items-center justify-end gap-3 mt-1">
+      {stats.map(({ label, value, icon }) => (
+        <div
+          key={label}
+          className={`rounded-xl center gap-2 border px-2 border-primary/15 bg-primary/30`}
+        >
+          <IconTag icon={icon} />
+          <p className="secondary pt-0.5 text-[10px] text-chino uppercase">
+            {label}
+          </p>
+          <p className="text-cream text-md font-semibold pt-1 leading-none">
+            {value}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const UserAvatarSection = ({
   user,
   isOwner,
@@ -187,41 +210,6 @@ const UserAvatarSection = ({
   );
 };
 
-const HeaderSection = ({ totalXp, currentLevel, friendsCount, tokens }) => {
-  const colorTheme = useSelector(selectColorValue) ?? "teal";
-  const t = THEME[colorTheme] ?? THEME.teal;
-
-  const stats = [
-    {
-      label: "Tokens",
-      value: (tokens ?? 0).toLocaleString(),
-      icon: <FaCoins />,
-    },
-    { label: "Total XP", value: totalXp, icon: <FaGamepad /> },
-    { label: "Level", value: currentLevel, icon: <MdFavorite /> },
-    { label: "Friends", value: friendsCount, icon: <FaUsers /> },
-  ];
-
-  return (
-    <div className="flex items-center justify-end gap-3 mt-1">
-      {stats.map(({ label, value, icon }) => (
-        <div
-          key={label}
-          className={`rounded-xl center gap-2 border px-2 ${t.statBorder} ${t.statBg}`}
-        >
-          <IconTag icon={icon} />
-          <p className="secondary pt-0.5 text-[10px] text-chino uppercase">
-            {label}
-          </p>
-          <p className="text-cream text-md font-semibold pt-1 leading-none">
-            {value}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-};
-
 const PROFILE_FIELDS = [
   { key: "display_name", label: "Alias" },
   { key: "full_name", label: "Full Name" },
@@ -275,7 +263,7 @@ const ProfileSection = ({ user }) => {
         {visibleFields.map(({ key, label }) => (
           <div
             key={key}
-            className="px-3 py-2 space-y-0.5 border border-teal-500/20 bg-black/30 backdrop-blur-lg rounded-md"
+            className="px-3 py-2 space-y-0.5 border border-primary/15 bg-black/50 backdrop-blur-lg rounded-md"
           >
             <p className="text-chino/60 text-[10px] secondary font-bold">
               {label}
@@ -347,9 +335,9 @@ const BadgesSection = ({ badgeProgress = [], xp = {} }) => {
         {sorted.map((badge) => (
           <div
             key={badge.id}
-            className="flex flex-col items-center gap-2 rounded-xl border border-teal-500/40 bg-teal-500/10 p-4 text-center"
+            className="flex flex-col items-center gap-2 rounded-xl border border-primary/15 bg-primary/10 p-4 text-center"
           >
-            <div className="h-12 w-12 rounded-full border border-teal-400 bg-teal-500 flex items-center justify-center shrink-0">
+            <div className="h-12 w-12 rounded-full border  bg-primary flex items-center justify-center shrink-0">
               <span className="text-black font-bold text-lg leading-none">
                 {badge.displayLevel}
               </span>
@@ -379,7 +367,7 @@ const GameBar = ({ label, count, total, color }) => {
         <span className="text-[10px] tracking-widest secondary text-chino font-medium">
           {label}
         </span>
-        <span className="text-[10px] text-teal-400 font-mono ">{count}</span>
+        <span className="text-[10px] text-primary font-mono ">{count}</span>
       </div>
       <div className="flex gap-0.5">
         {Array.from({ length: SEGMENTS_COUNT }, (_, i) => (
@@ -399,9 +387,9 @@ const Stats = ({ objectiveStats }) => {
   const { byStatus = {}, byPriority = {}, total = 0 } = objectiveStats ?? {};
 
   return (
-    <ItemCard className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-xl border border-teal-500/15 bg-teal-500/5 p-4">
+    <ItemCard className="grid grid-cols-2 gap-x-6 gap-y-2 ">
       <div className="space-y-4">
-        <p className="text-[9px] uppercase tracking-[0.2em] text-teal-500/70 font-semibold">
+        <p className="text-[9px] uppercase tracking-[0.2em] text-primary/70 font-semibold">
           Objectives
         </p>
         <GameBar
@@ -424,7 +412,7 @@ const Stats = ({ objectiveStats }) => {
         />
       </div>
       <div className="space-y-4">
-        <p className="text-[9px] uppercase tracking-[0.2em] text-teal-500/70 font-semibold">
+        <p className="text-[9px] uppercase tracking-[0.2em] text-primary/70 font-semibold">
           Difficulty
         </p>
         <GameBar

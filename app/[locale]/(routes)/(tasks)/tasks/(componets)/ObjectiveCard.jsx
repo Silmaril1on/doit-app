@@ -113,7 +113,7 @@ const ObjectiveCard = ({
           <AvatarTag user={owner} size="sm" />
         </div>
       )}
-      <ItemCard className="space-y-3 rounded-xl border border-teal-500/20 bg-black/45 p-4">
+      <ItemCard className="space-y-3">
         <CardHeader
           objective={objective}
           hasActions={hasActions}
@@ -248,7 +248,7 @@ const CardCategorySection = ({
       <div className="gap-1 flex flex-col items-start mb-4">
         {categoryData ? (
           <div>
-            <p className="secondary text-xs uppercase tracking-[0.14em] text-teal-200/85">
+            <p className="secondary text-xs uppercase tracking-[0.14em] text-primary">
               Category: {categoryData.label}
             </p>
             <p className="secondary capitalize text-[10px] text-chino">
@@ -256,7 +256,7 @@ const CardCategorySection = ({
             </p>
           </div>
         ) : (
-          <p className="secondary  text-xs uppercase tracking-[0.14em] text-teal-200/85">
+          <p className="secondary  text-xs uppercase tracking-[0.14em] text-primary">
             Category: —
           </p>
         )}
@@ -296,7 +296,7 @@ const SubTasksSection = ({
   return (
     <>
       {subtasks.length > 0 && (
-        <div className="rounded-lg border border-teal-500/20 bg-black/35 p-3">
+        <div className="rounded-lg border border-primary/20 bg-black/35 p-3">
           <p className="secondary text-xs uppercase tracking-[0.14em] text-white/80">
             Subtasks
           </p>
