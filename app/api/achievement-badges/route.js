@@ -10,10 +10,6 @@ async function getUserId() {
   return cookieStore.get("doit-user-id")?.value ?? null;
 }
 
-/**
- * GET /api/achievement-badges
- * Returns the authenticated user's category progress enriched with tier data.
- */
 export async function GET() {
   try {
     const userId = await getUserId();
@@ -31,11 +27,6 @@ export async function GET() {
   }
 }
 
-/**
- * PATCH /api/achievement-badges
- * Marks all unseen badges as seen for the authenticated user.
- * Called from the client when the My Achievements page first mounts.
- */
 export async function PATCH() {
   try {
     const userId = await getUserId();
