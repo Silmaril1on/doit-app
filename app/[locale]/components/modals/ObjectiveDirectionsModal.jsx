@@ -35,7 +35,7 @@ const PIN_KEYFRAMES = `
 `;
 
 const MODAL_TYPE = "objectiveDirections";
-const GOOGLE_MAPS_API_KEY = "AIzaSyBYo36Sb6U2GXV0zcxS4CTooFrdVlr3f4Q";
+const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 const LIBRARIES = ["places"];
 
 const MAP_STYLES = [
@@ -648,7 +648,7 @@ const ObjectiveDirectionsModal = () => {
   const isOpen = modalType === MODAL_TYPE;
 
   const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: apiKey,
     libraries: LIBRARIES,
   });
 
