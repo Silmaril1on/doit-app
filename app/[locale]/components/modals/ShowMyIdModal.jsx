@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { selectModal } from "@/app/[locale]/lib/features/modalSlice";
-import { useModal } from "@/app/[locale]/lib/hooks/useModal";
+import { useModalActions } from "@/app/[locale]/lib/hooks/useModal";
 import GlobalModal from "./GlobalModal";
 import Image from "next/image";
 
@@ -13,7 +13,7 @@ export const SHOW_MY_ID_MODAL = "showMyId";
 const ShowMyIdModal = () => {
   const { modalType } = useSelector(selectModal);
   const isOpen = modalType === SHOW_MY_ID_MODAL;
-  const { close } = useModal();
+  const { close } = useModalActions();
   const user = useSelector(selectCurrentUser);
 
   const [qrUrl, setQrUrl] = useState(null);

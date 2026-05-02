@@ -1,5 +1,11 @@
 import React from "react";
 
+export const metadata = {
+  title: "DoIt — Level Up Your Life",
+  description:
+    "DoIt helps you set objectives, track achievements, and level up through real-life tasks. Join your friends on the journey.",
+};
+
 const styles = [
   {
     name: "Classic Arcade",

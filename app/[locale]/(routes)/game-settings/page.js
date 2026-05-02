@@ -1,6 +1,11 @@
 import Link from "next/link";
 import React from "react";
 
+export const metadata = {
+  title: "Settings — DoIt",
+  description: "Manage your DoIt account settings.",
+};
+
 const SettingsPage = () => {
   return (
     <div className="page-wrapper center flex-col *:text-6xl *:font-bold gap-3">
@@ -27,6 +32,12 @@ const SettingsPage = () => {
         className="text-primary/80 hover:text-primary duration-300"
       >
         Customization
+      </Link>
+      <Link
+        href="/game-settings/difficulty"
+        className="text-primary/80 hover:text-primary duration-300"
+      >
+        Choose difficulty
       </Link>
     </div>
   );

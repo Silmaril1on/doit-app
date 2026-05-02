@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
 import Button from "@/app/[locale]/components/buttons/Button";
@@ -29,7 +29,10 @@ const ObjectivesSideBar = ({
     onClose();
   };
 
-  const configs = buildObjectivesFilterConfig(objectives);
+  const configs = useMemo(
+    () => buildObjectivesFilterConfig(objectives),
+    [objectives],
+  );
 
   return (
     <AnimatePresence>

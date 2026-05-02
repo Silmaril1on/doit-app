@@ -1,33 +1,16 @@
 "use server";
-import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 import { batchGetTaskLikesStatus } from "./taskLikes";
 import { batchGetTaskReviewCounts } from "./taskReviews";
 
-async function getCallerId() {
-  const cookieStore = await cookies();
-  return cookieStore.get("doit-user-id")?.value ?? null;
-}
+/**
+ * Fetch completed public tasks from a pre-resolved list of friend IDs.
+ * Accepts `friendIds` directly so the caller (feedService) doesn't have to
+ * re-query the friendships table — eliminating the duplicate DB round-trip.
+ */
+export async function getFriendsFeedTasks({ friendIds = [], limit = 20 } = {}) {
+  if (!friendIds?.length) return { tasks: [], total: 0 };
 
-export async function getFriendsFeedTasks({ offset = 0, limit = 20 } = {}) {
-  const userId = await getCallerId();
-  if (!userId) throw new Error("Unauthorized");
-
-  // 1. Get accepted friend IDs (either side of the friendship)
-  const { data: friendships, error: fError } = await supabaseAdmin
-    .from("friendships")
-    .select("requester_id, addressee_id")
-    .eq("status", "accepted")
-    .or(`requester_id.eq.${userId},addressee_id.eq.${userId}`);
-
-  if (fError) throw new Error(fError.message);
-  if (!friendships?.length) return { tasks: [], total: 0 };
-
-  const friendIds = friendships.map((f) =>
-    f.requester_id === userId ? f.addressee_id : f.requester_id,
-  );
-
-  // 2. Fetch public todo/completed tasks from friends with pagination
   const {
     data: tasks,
     count,
@@ -42,12 +25,11 @@ export async function getFriendsFeedTasks({ offset = 0, limit = 20 } = {}) {
     .eq("status", "completed")
     .eq("is_public", true)
     .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+    .limit(limit);
 
   if (tError) throw new Error(tError.message);
   if (!tasks?.length) return { tasks: [], total: count ?? 0 };
 
-  // 3. Enrich with owner display_name + image_url
   const uniqueUserIds = [...new Set(tasks.map((t) => t.user_id))];
   const { data: users, error: uError } = await supabaseAdmin
     .from("users")
@@ -58,7 +40,6 @@ export async function getFriendsFeedTasks({ offset = 0, limit = 20 } = {}) {
 
   const userMap = Object.fromEntries((users ?? []).map((u) => [u.id, u]));
 
-  // 4. Enrich with like counts + review counts in parallel (single extra round-trip each)
   const taskIds = tasks.map((t) => t.id);
   const [likesStatus, reviewsStatus] = await Promise.all([
     batchGetTaskLikesStatus(taskIds),

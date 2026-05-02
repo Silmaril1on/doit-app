@@ -30,6 +30,7 @@ const UserSlot = ({ u, reverse = false }) => {
             src={u.image_url}
             alt={u.display_name ?? "user"}
             fill
+            sizes="48px"
             className="object-cover"
           />
         ) : (
@@ -55,7 +56,13 @@ const UserSlot = ({ u, reverse = false }) => {
 const ImageSlot = ({ src, alt }) => (
   <div className="h-12 w-12 shrink-0 relative overflow-hidden rounded-md border border-white/10 bg-white/5">
     {src && (
-      <ImageTag src={src} alt={alt ?? ""} fill className="object-cover" />
+      <ImageTag
+        src={src}
+        alt={alt ?? ""}
+        fill
+        sizes="48px"
+        className="object-cover"
+      />
     )}
   </div>
 );

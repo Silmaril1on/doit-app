@@ -20,7 +20,7 @@ const ViewGalleryModal = () => {
   const objectiveId = modalProps?.objectiveId
     ? String(modalProps.objectiveId)
     : null;
-  const subtasks = Array.isArray(modalProps?.subtasks)
+  const subtasks = Array.isArray(modalProps.subtasks)
     ? modalProps.subtasks
     : [];
 
@@ -72,14 +72,16 @@ const ViewGalleryModal = () => {
   const labelMap = useMemo(
     () =>
       Object.fromEntries(
-        subtasks.map((st, index) => {
-          if (typeof st === "object") {
-            return [Number(st.id), String(st.label ?? "")];
-          }
-          return [index + 1, String(st ?? "")];
-        }),
+        (Array.isArray(modalProps.subtasks) ? modalProps.subtasks : []).map(
+          (st, index) => {
+            if (typeof st === "object") {
+              return [Number(st.id), String(st.label ?? "")];
+            }
+            return [index + 1, String(st ?? "")];
+          },
+        ),
       ),
-    [subtasks],
+    [modalProps.subtasks],
   );
 
   const getLabel = (item) => {

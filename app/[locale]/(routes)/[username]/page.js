@@ -6,6 +6,15 @@ import { getObjectiveStatsByUserId } from "@/app/[locale]/lib/services/tasks/obj
 import { getAllCategoryProgress } from "@/app/[locale]/lib/services/achievement-badges/categoryProgress";
 import MyProfile from "./MyProfile";
 
+export async function generateMetadata({ params }) {
+  const { username } = await params;
+  const displayName = decodeURIComponent(username);
+  return {
+    title: `${displayName} — DoIt`,
+    description: `View ${displayName}'s profile, achievements, and completed objectives on DoIt.`,
+  };
+}
+
 const UsersProfilePage = async ({ params }) => {
   const { username } = await params;
   const displayName = decodeURIComponent(username);

@@ -2,6 +2,11 @@ import React from "react";
 import { getUnifiedFriendsFeed } from "@/app/[locale]/lib/services/tasks/feed/feedService";
 import Feed from "./Feed";
 
+export const metadata = {
+  title: "Feed — DoIt",
+  description: "See what your friends have accomplished recently.",
+};
+
 const FeedsPage = async () => {
   const { items, total } = await getUnifiedFriendsFeed({
     offset: 0,

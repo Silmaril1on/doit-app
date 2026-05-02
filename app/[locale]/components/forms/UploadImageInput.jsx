@@ -1,8 +1,6 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
 import { MdOutlineAddAPhoto } from "react-icons/md";
-import NextImage from "next/image";
 import ImageTag from "../elements/ImageTag";
 const UploadImageInput = ({
   value,

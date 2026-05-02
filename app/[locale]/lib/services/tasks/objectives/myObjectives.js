@@ -61,7 +61,14 @@ const normalizeSubtasks = (value) => {
       const label = normalizeText(item?.label);
       const id =
         typeof item?.id === "number" && item.id > 0 ? item.id : index + 1;
-      return label ? { id, label, completed: Boolean(item?.completed) } : null;
+      if (!label) return null;
+      const subtask = { id, label, completed: Boolean(item?.completed) };
+      // Preserve GPS coordinates when set via Google Places location mode
+      if (typeof item?.lat === "number" && typeof item?.lng === "number") {
+        subtask.lat = item.lat;
+        subtask.lng = item.lng;
+      }
+      return subtask;
     })
     .filter(Boolean);
 };

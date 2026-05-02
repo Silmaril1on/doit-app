@@ -12,6 +12,13 @@ const sizes = {
   xl: "h-20 w-20 text-base",
 };
 
+const sizePixels = {
+  sm: 32,
+  md: 48,
+  lg: 64,
+  xl: 80,
+};
+
 const AvatarTag = ({
   user,
   size = "md",
@@ -23,6 +30,7 @@ const AvatarTag = ({
   buttonLoading = false,
 }) => {
   const sizeClasses = sizes[size] ?? sizes.md;
+  const avatarSizePx = sizePixels[size] ?? sizePixels.md;
   const initials = getUserInitials(user);
   const userName =
     user?.first_name && user?.last_name
@@ -53,6 +61,7 @@ const AvatarTag = ({
             src={user.image_url}
             alt="user avatar"
             fill
+            sizes={`${avatarSizePx}px`}
             className="object-cover"
           />
         ) : (

@@ -14,6 +14,8 @@ const SwiperMode = ({
   spacing = 12,
   mobileOnly = false,
   className = "",
+  onIndexChange,
+  restrictFirstSwipeBack = false,
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const x = useMotionValue(0);
@@ -24,12 +26,18 @@ const SwiperMode = ({
     const next = Math.max(0, Math.min(index, total - 1));
     setActiveIndex(next);
     animate(x, -(next * stepSize), SPRING);
+    onIndexChange?.(next);
   };
 
   const handleDragEnd = (_, info) => {
     const movedFar = Math.abs(info.offset.x) > DRAG_THRESHOLD;
     const movedFast = Math.abs(info.velocity.x) > VELOCITY_THRESHOLD;
     if (movedFar || movedFast) {
+      // Restrict swiping back when at index 0
+      if (restrictFirstSwipeBack && activeIndex === 0 && info.offset.x > 0) {
+        goTo(0);
+        return;
+      }
       goTo(info.offset.x < 0 ? activeIndex + 1 : activeIndex - 1);
     } else {
       goTo(activeIndex);

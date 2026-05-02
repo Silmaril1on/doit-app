@@ -11,39 +11,40 @@ import ActionButton from "../../../components/buttons/ActionButton";
 import Button from "../../../components/buttons/Button";
 import Link from "next/link";
 import Motion from "../../../components/motion/Motion";
+import useSWR from "swr";
 
 const LIMIT = 5;
 
+const fetcher = (url) =>
+  fetch(url).then((r) => {
+    if (!r.ok) throw new Error("Failed to fetch notifications");
+    return r.json();
+  });
+
 const NotificationsBadge = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [hasMore, setHasMore] = useState(false);
   const containerRef = useRef(null);
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
   const currentUser = useSelector(selectCurrentUser);
   const userId = currentUser?.id ?? null;
 
+  const { data, mutate } = useSWR(
+    userId ? `/api/admin/notifications?limit=${LIMIT}` : null,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateOnReconnect: true,
+      dedupingInterval: 120000, // 2 min — notifications are low-urgency for polling
+      fallbackData: { notifications: [], hasMore: false },
+    },
+  );
+
+  const notifications = data?.notifications ?? [];
+  const hasMore = data?.hasMore ?? false;
   const hasUnread = notifications.some((n) => !n.has_read);
 
-  // Initial fetch
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`/api/admin/notifications?limit=${LIMIT}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => {
-        if (!cancelled) {
-          setNotifications(data.notifications ?? []);
-          setHasMore(data.hasMore ?? false);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Supabase Realtime — listen for new notifications inserted for this user
+  // Supabase Realtime — push new notifications into SWR cache without a refetch
   useEffect(() => {
     if (!userId) return;
     const channel = supabaseClient
@@ -56,14 +57,19 @@ const NotificationsBadge = () => {
           table: "notifications",
         },
         (payload) => {
-          // Filter client-side — server-side row filter requires REPLICA IDENTITY FULL
           if (payload.new.user_id !== userId) return;
-          setNotifications((prev) => {
-            if (prev.some((n) => n.id === payload.new.id)) return prev;
-            const next = [payload.new, ...prev];
-            if (next.length > LIMIT) setHasMore(true);
-            return next.slice(0, LIMIT);
-          });
+          mutate(
+            (current) => {
+              const prev = current?.notifications ?? [];
+              if (prev.some((n) => n.id === payload.new.id)) return current;
+              const next = [payload.new, ...prev];
+              return {
+                notifications: next.slice(0, LIMIT),
+                hasMore: next.length > LIMIT || (current?.hasMore ?? false),
+              };
+            },
+            { revalidate: false },
+          );
         },
       )
       .subscribe();
@@ -71,7 +77,7 @@ const NotificationsBadge = () => {
     return () => {
       supabaseClient.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, mutate]);
 
   // Close panel on outside click
   useEffect(() => {
@@ -87,7 +93,16 @@ const NotificationsBadge = () => {
     try {
       const res = await fetch("/api/admin/notifications", { method: "PATCH" });
       if (!res.ok) return;
-      setNotifications((prev) => prev.map((n) => ({ ...n, has_read: true })));
+      mutate(
+        (current) => ({
+          ...current,
+          notifications: (current?.notifications ?? []).map((n) => ({
+            ...n,
+            has_read: true,
+          })),
+        }),
+        { revalidate: false },
+      );
     } catch {
       // silently ignore
     }
@@ -100,7 +115,15 @@ const NotificationsBadge = () => {
         { method: "DELETE" },
       );
       if (!res.ok) return;
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      mutate(
+        (current) => ({
+          ...current,
+          notifications: (current?.notifications ?? []).filter(
+            (n) => n.id !== id,
+          ),
+        }),
+        { revalidate: false },
+      );
     } catch {
       // silently ignore
     }

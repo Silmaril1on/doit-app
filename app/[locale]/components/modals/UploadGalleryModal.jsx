@@ -180,7 +180,7 @@ const UploadGalleryModal = () => {
                 className={`flex-1 flex flex-col items-center gap-1 py-2 rounded-md border transition-colors duration-300 ${
                   uploaded
                     ? "bg-green-600/20 border-green-600/30"
-                    : "bg-teal-500/5 border-teal-500/15"
+                    : "bg-primary/5 border-primary/15"
                 }`}
               >
                 <span
@@ -243,7 +243,7 @@ const UploadGalleryModal = () => {
               return uploaded ? (
                 <div
                   key={id}
-                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left border-teal-500/15 bg-black/30"
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left border-primary/15 bg-black/30"
                 >
                   <div className="flex items-center gap-2">
                     <span className="secondary text-sm capitalize text-cream/80">
@@ -274,8 +274,8 @@ const UploadGalleryModal = () => {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left duration-200 ${
                     isSelected
-                      ? "border-teal-500/60 bg-teal-500/10"
-                      : "border-teal-500/15 bg-black/30 hover:border-teal-500/30"
+                      ? "border-primary/60 bg-primary/10"
+                      : "border-primary/15 bg-black/30 hover:border-primary/30"
                   }`}
                 >
                   <div className="flex items-center gap-2">

@@ -27,10 +27,9 @@ export function useAchievements(initialData = null, userIdOverride = null) {
 
   const { data, error, isLoading, mutate } = useSWR(swrKey, fetcher, {
     fallbackData: initialData ?? { achievements: [], total: 0 },
-    revalidateOnFocus: true,
+    revalidateOnFocus: false,
     revalidateOnReconnect: true,
-    revalidateOnMount: true,
-    dedupingInterval: 30000, // 30 sec
+    dedupingInterval: 30000,
   });
 
   const firstPage = data?.achievements ?? [];

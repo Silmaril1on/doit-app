@@ -7,13 +7,13 @@ import DonutChart from "@/app/[locale]/components/elements/DonutChart";
 import ObjectiveCard from "./ObjectiveCard";
 import ObjectivesSideBar from "./ObjectivesSideBar";
 import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { MdFilterAltOff } from "react-icons/md";
 import { IoIosAdd } from "react-icons/io";
 import { clearToast } from "@/app/[locale]/lib/features/toastSlice";
 import { selectModal } from "@/app/[locale]/lib/features/modalSlice";
-import { useModal } from "@/app/[locale]/lib/hooks/useModal";
+import { useModalActions } from "@/app/[locale]/lib/hooks/useModal";
 import {
   EMPTY_FILTERS,
   applyObjectivesFilters,
@@ -45,9 +45,10 @@ const ObjectivePageWrapper = ({
   showSidebar = true,
   renderCardBefore = null,
   readOnly = false,
+  showDirections = false,
 }) => {
   const dispatch = useDispatch();
-  const { open } = useModal();
+  const { open } = useModalActions();
   const { modalType } = useSelector(selectModal);
   const lastModalTypeRef = useRef(modalType);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -82,9 +83,18 @@ const ObjectivePageWrapper = ({
     buttonLabel ??
     (items.length > 0 ? "Create Objective" : "Create First Objective");
 
-  const searched = searchItems(items, searchQuery, OBJECTIVE_SEARCH_FIELDS);
-  const filteredItems = applyObjectivesFilters(searched, filters);
-  const hasActiveFilters = Object.values(filters).some((v) => v?.length > 0);
+  const searched = useMemo(
+    () => searchItems(items, searchQuery, OBJECTIVE_SEARCH_FIELDS),
+    [items, searchQuery],
+  );
+  const filteredItems = useMemo(
+    () => applyObjectivesFilters(searched, filters),
+    [searched, filters],
+  );
+  const hasActiveFilters = useMemo(
+    () => Object.values(filters).some((v) => v?.length > 0),
+    [filters],
+  );
 
   return (
     <section className="w-full grow flex flex-col gap-3 bg-black">
@@ -166,6 +176,7 @@ const ObjectivePageWrapper = ({
                   onRemoveSubtask={onRemoveSubtask}
                   completedView={completedView}
                   readOnly={readOnly}
+                  showDirections={showDirections}
                 />
               </div>
             ) : (
@@ -180,6 +191,7 @@ const ObjectivePageWrapper = ({
                 onRemoveSubtask={onRemoveSubtask}
                 completedView={completedView}
                 readOnly={readOnly}
+                showDirections={showDirections}
               />
             ),
           )}

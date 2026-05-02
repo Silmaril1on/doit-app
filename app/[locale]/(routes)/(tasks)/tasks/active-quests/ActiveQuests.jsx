@@ -77,13 +77,9 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
           throw new Error(data.error || "Failed to update subtask");
         if (allDone) {
           setQuests((prev) => prev.filter((q) => q.id !== quest.id));
-          console.log("[Client] Subtask completion xpUpdate:", data.xpUpdate);
           if (data.xpUpdate) {
             dispatch(setXp(data.xpUpdate));
           } else {
-            console.warn(
-              "[Client] xpUpdate missing after subtask completion — refetching XP",
-            );
             await refreshXp();
           }
           dispatch(
@@ -112,7 +108,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         );
       }
     },
-    [dispatch, mutate, refreshXp],
+    [dispatch, mutate, refreshXp, userId],
   );
 
   const handleRemoveSubtask = useCallback(
@@ -193,9 +189,6 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         if (data.xpUpdate) {
           dispatch(setXp(data.xpUpdate));
         } else {
-          console.warn(
-            "[Client] xpUpdate missing after task completion — refetching XP",
-          );
           await refreshXp();
         }
         dispatch(
@@ -216,7 +209,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         );
       }
     },
-    [dispatch, mutate, refreshXp],
+    [dispatch, mutate, refreshXp, userId],
   );
 
   const handleDeleteQuest = useCallback(
@@ -263,6 +256,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
       onComplete={handleCompleteQuest}
       onToggleSubtask={handleToggleSubtask}
       onRemoveSubtask={handleRemoveSubtask}
+      showDirections={true}
     />
   );
 };

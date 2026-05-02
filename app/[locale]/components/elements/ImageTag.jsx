@@ -16,7 +16,10 @@ const ImageTag = ({
 }) => {
   if (!src) return null;
 
-  const computedSizes = sizes || (fill ? "100vw" : `${width || 100}px`);
+  // Callers should always pass an explicit `sizes` for fill images.
+  // Falling back to "100vw" would cause Next.js to serve a full-viewport-width
+  // image for every avatar/thumbnail — always pass the real rendered size.
+  const computedSizes = sizes ?? (fill ? undefined : `${width || 100}px`);
 
   const shouldUnoptimize =
     typeof unoptimized === "boolean"

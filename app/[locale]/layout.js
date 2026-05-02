@@ -18,7 +18,8 @@ import ThemeProvider from "./lib/providers/ThemeProvider";
 const josh = Jost({
   variable: "--font-jost",
   subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  // Load only the weights actually used in the UI — 9 weights = 9 font files.
+  weight: ["400", "500", "600", "700"],
 });
 
 const teko = Teko({

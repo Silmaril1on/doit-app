@@ -1,8 +1,14 @@
+"use client";
 import Input from "./Input";
 import UploadImageInput from "./UploadImageInput";
 import ToggleButton from "../buttons/ToggleButton";
-import { FaCheck, FaChevronDown } from "react-icons/fa";
+import { FaCheck, FaChevronDown, FaMapMarkerAlt } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
+import { useLoadScript, Autocomplete } from "@react-google-maps/api";
+import { useState, useRef } from "react";
+
+const GOOGLE_MAPS_API_KEY = "AIzaSyBYo36Sb6U2GXV0zcxS4CTooFrdVlr3f4Q";
+const PLACES_LIBRARIES = ["places"];
 
 const normalizeOptions = (options = []) =>
   options.map((opt) =>
@@ -100,14 +106,96 @@ const TextareaField = ({ field, value, onChange, disabled }) => (
 
 const EMPTY_SUBTASK = { label: "", completed: false };
 
+// Single location-aware subtask input — wraps Google Autocomplete when enabled
+const SubtaskInput = ({
+  subtask,
+  index,
+  fieldKey,
+  locationMode,
+  isLoaded,
+  disabled,
+  onChange,
+}) => {
+  const acRef = useRef(null);
+  // Local display value keeps the input label in sync even before a place is selected
+  const [displayValue, setDisplayValue] = useState(
+    typeof subtask === "object" ? (subtask.label ?? "") : (subtask ?? ""),
+  );
+
+  const handlePlaceChanged = () => {
+    if (!acRef.current) return;
+    const place = acRef.current.getPlace();
+    if (place?.geometry?.location) {
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+      const label = place.name || place.formatted_address || displayValue;
+      setDisplayValue(label);
+      onChange(index, label, { lat, lng });
+    }
+  };
+
+  const inputEl = (
+    <input
+      type="text"
+      disabled={disabled}
+      placeholder={
+        locationMode ? `Search location ${index + 1}…` : `Subtask ${index + 1}`
+      }
+      value={displayValue}
+      onChange={(e) => {
+        setDisplayValue(e.target.value);
+        if (!locationMode) onChange(index, e.target.value, null);
+      }}
+      className={locationMode ? "pr-8" : ""}
+    />
+  );
+
+  if (locationMode && isLoaded) {
+    return (
+      <div className="relative flex-1 min-w-0">
+        <Autocomplete
+          onLoad={(ac) => {
+            acRef.current = ac;
+          }}
+          onPlaceChanged={handlePlaceChanged}
+          options={{ fields: ["geometry", "name", "formatted_address"] }}
+        >
+          {inputEl}
+        </Autocomplete>
+        {subtask?.lat != null && (
+          <FaMapMarkerAlt
+            size={11}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-primary pointer-events-none"
+          />
+        )}
+      </div>
+    );
+  }
+
+  return <div className="flex-1 min-w-0">{inputEl}</div>;
+};
+
 const SubtasksField = ({ field, value, onChange, disabled }) => {
+  const [locationMode, setLocationMode] = useState(false);
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: PLACES_LIBRARIES,
+  });
+
   const subtasks =
     Array.isArray(value) && value.length > 0 ? value : [EMPTY_SUBTASK];
 
-  const handleSubtaskChange = (index, nextValue) => {
-    const nextSubtasks = subtasks.map((st, i) =>
-      i === index ? { ...st, label: nextValue } : st,
-    );
+  const handleSubtaskChange = (index, label, coords) => {
+    const nextSubtasks = subtasks.map((st, i) => {
+      if (i !== index) return st;
+      const base = typeof st === "object" ? st : { ...EMPTY_SUBTASK };
+      if (coords) {
+        return { ...base, label, lat: coords.lat, lng: coords.lng };
+      }
+      // Clear coordinates when typing without a place selection
+      const { lat, lng, ...rest } = base;
+      return { ...rest, label };
+    });
     onChange(field.key, nextSubtasks);
   };
 
@@ -126,19 +214,49 @@ const SubtasksField = ({ field, value, onChange, disabled }) => {
     );
   };
 
+  const handleToggleLocationMode = (checked) => {
+    setLocationMode(checked);
+    if (!checked) {
+      // Strip coordinates when turning location mode off
+      onChange(
+        field.key,
+        subtasks.map((st) => {
+          if (typeof st !== "object") return st;
+          const { lat, lng, ...rest } = st;
+          return rest;
+        }),
+      );
+    }
+  };
+
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <label>{field.label}</label>
-        <button
-          type="button"
-          onClick={handleAddSubtask}
-          disabled={disabled || field.disabled}
-          className="secondary inline-flex items-center gap-1 text-xs font-semibold text-chino duration-300 cursor-pointer hover:text-teal-300 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <span className="text-sm leading-none">+</span>
-          {field.addLabel || "Add subtask"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleAddSubtask}
+            disabled={disabled || field.disabled}
+            className="secondary inline-flex items-center gap-1 text-xs font-semibold text-chino duration-300 cursor-pointer hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="text-sm leading-none">+</span>
+            {field.addLabel || "Add subtask"}
+          </button>
+          <div className="flex items-center gap-1.5">
+            <FaMapMarkerAlt
+              size={10}
+              className={locationMode ? "text-primary" : "text-chino/40"}
+            />
+            <span className="secondary text-[10px] text-chino/50 uppercase tracking-widest">
+              Use Google
+            </span>
+            <ToggleButton
+              checked={locationMode}
+              onChange={handleToggleLocationMode}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2">
@@ -147,23 +265,18 @@ const SubtasksField = ({ field, value, onChange, disabled }) => {
             key={`${field.key}-${index}`}
             className="flex items-center gap-2"
           >
-            <input
-              type="text"
+            <SubtaskInput
+              subtask={subtask}
+              index={index}
+              fieldKey={field.key}
+              locationMode={locationMode}
+              isLoaded={isLoaded}
               disabled={disabled || field.disabled}
-              placeholder={field.placeholder || `Subtask ${index + 1}`}
-              value={
-                typeof subtask === "object"
-                  ? (subtask.label ?? "")
-                  : (subtask ?? "")
-              }
-              onChange={(event) =>
-                handleSubtaskChange(index, event.target.value)
-              }
+              onChange={handleSubtaskChange}
             />
             {subtasks.length > 1 && index > 0 ? (
               <span
-                className=" rounded-md cursor-pointer border border-red-600/20 bg-red-700/20 hover:bg-red-700/40 duration-300 p-1 text-red-600"
-                disabled={disabled || field.disabled}
+                className="rounded-md cursor-pointer border border-red-600/20 bg-red-700/20 hover:bg-red-700/40 duration-300 p-1 text-red-600"
                 onClick={() => handleRemoveSubtask(index)}
               >
                 <MdClose size={16} />

@@ -181,15 +181,11 @@ export async function updateActiveQuest(userId, questId, updates) {
     try {
       const user = await getUserById(userId);
       const displayName = user?.display_name ?? user?.first_name ?? "User";
-      console.log(
-        `[Task] Awarding XP for userId=${userId} priority=${existing.priority} displayName=${displayName}`,
-      );
       xpUpdate = await recordXpGain(
         userId,
         existing.priority ?? "low",
         displayName,
       );
-      console.log(`[Task] XP awarded:`, xpUpdate);
     } catch (xpErr) {
       // XP failure must never break task completion.
       console.error(`[Task] XP gain failed for userId=${userId}:`, xpErr);
@@ -217,11 +213,7 @@ export async function updateActiveQuest(userId, questId, updates) {
     badgeResult.totalBadges % BADGE_MILESTONE_COUNT === 0
   ) {
     try {
-      console.log(
-        `[Task] Badge milestone hit (totalBadges=${badgeResult.totalBadges}), awarding ${BADGE_MILESTONE_XP} bonus XP`,
-      );
       xpUpdate = await recordFixedXpGain(userId, BADGE_MILESTONE_XP);
-      console.log(`[Task] Bonus XP awarded:`, xpUpdate);
     } catch (bonusErr) {
       // Bonus XP failure must never break task completion.
       console.error(`[Task] Bonus XP failed for userId=${userId}:`, bonusErr);

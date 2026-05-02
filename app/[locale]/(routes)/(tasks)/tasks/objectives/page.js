@@ -2,6 +2,11 @@ import { cookies } from "next/headers";
 import { getAllObjectives } from "@/app/[locale]/lib/services/tasks/objectives/myObjectives";
 import Objectives from "./Objectives";
 
+export const metadata = {
+  title: "Objectives — DoIt",
+  description: "Track and manage all your personal objectives.",
+};
+
 const ObjectivesPage = async () => {
   const cookieStore = await cookies();
   const userId = cookieStore.get("doit-user-id")?.value ?? null;

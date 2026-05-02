@@ -2,6 +2,11 @@ import { cookies } from "next/headers";
 import { getAllActiveQuests } from "@/app/[locale]/lib/services/tasks/active-quests/myActiveQuests";
 import ActiveQuests from "./ActiveQuests";
 
+export const metadata = {
+  title: "Active Quests — DoIt",
+  description: "Stay on top of all your in-progress quests.",
+};
+
 const ActiveQuestsPage = async () => {
   const cookieStore = await cookies();
   const userId = cookieStore.get("doit-user-id")?.value ?? null;

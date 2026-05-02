@@ -24,10 +24,9 @@ const fetcher = async (url) => {
 };
 
 const swrOptions = {
-  revalidateOnFocus: true,
+  revalidateOnFocus: false,
   revalidateOnReconnect: true,
   dedupingInterval: 60000,
-  focusThrottleInterval: 60000,
   keepPreviousData: true,
 };
 

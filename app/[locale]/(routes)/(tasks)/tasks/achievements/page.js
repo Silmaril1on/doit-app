@@ -4,6 +4,11 @@ import { batchGetTaskLikesStatus } from "@/app/[locale]/lib/services/tasks/feed/
 import { batchGetTaskReviewCounts } from "@/app/[locale]/lib/services/tasks/feed/taskReviews";
 import Achievements from "./Achievements";
 
+export const metadata = {
+  title: "Achievements — DoIt",
+  description: "Browse all your completed tasks and earned achievements.",
+};
+
 const AchievementsPage = async () => {
   const cookieStore = await cookies();
   const userId = cookieStore.get("doit-user-id")?.value ?? null;

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { sendFriendRequest } from "../../lib/services/user/friendships";
 import { setToast } from "../../lib/features/toastSlice";
@@ -9,7 +9,7 @@ import { FaUsers, FaGamepad, FaCoins } from "react-icons/fa";
 import { MdFavorite } from "react-icons/md";
 import { getEarnedTiers } from "../../lib/local-bd/levelProgressData";
 import { useUserProfile } from "../../lib/hooks/userProfileHook";
-import { useModal } from "../../lib/hooks/useModal";
+import { useModalActions } from "../../lib/hooks/useModal";
 import { selectCurrentUser } from "../../lib/features/userSlice";
 import useSWR from "swr";
 import ItemCard from "../../components/container/ItemCard";
@@ -21,6 +21,10 @@ import {
 } from "../../lib/local-bd/categoryTypesData";
 import ImageTag from "../../components/elements/ImageTag";
 import IconTag from "../../components/elements/IconTag";
+import Swiper from "../../components/motion/Swiper";
+import Spinner from "../../components/elements/Spinner";
+import { getUserGallery } from "../../lib/services/tasks/gallery/galleryActions";
+import TimeNow from "../../components/elements/TimeNow";
 
 const friendshipFetcher = (url) => fetch(url).then((r) => r.json());
 
@@ -112,6 +116,7 @@ const MyProfile = ({
       <ProfileSection user={user} />
       <BadgesSection badgeProgress={badgeProgress} xp={xp} />
       <Stats objectiveStats={objectiveStats} />
+      <MyGallery userId={user?.id} />
     </div>
   );
 };
@@ -156,7 +161,7 @@ const UserAvatarSection = ({
   handleAdd,
   handleRemoveFriend,
 }) => {
-  const { open } = useModal();
+  const { open } = useModalActions();
 
   const buttonText = (() => {
     if (isOwner) return null;
@@ -190,6 +195,7 @@ const UserAvatarSection = ({
                 fill
                 src={user.wallpaper_image_url}
                 alt="Cover photo"
+                sizes="(max-width: 768px) 100vw, 85vw"
                 className="object-cover"
               />
             </div>
@@ -434,6 +440,157 @@ const Stats = ({ objectiveStats }) => {
           color="bg-red-400"
         />
       </div>
+    </ItemCard>
+  );
+};
+
+const GALLERY_PAGE_SIZE = 15;
+const PREFETCH_WHEN_LEFT = 3; // prefetch when this many items remain
+
+const GalleryCard = ({ item, index, total }) => {
+  return (
+    <article className="w-full overflow-hidden rounded-2xl backdrop-blur-xl border border-primary/15 bg-black/40">
+      <div className="relative w-full pointer-events-none">
+        <ImageTag
+          src={item.image_url}
+          alt={item.subtask_label || "Gallery image"}
+          width={0}
+          height={0}
+          sizes="304px"
+          className="w-full h-auto"
+        />
+        {/* Index counter badge */}
+        <div className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm border border-primary/30">
+          <span className="text-primary font-mono text-xs font-bold">
+            {index + 1}/{total}
+          </span>
+        </div>
+      </div>
+      <div className="p-4 space-y-1">
+        {item.subtask_label && (
+          <p className="secondary text-[18px] leading-tight text-cream/95 capitalize">
+            {item.subtask_label}
+          </p>
+        )}
+        {item.objective_title && (
+          <p className="primary text-xs uppercase tracking-[0.12em] text-primary/70 truncate">
+            {item.objective_title}
+          </p>
+        )}
+      </div>
+    </article>
+  );
+};
+
+const MyGallery = ({ userId }) => {
+  const [gallery, setGallery] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [initialized, setInitialized] = useState(false);
+  const isFetchingMoreRef = useRef(false);
+  const loadedOffsetRef = useRef(0);
+
+  // Initial fetch — all setState calls are inside the async function, not directly in the effect body
+  useEffect(() => {
+    if (!userId) return;
+    let isAlive = true;
+    loadedOffsetRef.current = 0;
+    const load = async () => {
+      setLoading(true);
+      setGallery([]);
+      setTotal(0);
+      setActiveIndex(0);
+      setInitialized(false);
+      console.log("[MyGallery] starting fetch for userId:", userId);
+      try {
+        const { gallery: items = [], total: t = 0 } = await getUserGallery(
+          userId,
+          0,
+          GALLERY_PAGE_SIZE,
+        );
+        if (!isAlive) return;
+        setGallery(items);
+        setTotal(t);
+        loadedOffsetRef.current = items.length;
+      } catch (err) {
+        console.error("[MyGallery] fetch error:", err?.message ?? err);
+      } finally {
+        if (isAlive) {
+          setLoading(false);
+          setInitialized(true);
+        }
+      }
+    };
+
+    load();
+    return () => {
+      isAlive = false;
+    };
+  }, [userId]);
+
+  // Prefetch next page when nearing the end
+  const loadMore = useCallback(() => {
+    if (!userId || isFetchingMoreRef.current) return;
+    isFetchingMoreRef.current = true;
+    const currentOffset = loadedOffsetRef.current;
+    getUserGallery(userId, currentOffset, GALLERY_PAGE_SIZE)
+      .then(({ gallery: items = [] }) => {
+        if (items.length === 0) return;
+        setGallery((prev) => [...prev, ...items]);
+        loadedOffsetRef.current = currentOffset + items.length;
+      })
+      .catch(() => {})
+      .finally(() => {
+        isFetchingMoreRef.current = false;
+      });
+  }, [userId]);
+
+  useEffect(() => {
+    if (!initialized) return;
+    const loaded = loadedOffsetRef.current;
+    if (loaded >= total) return; // all loaded
+    if (activeIndex >= loaded - PREFETCH_WHEN_LEFT) {
+      loadMore();
+    }
+  }, [activeIndex, initialized, total, loadMore]);
+
+  if (loading) {
+    return (
+      <ItemCard className="flex items-center justify-center py-8">
+        <Spinner />
+      </ItemCard>
+    );
+  }
+
+  if (!loading && initialized && gallery.length === 0) return null;
+
+  return (
+    <ItemCard className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-cream font-bold text-2xl">LISTORY</h2>
+        <span className="secondary text-sm text-chino/60 font-mono">
+          {total > 0 ? `${activeIndex + 1}/${total}` : ""}
+        </span>
+      </div>
+      <Swiper
+        items={gallery}
+        cardWidth={304}
+        spacing={12}
+        mobileOnly={false}
+        className="w-full"
+        onIndexChange={setActiveIndex}
+        restrictFirstSwipeBack
+      >
+        {gallery.map((item, index) => (
+          <GalleryCard
+            key={`${item.image_url ?? "img"}-${index}`}
+            item={item}
+            index={index}
+            total={total}
+          />
+        ))}
+      </Swiper>
     </ItemCard>
   );
 };

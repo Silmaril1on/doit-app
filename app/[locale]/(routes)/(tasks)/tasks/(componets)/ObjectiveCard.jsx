@@ -14,6 +14,7 @@ import { IoMdClose, IoMdArrowDropright, IoIosCheckmark } from "react-icons/io";
 import { AiFillFire, AiOutlineFire } from "react-icons/ai";
 import { MdOutlineReviews, MdReviews } from "react-icons/md";
 import { IoBookmarkOutline, IoBookmark } from "react-icons/io5";
+import { FaRoute } from "react-icons/fa";
 import Image from "next/image";
 import AvatarTag from "@/app/[locale]/components/elements/AvatarTag";
 
@@ -46,6 +47,7 @@ const ObjectiveCard = ({
   onStart,
   completedView = false,
   readOnly = false,
+  showDirections = false,
 }) => {
   const dispatch = useDispatch();
   const status = objective.status || "todo";
@@ -104,6 +106,27 @@ const ObjectiveCard = ({
     );
   }, [dispatch, objective.id, objective.task_title, subtasks]);
 
+  // Subtasks that have lat/lng coordinates set (location mode)
+  const locationSubtasks = subtasks.filter(
+    (st) =>
+      typeof st === "object" &&
+      typeof st.lat === "number" &&
+      typeof st.lng === "number",
+  );
+  const hasLocationSubtasks = locationSubtasks.length > 0;
+
+  const handleOpenDirections = useCallback(() => {
+    dispatch(
+      openModal({
+        modalType: "objectiveDirections",
+        modalProps: {
+          subtasks: locationSubtasks,
+          title: objective.task_title,
+        },
+      }),
+    );
+  }, [dispatch, locationSubtasks, objective.task_title]);
+
   const owner = readOnly ? objective.user : null;
 
   return (
@@ -160,6 +183,17 @@ const ObjectiveCard = ({
             initialReviewCount={objective.review_count ?? 0}
             initialRecreateCount={objective.recreate_count ?? 0}
           />
+        )}
+        {/* Directions button — only on active-quests page for in_progress objectives */}
+        {showDirections && hasLocationSubtasks && (
+          <div className="flex items-center gap-1.5 pt-1">
+            <ActionButton
+              color="cyan"
+              icon={<FaRoute size={13} />}
+              text="Get Directions"
+              onClick={handleOpenDirections}
+            />
+          </div>
         )}
       </ItemCard>
     </>

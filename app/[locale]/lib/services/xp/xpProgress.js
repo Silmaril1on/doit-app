@@ -30,9 +30,6 @@ export async function grantTokens(userId, amount) {
     .eq("id", userId);
 
   if (updateError) throw new Error(updateError.message);
-  console.log(
-    `[Tokens] userId=${userId} | +${amount} → ${current + amount} total`,
-  );
 }
 
 export async function getUserXp(userId) {
@@ -71,10 +68,6 @@ export async function recordXpGain(userId, priority, displayName) {
   const prevLevel = existing?.current_level ?? 1;
   const { total_xp, current_level } = resolveXpState(prevXp + xpGained);
 
-  console.log(
-    `[XP] userId=${userId} | priority=${normalized} | xpGained=${xpGained} | prevXp=${prevXp} prevLevel=${prevLevel} → total_xp=${total_xp} current_level=${current_level}`,
-  );
-
   const { data: upserted, error: upsertError } = await supabaseAdmin
     .from(XP_TABLE)
     .upsert(
@@ -91,18 +84,10 @@ export async function recordXpGain(userId, priority, displayName) {
 
   if (upsertError) throw new Error(upsertError.message);
 
-  console.log(
-    `[XP] Upsert OK → total_xp=${upserted.total_xp} current_level=${upserted.current_level}`,
-  );
-
   // Fire a notification + feed event only when a named tier threshold is crossed
   if (current_level > prevLevel) {
     const newlyUnlocked = LEVEL_TIERS.filter(
       (t) => t.threshold > prevLevel && t.threshold <= current_level,
-    );
-    console.log(
-      `[XP] Level-up detected: prevLevel=${prevLevel} → current_level=${current_level} | newlyUnlocked tiers:`,
-      newlyUnlocked.map((t) => t.name),
     );
 
     for (const tier of newlyUnlocked) {
@@ -115,19 +100,12 @@ export async function recordXpGain(userId, priority, displayName) {
             tier.name,
             tier.threshold,
           );
-          console.log(
-            `[XP] Level badge notification sent for tier=${tier.name} level=${tier.threshold}`,
-          );
         } catch (notifErr) {
           console.error(
             `[XP] Failed to send level badge notification for tier=${tier.name}:`,
             notifErr,
           );
         }
-      } else {
-        console.warn(
-          `[XP] Skipping notification — displayName is empty for userId=${userId}`,
-        );
       }
 
       // One feed event per tier milestone reached (level 5, 10, 15, 20, 25, 30)
@@ -137,9 +115,6 @@ export async function recordXpGain(userId, priority, displayName) {
           total_xp,
           badge: tier.name.toLowerCase(),
         });
-        console.log(
-          `[XP] Feed event inserted for tier=${tier.name} level=${tier.threshold}`,
-        );
       } catch (feedErr) {
         console.error(
           `[XP] Failed to insert feed event for tier=${tier.name}:`,

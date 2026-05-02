@@ -132,13 +132,13 @@ const BadgeGrid = ({
                 <div
                   className={`h-12 w-12 rounded-full border flex items-center justify-center shrink-0 ${
                     earned
-                      ? "bg-teal-500 border-teal-400"
-                      : "bg-teal-500/20 border-teal-500/40"
+                      ? "bg-primary border-primary"
+                      : "bg-primary/20 border-primary/40"
                   }`}
                 >
                   <span
                     className={`text-xs font-bold ${
-                      earned ? "text-black" : "text-teal-400"
+                      earned ? "text-black" : "text-primary/60"
                     }`}
                   >
                     {level}

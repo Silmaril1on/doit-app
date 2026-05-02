@@ -8,6 +8,7 @@ import {
   clearUser,
   selectCurrentUser,
 } from "@/app/[locale]/lib/features/userSlice";
+import { clearColorValue } from "@/app/[locale]/lib/features/configSlice";
 import { useParams, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
@@ -15,19 +16,21 @@ import { getUserInitials } from "@/app/[locale]/lib/utils/utils";
 import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import Motion from "../../../components/motion/Motion";
-import { useModal } from "@/app/[locale]/lib/hooks/useModal";
+import { useModalActions } from "@/app/[locale]/lib/hooks/useModal";
 import { ACCOUNT_VERIFICATION_MODAL } from "@/app/[locale]/components/modals/AccountVerificationModal";
 import { SHOW_MY_ID_MODAL } from "@/app/[locale]/components/modals/ShowMyIdModal";
+import { resetHydration } from "@/app/[locale]/lib/store/StoreProvider";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
-  const { open } = useModal();
+  const { open } = useModalActions();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [emailVerified, setEmailVerified] = useState(null);
   const menuRef = useRef(null);
+  const emailFetched = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -52,24 +55,29 @@ const UserProfile = () => {
     };
   }, []);
 
+  // Fetch email verification status once per session — guard prevents re-fires
+  // when Redux dispatches update the user object mid-session.
   useEffect(() => {
-    if (!user) return;
+    if (!user?.id || emailFetched.current) return;
+    emailFetched.current = true;
     fetch("/api/auth/verify-email")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d) setEmailVerified(d.email_verified ?? false);
       })
       .catch(() => {});
-  }, [user]);
+  }, [user?.id]);
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-      });
+      await fetch("/api/auth/logout", { method: "POST" });
     } finally {
       setIsMenuOpen(false);
+      // Allow StoreHydrator to re-run on next login without a full page reload
+      resetHydration();
+      emailFetched.current = false;
       dispatch(clearUser());
+      dispatch(clearColorValue());
       router.push(`/${locale}/`);
     }
   };
@@ -118,10 +126,11 @@ const ProfileIcon = ({ user, fallbackText, isMenuOpen, setIsMenuOpen }) => {
             alt="User avatar"
             width={32}
             height={32}
+            sizes="32px"
             className="w-full h-full object-cover"
           />
         ) : (
-          <span className="w-full h-full center bg-teal-500 text-lg font-bold uppercase text-black">
+          <span className="w-full h-full center bg-primary text-lg font-bold uppercase text-black">
             {fallbackText}
           </span>
         )}

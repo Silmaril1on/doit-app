@@ -39,3 +39,22 @@ export function useModal() {
     close: () => dispatch(closeModal()),
   };
 }
+
+/**
+ * useModalActions
+ * For components that only need to open/close modals and should NOT
+ * re-render whenever modal state changes.
+ */
+export function useModalActions() {
+  const dispatch = useDispatch();
+  return {
+    open: (type, props = {}) =>
+      dispatch(
+        openModal({
+          modalType: type,
+          modalProps: sanitizeModalProps(props),
+        }),
+      ),
+    close: () => dispatch(closeModal()),
+  };
+}

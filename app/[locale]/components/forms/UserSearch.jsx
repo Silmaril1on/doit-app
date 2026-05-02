@@ -29,6 +29,7 @@ const UserCard = ({ user, onAdd, onNavigate }) => {
             src={user.image_url}
             alt={user.display_name}
             fill
+            sizes="40px"
             className="object-cover"
           />
         ) : (

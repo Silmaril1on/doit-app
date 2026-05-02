@@ -9,7 +9,7 @@ import ItemCard from "@/app/[locale]/components/container/ItemCard";
 
 const PAGE_SIZE = 20;
 
-const FeedItem = ({ item }) => {
+const FeedItem = React.memo(({ item }) => {
   switch (item._type) {
     case "levelup":
     case "badge":
@@ -19,7 +19,7 @@ const FeedItem = ({ item }) => {
     default:
       return <ObjectiveCard objective={item} readOnly />;
   }
-};
+});
 
 const Feed = ({ initialItems = [], total = 0 }) => {
   const {
@@ -64,7 +64,7 @@ const Feed = ({ initialItems = [], total = 0 }) => {
       {uniqueItems.length > 0 && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {uniqueItems.map((item) => (
-            <FeedItem key={item.id} item={item} />
+            <FeedItem key={`${item._type}-${item.id}`} item={item} />
           ))}
         </div>
       )}

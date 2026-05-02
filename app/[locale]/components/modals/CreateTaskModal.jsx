@@ -96,7 +96,6 @@ const FIELDS = [
       },
     ],
   },
-
   {
     cols: 1,
     fields: [

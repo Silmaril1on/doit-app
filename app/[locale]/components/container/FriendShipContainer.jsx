@@ -16,10 +16,9 @@ const fetcher = async (url) => {
 };
 
 const swrOptions = {
-  revalidateOnFocus: true,
+  revalidateOnFocus: false,
   revalidateOnReconnect: true,
   dedupingInterval: 30000,
-  focusThrottleInterval: 30000,
   keepPreviousData: true,
 };
 
@@ -32,12 +31,14 @@ const FriendShipContainer = ({ onUserNavigate }) => {
 
   const friendsSWR = useSWR("/api/friends", fetcher, {
     ...swrOptions,
-    refreshInterval: tab === "friends" ? 15000 : 0,
   });
-  const requestsSWR = useSWR("/api/add-friend", fetcher, {
-    ...swrOptions,
-    refreshInterval: tab === "requests" ? 15000 : 0,
-  });
+  const requestsSWR = useSWR(
+    tab === "requests" ? "/api/add-friend" : null,
+    fetcher,
+    {
+      ...swrOptions,
+    },
+  );
 
   const activeSWR = tab === "friends" ? friendsSWR : requestsSWR;
   const items =

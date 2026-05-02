@@ -5,6 +5,7 @@ import { mutate as mutateCache } from "swr";
 import { useDispatch, useSelector } from "react-redux";
 import SubmissionForm from "@/app/[locale]/components/forms/SubmissionForm";
 import GlobalModal from "@/app/[locale]/components/modals/GlobalModal";
+import CoverCatalog from "@/app/[locale]/components/modals/CoverCatalog";
 import {
   closeModal,
   selectModal,
@@ -68,17 +69,15 @@ const ProfileFormModal = () => {
 
   const [form, setForm] = useState(() => createInitialForm(profile));
   const [imageFile, setImageFile] = useState(null);
-  const [wallpaperFile, setWallpaperFile] = useState(null);
+  const [selectedCover, setSelectedCover] = useState(null); // catalog URL
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
     setForm(createInitialForm(profile));
     setImageFile(null);
-    setWallpaperFile(null);
+    setSelectedCover(null);
     setSubmitting(false);
     setError(null);
   }, [isOpen, profile]);
@@ -87,7 +86,7 @@ const ProfileFormModal = () => {
     dispatch(closeModal());
     setSubmitting(false);
     setError(null);
-    setWallpaperFile(null);
+    setSelectedCover(null);
   };
 
   const handleChange = (key, value) => {
@@ -100,11 +99,9 @@ const ProfileFormModal = () => {
     setError(null);
 
     try {
-      // Upload avatar first if a new image was selected
       if (imageFile) {
         const fd = new FormData();
         fd.append("file", imageFile);
-
         const avatarRes = await fetch("/api/user/avatar", {
           method: "POST",
           body: fd,
@@ -114,18 +111,16 @@ const ProfileFormModal = () => {
           throw new Error(avatarData.error || "Failed to upload avatar");
       }
 
-      // Upload wallpaper if a new one was selected
-      if (wallpaperFile) {
-        const fd = new FormData();
-        fd.append("file", wallpaperFile);
-
+      // Catalog cover selection — PATCH with just the URL (no file upload needed)
+      if (selectedCover) {
         const wallpaperRes = await fetch("/api/user/wallpaper", {
-          method: "POST",
-          body: fd,
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: selectedCover }),
         });
         const wallpaperData = await wallpaperRes.json();
         if (!wallpaperRes.ok)
-          throw new Error(wallpaperData.error || "Failed to upload cover photo");
+          throw new Error(wallpaperData.error || "Failed to set cover photo");
       }
 
       const response = await fetch("/api/user/profile", {
@@ -163,6 +158,14 @@ const ProfileFormModal = () => {
         </p>
       )}
 
+      {/* Cover photo catalog — replaces the file upload input */}
+      <CoverCatalog
+        selected={selectedCover}
+        onSelect={setSelectedCover}
+        disabled={submitting}
+      />
+
+      {/* Profile fields + avatar upload (no wallpaperField — handled by catalog above) */}
       <SubmissionForm
         fields={FIELDS}
         values={form}
@@ -173,10 +176,6 @@ const ProfileFormModal = () => {
         imageField={{
           value: profile?.image_url ?? null,
           onChange: setImageFile,
-        }}
-        wallpaperField={{
-          value: profile?.wallpaper_image_url ?? null,
-          onChange: setWallpaperFile,
         }}
       />
     </GlobalModal>

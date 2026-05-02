@@ -1,7 +1,7 @@
 import useSWR from "swr";
 
 const fetcher = (url) =>
-  fetch(url, { cache: "no-store" }).then((res) => {
+  fetch(url).then((res) => {
     if (!res.ok) throw new Error("Failed to fetch profile");
     return res.json();
   });
@@ -19,10 +19,9 @@ export function useUserProfile(initialData = null) {
     fetcher,
     {
       fallbackData: initialData ? { profile: initialData } : undefined,
-      revalidateOnMount: true,
-      revalidateOnFocus: true,
+      revalidateOnFocus: false,
       revalidateOnReconnect: true,
-      dedupingInterval: 0, // always re-fetch after mutate()
+      dedupingInterval: 60000,
     },
   );
 

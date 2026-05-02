@@ -64,7 +64,7 @@ const Achievements = ({ initialData = null, userId: userIdProp = null }) => {
         );
       }
     },
-    [dispatch, mutate],
+    [dispatch, mutate, userId],
   );
 
   const handleModalClose = useCallback(() => {

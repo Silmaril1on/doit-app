@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 export async function getFriendFeedEvents(
   friendIds,
   viewerId = null,
-  { limit = 100 } = {},
+  { limit = 60 } = {},
 ) {
   if (!friendIds?.length) return [];
 
