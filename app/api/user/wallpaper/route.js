@@ -6,10 +6,11 @@ const BUCKET = "user_profile_images";
 const WALLPAPER_PATH = (userId) => `${userId}/wallpaper.jpg`;
 
 async function getUserId() {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   return cookieStore.get("doit-user-id")?.value ?? null;
 }
 
+// POST — upload wallpaper file
 export async function POST(request) {
   try {
     const userId = await getUserId();
@@ -27,6 +28,7 @@ export async function POST(request) {
     const supabase = createSupabaseAdminClient();
     const filePath = WALLPAPER_PATH(userId);
 
+    // Remove old wallpaper (ignore error)
     await supabase.storage.from(BUCKET).remove([filePath]);
 
     const arrayBuffer = await file.arrayBuffer();
@@ -35,7 +37,7 @@ export async function POST(request) {
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
       .upload(filePath, buffer, {
-        contentType: "image/jpeg",
+        contentType: file.type || "image/jpeg",
         upsert: true,
       });
 
@@ -63,18 +65,22 @@ export async function POST(request) {
   }
 }
 
-// PATCH — set wallpaper from a catalog URL (no file upload, just update the DB reference)
+// PATCH — set wallpaper from URL
 export async function PATCH(request) {
   try {
     const userId = await getUserId();
-    if (!userId)
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { url } = await request.json();
-    if (!url || typeof url !== "string")
+
+    if (!url || typeof url !== "string") {
       return NextResponse.json({ error: "Invalid url" }, { status: 400 });
+    }
 
     const supabase = createSupabaseAdminClient();
+
     const { error } = await supabase
       .from("users")
       .update({ wallpaper_image_url: url })
@@ -83,58 +89,6 @@ export async function PATCH(request) {
     if (error) throw new Error(error.message);
 
     return NextResponse.json({ imageUrl: url });
-  } catch (err) {
-    return NextResponse.json(
-      { error: err.message || "Internal server error" },
-      { status: 500 },
-    );
-  }
-}
-
-  try {
-    const userId = await getUserId();
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const formData = await request.formData();
-    const file = formData.get("file");
-
-    if (!file || typeof file === "string") {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    }
-
-    const supabase = createSupabaseAdminClient();
-    const filePath = WALLPAPER_PATH(userId);
-
-    await supabase.storage.from(BUCKET).remove([filePath]);
-
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    const { error: uploadError } = await supabase.storage
-      .from(BUCKET)
-      .upload(filePath, buffer, {
-        contentType: "image/jpeg",
-        upsert: true,
-      });
-
-    if (uploadError) throw new Error(uploadError.message);
-
-    const { data: urlData } = supabase.storage
-      .from(BUCKET)
-      .getPublicUrl(filePath);
-
-    const imageUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({ wallpaper_image_url: imageUrl })
-      .eq("id", userId);
-
-    if (updateError) throw new Error(updateError.message);
-
-    return NextResponse.json({ imageUrl });
   } catch (err) {
     return NextResponse.json(
       { error: err.message || "Internal server error" },
