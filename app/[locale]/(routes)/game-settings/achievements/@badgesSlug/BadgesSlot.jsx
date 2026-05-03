@@ -17,7 +17,9 @@ const BadgesSlot = ({ categories, allProgress, unseenCategoryIds = [] }) => {
   }, [unseenSet]);
 
   const progressMap = new Map(allProgress.map((p) => [p.category_id, p]));
-  const activeProgress = progressMap.get(activeCategory.id);
+  const activeProgress = activeCategory
+    ? progressMap.get(activeCategory.id)
+    : null;
   const completedCount = activeProgress?.completed_count ?? 0;
   const acquiredAt = activeProgress?.created_at
     ? new Date(activeProgress.created_at).toLocaleDateString(undefined, {
@@ -26,17 +28,22 @@ const BadgesSlot = ({ categories, allProgress, unseenCategoryIds = [] }) => {
         day: "numeric",
       })
     : null;
-  const currentLevel = resolveCurrentLevel(activeCategory.id, completedCount);
-  const tiers = CATEGORY_ACHIEVEMENT_TIERS[activeCategory.id] ?? [];
+  const currentLevel = activeCategory
+    ? resolveCurrentLevel(activeCategory.id, completedCount)
+    : 0;
+  const tiers = activeCategory
+    ? (CATEGORY_ACHIEVEMENT_TIERS[activeCategory.id] ?? [])
+    : [];
 
   return (
     <BadgeGrid
       title="Badges"
       tiersData={tiers}
       currentProgress={currentLevel}
+      completedCount={completedCount}
       type="category"
       categories={categories}
-      activeCategoryId={activeCategory.id}
+      activeCategoryId={activeCategory?.id}
       onCategoryChange={setActiveCategory}
       unseenCategoryIds={Array.from(unseenSet)}
       latestAcquiredAt={acquiredAt}

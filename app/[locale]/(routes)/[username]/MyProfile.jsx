@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { mutate as mutateCache } from "swr";
 import { useDispatch, useSelector } from "react-redux";
 import { sendFriendRequest } from "../../lib/services/user/friendships";
 import { setToast } from "../../lib/features/toastSlice";
 import { CountryFlags } from "../../components/elements/CountryFlags";
 import { formatDate } from "../../lib/utils/utils";
+import { MdImage } from "react-icons/md";
 import { FaUsers, FaGamepad, FaCoins } from "react-icons/fa";
 import { MdFavorite } from "react-icons/md";
 import { getEarnedTiers } from "../../lib/local-bd/levelProgressData";
@@ -19,6 +21,7 @@ import {
   TASK_CATEGORIES,
   CATEGORY_ACHIEVEMENT_TIERS,
 } from "../../lib/local-bd/categoryTypesData";
+import GlobalModal from "../../components/modals/GlobalModal";
 import ImageTag from "../../components/elements/ImageTag";
 import IconTag from "../../components/elements/IconTag";
 import Swiper from "../../components/motion/Swiper";
@@ -153,6 +156,19 @@ const HeaderSection = ({ totalXp, currentLevel, friendsCount, tokens }) => {
   );
 };
 
+const COVER_CATALOG = [
+  "/assets/covers/01.jpg",
+  "/assets/covers/02.webp",
+  "/assets/covers/03.jpg",
+  "/assets/covers/04.jpg",
+  "/assets/covers/05.jpg",
+  "/assets/covers/06.jpg",
+  "/assets/covers/07.jpg",
+  "/assets/covers/08.jpg",
+  "/assets/covers/09.jpg",
+  "/assets/covers/10.jpg",
+];
+
 const UserAvatarSection = ({
   user,
   isOwner,
@@ -162,6 +178,29 @@ const UserAvatarSection = ({
   handleRemoveFriend,
 }) => {
   const { open } = useModalActions();
+  const [selectedCover, setSelectedCover] = useState(null);
+  const [wallpaperOpen, setWallpaperOpen] = useState(false);
+  const [savingWallpaper, setSavingWallpaper] = useState(false);
+
+  const handleSaveWallpaper = async () => {
+    if (!selectedCover) return;
+    setSavingWallpaper(true);
+    try {
+      const res = await fetch("/api/user/wallpaper", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: selectedCover }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Failed");
+      setWallpaperOpen(false);
+      setSelectedCover(null);
+      await mutateCache("/api/user/profile/single-profile");
+    } catch {
+      // silently ignore
+    } finally {
+      setSavingWallpaper(false);
+    }
+  };
 
   const buttonText = (() => {
     if (isOwner) return null;
@@ -178,15 +217,76 @@ const UserAvatarSection = ({
 
   return (
     <div className="relative h-44 flex items-center justify-start">
-      <div className="absolute top-0 right-0 z-5">
+      <div className="absolute top-0 right-0 z-5 flex items-center gap-2">
         {isOwner && (
-          <ActionButton
-            variant="edit"
-            className="absolute top-3 right-3"
-            onClick={() => open("editProfile", { profile: user })}
-          />
+          <>
+            <ActionButton
+              icon={<MdImage size={14} />}
+              onClick={() => setWallpaperOpen(true)}
+              disabled={savingWallpaper}
+            />
+            <ActionButton
+              variant="edit"
+              onClick={() => open("editProfile", { profile: user })}
+            />
+          </>
         )}
       </div>
+
+      {/* Wallpaper catalog modal */}
+      <GlobalModal
+        isOpen={wallpaperOpen}
+        onClose={() => {
+          setWallpaperOpen(false);
+          setSelectedCover(null);
+        }}
+        title="Wallpaper"
+        maxWidth="max-w-4xl"
+        footerMode="submit"
+        submitLabel={savingWallpaper ? "Saving..." : "Save Wallpaper"}
+        submitDisabled={!selectedCover || savingWallpaper}
+        formId="wallpaper-form"
+      >
+        <form
+          id="wallpaper-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSaveWallpaper();
+          }}
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 pt-3">
+            {COVER_CATALOG.map((url) => (
+              <button
+                key={url}
+                type="button"
+                onClick={() =>
+                  setSelectedCover((prev) => (prev === url ? null : url))
+                }
+                className={`relative aspect-video overflow-hidden rounded-md border-2 transition-all duration-200 ${
+                  selectedCover === url
+                    ? "border-primary shadow-[0_0_8px_rgba(200,168,75,0.5)]"
+                    : "border-primary/15 hover:border-primary/50"
+                }`}
+              >
+                <ImageTag
+                  src={url}
+                  alt="cover"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 20vw"
+                  className="object-cover"
+                />
+                {selectedCover === url && (
+                  <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                    <span className="text-primary text-lg font-bold drop-shadow">
+                      ✓
+                    </span>
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </form>
+      </GlobalModal>
       <div className="absolute w-[85%] right-0 h-44 z-0">
         <ItemCard className="h-full overflow-hidden p-0">
           {user?.wallpaper_image_url ? (

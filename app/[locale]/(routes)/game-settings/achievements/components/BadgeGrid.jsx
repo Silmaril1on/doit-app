@@ -13,6 +13,7 @@ const BadgeGrid = ({
   title,
   tiersData = [],
   currentProgress = 0,
+  completedCount = 0,
   type = "level", // "level" | "category"
   categories = [],
   activeCategoryId,
@@ -37,6 +38,14 @@ const BadgeGrid = ({
     type === "category" && activeCategory
       ? CATEGORY_ACHIEVEMENT_TIERS[activeCategory.id] || []
       : tiersData;
+
+  const nextTierLevel = useMemo(() => {
+    if (type !== "category") return null;
+    const next = activeTiers.find(
+      (tier) => completedCount < (tier.required_count ?? tier.threshold),
+    );
+    return next?.level ?? null;
+  }, [activeTiers, completedCount, type]);
 
   const unseenSet = new Set(unseenCategoryIds);
   const hasUnseenActive =
@@ -86,6 +95,7 @@ const BadgeGrid = ({
             type === "category"
               ? level <= currentProgress
               : currentProgress >= level;
+          const isNextTier = type === "category" && level === nextTierLevel;
 
           const isLatestEarned = earned && level === currentProgress;
           const showNew = showNewTag && isLatestEarned && hasUnseenActive;
@@ -151,9 +161,15 @@ const BadgeGrid = ({
                   {title}
                 </p>
                 <p className="text-[10px] secondary text-chino/60 leading-tight">
-                  {earned
-                    ? `Unlocked at ${reqCount} ${type === "level" ? "level" : "objectives"}`
-                    : `Complete ${reqCount} ${type === "level" ? "level" : "objectives"} to unlock this badge`}
+                  {type === "category"
+                    ? earned
+                      ? `${reqCount}/${reqCount} tasks`
+                      : isNextTier
+                        ? `${completedCount}/${reqCount} tasks`
+                        : `Complete ${reqCount} tasks to unlock this badge`
+                    : earned
+                      ? `Unlocked at ${reqCount} level`
+                      : `Complete ${reqCount} level to unlock this badge`}
                 </p>
                 <div className="h-4">
                   {earned && isLatestEarned && latestAcquiredAt && (

@@ -6,7 +6,7 @@ const BUCKET = "user_profile_images";
 const WALLPAPER_PATH = (userId) => `${userId}/wallpaper.jpg`;
 
 async function getUserId() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   return cookieStore.get("doit-user-id")?.value ?? null;
 }
 
@@ -80,6 +80,10 @@ export async function PATCH(request) {
     }
 
     const supabase = createSupabaseAdminClient();
+    const filePath = WALLPAPER_PATH(userId);
+
+    // Remove old wallpaper file when switching to a new URL
+    await supabase.storage.from(BUCKET).remove([filePath]);
 
     const { error } = await supabase
       .from("users")

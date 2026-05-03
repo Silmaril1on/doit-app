@@ -13,7 +13,6 @@ export const EMPTY_FILTERS = { country: [], city: [], priority: [] };
 export const OBJECTIVE_SEARCH_FIELDS = [
   "task_title",
   "task_description",
-  "task_category",
   "country",
   "city",
   "priority",
@@ -23,8 +22,9 @@ export const OBJECTIVE_SEARCH_FIELDS = [
 
 // ─── Filter config builders ───────────────────────────────────────────────────
 
-const uniqueValues = (items, key) =>
-  [...new Set(items.map((o) => o[key]).filter(Boolean))];
+const uniqueValues = (items, key) => [
+  ...new Set(items.map((o) => o[key]).filter(Boolean)),
+];
 
 /**
  * Builds the FilterGroup config array for objectives.
@@ -64,9 +64,8 @@ export const buildObjectivesFilterConfig = (objectives = []) => {
     label: "Priority",
     options: PRIORITY_OPTIONS.map((opt) => ({
       ...opt,
-      count: objectives.filter(
-        (o) => (o.priority || "medium") === opt.value,
-      ).length,
+      count: objectives.filter((o) => (o.priority || "medium") === opt.value)
+        .length,
     })),
   });
 
@@ -83,8 +82,7 @@ export const applyObjectivesFilters = (objectives = [], filters = {}) =>
   objectives.filter((o) => {
     const countryMatch =
       !filters.country?.length || filters.country.includes(o.country);
-    const cityMatch =
-      !filters.city?.length || filters.city.includes(o.city);
+    const cityMatch = !filters.city?.length || filters.city.includes(o.city);
     const priorityMatch =
       !filters.priority?.length ||
       filters.priority.includes(o.priority || "medium");
@@ -107,9 +105,7 @@ export const searchItems = (items = [], query = "", fields = []) => {
   return items.filter((item) =>
     fields.some((field) => {
       const val = item[field];
-      const str = Array.isArray(val)
-        ? val.join(" ")
-        : String(val ?? "");
+      const str = Array.isArray(val) ? val.join(" ") : String(val ?? "");
       return str.toLowerCase().includes(q);
     }),
   );

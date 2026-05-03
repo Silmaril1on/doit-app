@@ -14,7 +14,6 @@ const Button = ({
   text,
   icon,
   variant = "fill",
-  primaryColor = "teal",
   size = "md",
   href,
   type = "button",

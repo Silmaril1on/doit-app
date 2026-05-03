@@ -15,7 +15,10 @@ import {
   BADGE_MILESTONE_XP,
   TOKEN_REWARDS,
 } from "@/app/[locale]/lib/services/xp/xpConfig";
-import { badgesCacheTag } from "@/app/[locale]/lib/local-bd/categoryTypesData";
+import {
+  badgesCacheTag,
+  VALID_CATEGORY_IDS,
+} from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
 
 const TABLE_NAME = "objectives";
@@ -38,6 +41,20 @@ const normalizeBoolean = (value, fallback = false) => {
   }
   return Boolean(value);
 };
+const normalizeNumber = (value) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+const normalizeCategoryId = (value) => {
+  if (value === "" || value == null) return null;
+  const id = Number(value);
+  if (!Number.isInteger(id) || !VALID_CATEGORY_IDS.has(id)) return null;
+  return id;
+};
 const normalizeSubtasks = (value) => {
   if (!Array.isArray(value)) return [];
   return value
@@ -49,7 +66,17 @@ const normalizeSubtasks = (value) => {
       const label = normalizeText(item?.label);
       const id =
         typeof item?.id === "number" && item.id > 0 ? item.id : index + 1;
-      return label ? { id, label, completed: Boolean(item?.completed) } : null;
+      if (!label) return null;
+      const subtask = { id, label, completed: Boolean(item?.completed) };
+      const categoryId = normalizeCategoryId(item?.category_id);
+      if (categoryId != null) subtask.category_id = categoryId;
+      const lat = normalizeNumber(item?.lat);
+      const lng = normalizeNumber(item?.lng);
+      if (lat != null && lng != null) {
+        subtask.lat = lat;
+        subtask.lng = lng;
+      }
+      return subtask;
     })
     .filter(Boolean);
 };
@@ -89,10 +116,10 @@ export async function updateActiveQuest(userId, questId, updates) {
   if (!userId) throw new Error("userId is required");
   if (!questId) throw new Error("questId is required");
 
-  // Fetch the current row so we can detect status transitions and read category.
+  // Fetch the current row so we can detect status transitions and read subtasks.
   const { data: existing, error: fetchError } = await supabaseAdmin
     .from(TABLE_NAME)
-    .select("status, task_category, priority, completed_at")
+    .select("status, priority, completed_at, subtasks")
     .eq("id", questId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -111,8 +138,6 @@ export async function updateActiveQuest(userId, questId, updates) {
     if (!d) throw new Error("task_description cannot be empty");
     updatePayload.task_description = d;
   }
-  if ("task_category" in updates)
-    updatePayload.task_category = normalizeOptionalText(updates.task_category);
   if ("subtasks" in updates)
     updatePayload.subtasks = normalizeSubtasks(updates.subtasks);
   if ("country" in updates)
@@ -156,8 +181,7 @@ export async function updateActiveQuest(userId, questId, updates) {
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Active quest not found");
 
-  // Badge logic — detect status transitions using the existing row.
-  const categoryId = existing.task_category;
+  // Badge logic — count completed subtasks by category.
   const wasCompleted = existing.status === "completed";
   const isNowCompleted =
     (updatePayload.status ?? existing.status) === "completed";
@@ -165,18 +189,44 @@ export async function updateActiveQuest(userId, questId, updates) {
   // XP and badge progress have already been awarded for it, so skip them.
   const alreadyRewarded = Boolean(existing.completed_at);
 
+  const hasSubtaskUpdate = "subtasks" in updates;
+  const prevSubtasks = normalizeSubtasks(existing.subtasks ?? []);
+  const nextSubtasks = hasSubtaskUpdate
+    ? (updatePayload.subtasks ?? [])
+    : prevSubtasks;
+
   let badgeResult = null;
-  if (!wasCompleted && isNowCompleted && !alreadyRewarded && categoryId) {
-    badgeResult = await recordCategoryCompletion(userId, categoryId);
-    // Bust the badges page cache so the user sees fresh data immediately.
-    revalidateTag(badgesCacheTag(userId));
-  } else if (wasCompleted && !isNowCompleted && categoryId) {
-    await revokeCategoryCompletion(userId, categoryId);
+  let badgeChanged = false;
+
+  if (hasSubtaskUpdate) {
+    const prevById = new Map(prevSubtasks.map((st) => [st.id, st]));
+    const nextById = new Map(nextSubtasks.map((st) => [st.id, st]));
+
+    for (const st of nextSubtasks) {
+      const prev = prevById.get(st.id);
+      if (st.completed && !prev?.completed) {
+        const result = await recordCategoryCompletion(userId, st.category_id);
+        badgeChanged = true;
+        if (result?.newTier) badgeResult = result;
+      }
+    }
+
+    for (const st of prevSubtasks) {
+      const next = nextById.get(st.id);
+      if (st.completed && !next?.completed) {
+        await revokeCategoryCompletion(userId, st.category_id);
+        badgeChanged = true;
+      }
+    }
+  }
+
+  if (badgeChanged) {
     revalidateTag(badgesCacheTag(userId));
   }
 
   // XP — only awarded on first-ever completion, never revoked.
   let xpUpdate = null;
+  let taskXpGained = 0;
   if (!wasCompleted && isNowCompleted && !alreadyRewarded) {
     try {
       const user = await getUserById(userId);
@@ -186,6 +236,7 @@ export async function updateActiveQuest(userId, questId, updates) {
         existing.priority ?? "low",
         displayName,
       );
+      taskXpGained = xpUpdate?.xpGained ?? 0;
     } catch (xpErr) {
       // XP failure must never break task completion.
       console.error(`[Task] XP gain failed for userId=${userId}:`, xpErr);
@@ -193,12 +244,14 @@ export async function updateActiveQuest(userId, questId, updates) {
   }
 
   // Tokens for task completion — based on priority
+  let tokenReward = 0;
   if (!wasCompleted && isNowCompleted && !alreadyRewarded) {
     try {
       const priority = String(existing.priority ?? "low").toLowerCase();
       const tokenAmount =
         TOKEN_REWARDS.TASK[priority] ?? TOKEN_REWARDS.TASK.low;
       await grantTokens(userId, tokenAmount);
+      tokenReward = tokenAmount;
     } catch (tokenErr) {
       console.error(
         `[Task] Token grant failed for userId=${userId}:`,
@@ -237,7 +290,7 @@ export async function updateActiveQuest(userId, questId, updates) {
     }
   }
 
-  return { quest: data, xpUpdate };
+  return { quest: data, xpUpdate, tokenReward, taskXpGained };
 }
 
 export async function deleteActiveQuest(userId, questId) {

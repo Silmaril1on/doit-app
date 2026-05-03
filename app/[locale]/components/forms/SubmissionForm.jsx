@@ -5,7 +5,7 @@ import ToggleButton from "../buttons/ToggleButton";
 import { FaCheck, FaChevronDown, FaMapMarkerAlt } from "react-icons/fa";
 import { MdClose } from "react-icons/md";
 import { useLoadScript, Autocomplete } from "@react-google-maps/api";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const GOOGLE_MAPS_API_KEY = "AIzaSyBYo36Sb6U2GXV0zcxS4CTooFrdVlr3f4Q";
 const PLACES_LIBRARIES = ["places"];
@@ -104,7 +104,7 @@ const TextareaField = ({ field, value, onChange, disabled }) => (
   </div>
 );
 
-const EMPTY_SUBTASK = { label: "", completed: false };
+const EMPTY_SUBTASK = { label: "", completed: false, category_id: "" };
 
 // Single location-aware subtask input — wraps Google Autocomplete when enabled
 const SubtaskInput = ({
@@ -181,9 +181,24 @@ const SubtasksField = ({ field, value, onChange, disabled }) => {
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
     libraries: PLACES_LIBRARIES,
   });
+  const scrollRef = useRef(null);
+  const [scrollState, setScrollState] = useState({ top: false, bottom: false });
 
   const subtasks =
     Array.isArray(value) && value.length > 0 ? value : [EMPTY_SUBTASK];
+
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setScrollState({
+      top: el.scrollTop > 4,
+      bottom: el.scrollTop + el.clientHeight < el.scrollHeight - 4,
+    });
+  };
+
+  useEffect(() => {
+    checkScroll();
+  }, [subtasks.length]);
 
   const handleSubtaskChange = (index, label, coords) => {
     const nextSubtasks = subtasks.map((st, i) => {
@@ -192,15 +207,25 @@ const SubtasksField = ({ field, value, onChange, disabled }) => {
       if (coords) {
         return { ...base, label, lat: coords.lat, lng: coords.lng };
       }
-      // Clear coordinates when typing without a place selection
       const { lat, lng, ...rest } = base;
       return { ...rest, label };
     });
     onChange(field.key, nextSubtasks);
   };
 
+  const handleCategoryChange = (index, category_id) => {
+    const nextSubtasks = subtasks.map((st, i) => {
+      if (i !== index) return st;
+      const base = typeof st === "object" ? st : { ...EMPTY_SUBTASK };
+      return { ...base, category_id };
+    });
+    onChange(field.key, nextSubtasks);
+  };
+
   const handleAddSubtask = () => {
     onChange(field.key, [...subtasks, { ...EMPTY_SUBTASK }]);
+    // Reset global toggle to off every time a new subtask is added
+    setLocationMode(false);
   };
 
   const handleRemoveSubtask = (index) => {
@@ -210,14 +235,14 @@ const SubtasksField = ({ field, value, onChange, disabled }) => {
     }
     onChange(
       field.key,
-      subtasks.filter((_, currentIndex) => currentIndex !== index),
+      subtasks.filter((_, i) => i !== index),
     );
   };
 
   const handleToggleLocationMode = (checked) => {
     setLocationMode(checked);
     if (!checked) {
-      // Strip coordinates when turning location mode off
+      // Strip coordinates from the last subtask (the active one being typed)
       onChange(
         field.key,
         subtasks.map((st) => {
@@ -228,6 +253,10 @@ const SubtasksField = ({ field, value, onChange, disabled }) => {
       );
     }
   };
+
+  const categoryOptions = field.categoryOptions ?? [];
+  // Google toggle applies to the last subtask row only
+  const lastIndex = subtasks.length - 1;
 
   return (
     <div className="space-y-2">
@@ -259,31 +288,70 @@ const SubtasksField = ({ field, value, onChange, disabled }) => {
         </div>
       </div>
 
-      <div className="space-y-2">
-        {subtasks.map((subtask, index) => (
-          <div
-            key={`${field.key}-${index}`}
-            className="flex items-center gap-2"
-          >
-            <SubtaskInput
-              subtask={subtask}
-              index={index}
-              fieldKey={field.key}
-              locationMode={locationMode}
-              isLoaded={isLoaded}
-              disabled={disabled || field.disabled}
-              onChange={handleSubtaskChange}
-            />
-            {subtasks.length > 1 && index > 0 ? (
-              <span
-                className="rounded-md cursor-pointer border border-red-600/20 bg-red-700/20 hover:bg-red-700/40 duration-300 p-1 text-red-600"
-                onClick={() => handleRemoveSubtask(index)}
-              >
-                <MdClose size={16} />
-              </span>
-            ) : null}
-          </div>
-        ))}
+      <div className="relative">
+        {scrollState.top && (
+          <div className="absolute top-0 left-0 right-0 h-7 bg-linear-to-b from-black/50 to-transparent pointer-events-none z-10 rounded-t-md" />
+        )}
+        <div
+          ref={scrollRef}
+          onScroll={checkScroll}
+          className="space-y-2 overflow-y-auto max-h-65 [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {subtasks.map((subtask, index) => (
+            <div
+              key={`${field.key}-${index}`}
+              className="flex items-center gap-2"
+            >
+              <SubtaskInput
+                subtask={subtask}
+                index={index}
+                fieldKey={field.key}
+                locationMode={locationMode && index === lastIndex}
+                isLoaded={isLoaded}
+                disabled={disabled || field.disabled}
+                onChange={handleSubtaskChange}
+              />
+              {categoryOptions.length > 0 && (
+                <div className="relative shrink-0 w-32.5">
+                  <select
+                    value={
+                      (typeof subtask === "object"
+                        ? subtask.category_id
+                        : "") ?? ""
+                    }
+                    onChange={(e) =>
+                      handleCategoryChange(index, e.target.value)
+                    }
+                    disabled={disabled || field.disabled}
+                    className="appearance-none pr-6 w-full text-xs"
+                  >
+                    <option value="">Category…</option>
+                    {categoryOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-cream/60">
+                    <FaChevronDown size={8} />
+                  </span>
+                </div>
+              )}
+              {subtasks.length > 1 && index > 0 ? (
+                <span
+                  className="rounded-md cursor-pointer border border-red-600/20 bg-red-700/20 hover:bg-red-700/40 duration-300 p-1 text-red-600 shrink-0"
+                  onClick={() => handleRemoveSubtask(index)}
+                >
+                  <MdClose size={14} />
+                </span>
+              ) : null}
+            </div>
+          ))}
+        </div>
+        {scrollState.bottom && (
+          <div className="absolute bottom-0 left-0 right-0 h-7 bg-linear-to-t from-black/50 to-transparent pointer-events-none z-10 rounded-b-md" />
+        )}
       </div>
     </div>
   );

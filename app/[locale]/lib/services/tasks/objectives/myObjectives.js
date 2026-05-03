@@ -29,15 +29,24 @@ const normalizeBoolean = (value, fallback = false) => {
   return Boolean(value);
 };
 
-const normalizeCategoryId = (value) => {
+const normalizeSubtaskCategoryId = (value) => {
   if (value === "" || value == null) return null;
   const id = Number(value);
   if (!Number.isInteger(id) || !VALID_CATEGORY_IDS.has(id)) {
     throw new Error(
-      `task_category must be one of: ${[...VALID_CATEGORY_IDS].join(", ")}`,
+      `subtask.category_id must be one of: ${[...VALID_CATEGORY_IDS].join(", ")}`,
     );
   }
   return id;
+};
+
+const normalizeNumber = (value) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 };
 
 const normalizeStatus = (value) => {
@@ -63,10 +72,14 @@ const normalizeSubtasks = (value) => {
         typeof item?.id === "number" && item.id > 0 ? item.id : index + 1;
       if (!label) return null;
       const subtask = { id, label, completed: Boolean(item?.completed) };
+      const categoryId = normalizeSubtaskCategoryId(item?.category_id);
+      if (categoryId != null) subtask.category_id = categoryId;
       // Preserve GPS coordinates when set via Google Places location mode
-      if (typeof item?.lat === "number" && typeof item?.lng === "number") {
-        subtask.lat = item.lat;
-        subtask.lng = item.lng;
+      const lat = normalizeNumber(item?.lat);
+      const lng = normalizeNumber(item?.lng);
+      if (lat != null && lng != null) {
+        subtask.lat = lat;
+        subtask.lng = lng;
       }
       return subtask;
     })
@@ -139,12 +152,10 @@ export async function createObjective(userId, payload) {
 
   const now = new Date().toISOString();
   const status = normalizeStatus(payload?.status);
-  const categoryId = normalizeCategoryId(payload?.task_category);
 
   const createPayload = {
     task_title: taskTitle,
     task_description: taskDescription,
-    task_category: categoryId,
     subtasks: normalizeSubtasks(payload?.subtasks),
     task_deadline: normalizeOptionalTimestamp(payload?.task_deadline),
     country: normalizeOptionalText(payload?.country),
@@ -172,10 +183,10 @@ export async function updateObjective(userId, objectiveId, updates) {
   if (!userId) throw new Error("userId is required");
   if (!objectiveId) throw new Error("objectiveId is required");
 
-  // Fetch the current state so we can detect status transitions and category.
+  // Fetch the current state so we can detect status transitions.
   const { data: existing, error: fetchError } = await supabaseAdmin
     .from(TABLE_NAME)
-    .select("status, task_category")
+    .select("status")
     .eq("id", objectiveId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -199,10 +210,6 @@ export async function updateObjective(userId, objectiveId, updates) {
 
   if ("country" in updates) {
     updatePayload.country = normalizeOptionalText(updates.country);
-  }
-
-  if ("task_category" in updates) {
-    updatePayload.task_category = normalizeCategoryId(updates.task_category);
   }
 
   if ("subtasks" in updates) {

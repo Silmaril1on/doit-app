@@ -54,13 +54,13 @@ export async function PATCH(request) {
     }
 
     const payload = await request.json();
-    const { quest, xpUpdate } = await updateActiveQuest(
-      userId,
-      questId,
-      payload,
-    );
+    const { quest, xpUpdate, tokenReward, taskXpGained } =
+      await updateActiveQuest(userId, questId, payload);
 
-    return NextResponse.json({ quest, xpUpdate }, { status: 200 });
+    return NextResponse.json(
+      { quest, xpUpdate, tokenReward, taskXpGained },
+      { status: 200 },
+    );
   } catch (err) {
     return NextResponse.json(
       { error: err.message || "Internal server error" },

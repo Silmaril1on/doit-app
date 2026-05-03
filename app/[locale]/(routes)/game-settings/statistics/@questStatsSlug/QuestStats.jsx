@@ -12,9 +12,9 @@ import { TASK_CATEGORIES } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 // ─── Theme constants — mirrors existing DonutChart/CountryTasks palette ───────
 
 const STATUS_COLORS = {
-  todo: "#f59e0b",        // amber  — "pending, not started yet"
+  todo: "#f59e0b", // amber  — "pending, not started yet"
   in_progress: "#60a5fa", // sky-blue — "in motion, focused"
-  completed: "#22c55e",   // green  — "done, success"
+  completed: "#22c55e", // green  — "done, success"
 };
 
 const PRIORITY_META = {
@@ -29,6 +29,17 @@ const CATEGORY_COLORS = {
   3: "#9b59ff", // Nightlife
   4: "#ff3d81", // Experiences
   5: "#fcb913", // Shopping
+};
+
+const getTaskCategoryIds = (task) => {
+  const subtasks = Array.isArray(task?.subtasks) ? task.subtasks : [];
+  const ids = new Set();
+  subtasks.forEach((st) => {
+    if (!st || typeof st !== "object") return;
+    const id = Number(st.category_id);
+    if (Number.isFinite(id)) ids.add(id);
+  });
+  return [...ids];
 };
 
 // ─── Filter definitions ───────────────────────────────────────────────────────
@@ -110,14 +121,14 @@ const QuestStats = ({ tasks = [] }) => {
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
       if (primaryFilter === "todo" && t.status !== "todo") return false;
-      if (primaryFilter === "active" && t.status !== "in_progress") return false;
-      if (primaryFilter === "completed" && t.status !== "completed") return false;
-      // normalize to number — Supabase may return task_category as string
-      if (
-        categoryFilters.length > 0 &&
-        !categoryFilters.includes(Number(t.task_category))
-      )
+      if (primaryFilter === "active" && t.status !== "in_progress")
         return false;
+      if (primaryFilter === "completed" && t.status !== "completed")
+        return false;
+      if (categoryFilters.length > 0) {
+        const ids = getTaskCategoryIds(t);
+        if (!categoryFilters.some((id) => ids.includes(id))) return false;
+      }
       const p = t.priority ?? "medium";
       if (priorityFilters.length > 0 && !priorityFilters.includes(p))
         return false;
@@ -129,11 +140,10 @@ const QuestStats = ({ tasks = [] }) => {
 
   const statusCounts = useMemo(() => {
     const base = tasks.filter((t) => {
-      if (
-        categoryFilters.length > 0 &&
-        !categoryFilters.includes(Number(t.task_category))
-      )
-        return false;
+      if (categoryFilters.length > 0) {
+        const ids = getTaskCategoryIds(t);
+        if (!categoryFilters.some((id) => ids.includes(id))) return false;
+      }
       const p = t.priority ?? "medium";
       if (priorityFilters.length > 0 && !priorityFilters.includes(p))
         return false;
@@ -187,7 +197,9 @@ const QuestStats = ({ tasks = [] }) => {
   const donutCenterSub =
     primaryFilter === "all"
       ? "total"
-      : PRIMARY_TABS.find((t) => t.key === primaryFilter)?.label?.toLowerCase() ?? "";
+      : (PRIMARY_TABS.find(
+          (t) => t.key === primaryFilter,
+        )?.label?.toLowerCase() ?? "");
 
   // ─── Category breakdown ────────────────────────────────────────────────────
 
@@ -195,7 +207,8 @@ const QuestStats = ({ tasks = [] }) => {
     return TASK_CATEGORIES.map((cat) => ({
       id: cat.id,
       label: cat.label,
-      count: filteredTasks.filter((t) => Number(t.task_category) === cat.id).length,
+      count: filteredTasks.filter((t) => getTaskCategoryIds(t).includes(cat.id))
+        .length,
       color: CATEGORY_COLORS[cat.id] ?? "#4affd7",
     }))
       .filter((c) => c.count > 0)
@@ -214,9 +227,8 @@ const QuestStats = ({ tasks = [] }) => {
       PRIORITY_TABS.map((p) => ({
         key: p.key,
         label: p.label,
-        count: filteredTasks.filter(
-          (t) => (t.priority ?? "medium") === p.key,
-        ).length,
+        count: filteredTasks.filter((t) => (t.priority ?? "medium") === p.key)
+          .length,
         color: PRIORITY_META[p.key].color,
       })).filter((p) => p.count > 0),
     [filteredTasks],

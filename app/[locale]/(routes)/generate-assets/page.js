@@ -116,7 +116,7 @@ export default function GenerateAssetsPage() {
 
   return (
     <div className="min-h-screen bg-black text-cream pb-28">
-      <div className="max-w-5xl bg-teal-700/40 mx-auto p-5 rounded-lg flex  space-x-5">
+      <div className="max-w-6xl bg-teal-700/40 mx-auto p-5 rounded-lg flex  space-x-5">
         <div className="space-y-4 w-2/4">
           <SectionHeadline
             title="Image Generator"
@@ -161,42 +161,46 @@ export default function GenerateAssetsPage() {
               />
             ))}
           </div>
+          <div className="grid grid-cols-[1fr_3fr] gap-2">
+            {/* Image upload — key forces remount/reset when mode changes */}
+            <div className="space-y-3">
+              {currentMode.maxImages >= 1 && (
+                <UploadImageInput
+                  key={`img1-${mode}`}
+                  label="Reference Image 1"
+                  onChange={setImageFile1}
+                  maxSizeBytes={5 * 1024 * 1024}
+                />
+              )}
+              {currentMode.maxImages >= 2 && (
+                <UploadImageInput
+                  key={`img2-${mode}`}
+                  label="Reference Image 2"
+                  onChange={setImageFile2}
+                  maxSizeBytes={5 * 1024 * 1024}
+                />
+              )}
+            </div>
 
-          {/* Image upload — key forces remount/reset when mode changes */}
-          {currentMode.maxImages >= 1 && (
-            <UploadImageInput
-              key={`img1-${mode}`}
-              label="Reference Image 1"
-              onChange={setImageFile1}
-              maxSizeBytes={5 * 1024 * 1024}
-            />
-          )}
-          {currentMode.maxImages >= 2 && (
-            <UploadImageInput
-              key={`img2-${mode}`}
-              label="Reference Image 2"
-              onChange={setImageFile2}
-              maxSizeBytes={5 * 1024 * 1024}
-            />
-          )}
-
-          {/* Prompt */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] secondary text-chino/40 uppercase tracking-wide">
-              Prompt
-            </label>
-            <textarea
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder={
-                mode === "i2i"
-                  ? "Describe how to transform the image..."
-                  : mode === "multi"
-                    ? "Describe what to generate using the reference images..."
-                    : "Describe the image you want to generate..."
-              }
-              rows={5}
-            />
+            {/* Prompt */}
+            <div className="flex flex-col gap-1 pt-1">
+              <label className="text-[10px] secondary text-chino/40 uppercase tracking-wide">
+                Prompt
+              </label>
+              <textarea
+                className="mt-2 h-full text-xs"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder={
+                  mode === "i2i"
+                    ? "Describe how to transform the image..."
+                    : mode === "multi"
+                      ? "Describe what to generate using the reference images..."
+                      : "Describe the image you want to generate..."
+                }
+                rows={5}
+              />
+            </div>
           </div>
 
           {/* Settings */}
@@ -250,7 +254,7 @@ export default function GenerateAssetsPage() {
 
         {/* Result */}
         {result?.url && (
-          <div className="rounded-xl w-2/4 border border-teal-500/20 overflow-hidden">
+          <div className="rounded-xl w-2/4 border border-teal-500/20 overflow-hidden ">
             <div className="relative bg-black/40">
               <IoImageOutline
                 size={40}

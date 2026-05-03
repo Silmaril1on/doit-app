@@ -27,6 +27,9 @@ const ObjectiveDirectionsModal = dynamic(
   () => import("./ObjectiveDirectionsModal"),
   { ssr: false },
 );
+const OnCompleteTaskModal = dynamic(() => import("./OnCompleteTaskModal"), {
+  ssr: false,
+});
 
 // Map every modalType key to its component.
 // CreateTaskModal handles create / edit / recreate flows internally.
@@ -41,6 +44,7 @@ const MODAL_COMPONENTS = {
   thoughts: ThoughsModal,
   showMyId: ShowMyIdModal,
   objectiveDirections: ObjectiveDirectionsModal,
+  completeTask: OnCompleteTaskModal,
 };
 
 const ModalRoot = () => {

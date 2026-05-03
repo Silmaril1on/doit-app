@@ -6,6 +6,7 @@ import { setToast } from "@/app/[locale]/lib/features/toastSlice";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import Button from "@/app/[locale]/components/buttons/Button";
 import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
+import BorderSvg from "@/app/[locale]/components/elements/BorderSvg";
 import { GiSwordsPower, GiCrossedSwords, GiDragonHead } from "react-icons/gi";
 
 const DIFFICULTIES = [
@@ -13,13 +14,12 @@ const DIFFICULTIES = [
     id: "easy",
     label: "EASY",
     icon: GiSwordsPower,
-    color: "green",
-    borderColor: "border-green-500/40",
-    activeBorder: "border-green-500",
-    glow: "shadow-[0_0_20px_rgba(34,197,94,0.25)]",
-    textColor: "text-green-400",
-    bgColor: "bg-green-500/10",
-    activeBg: "bg-green-500/20",
+    accentKey: "teal",
+    glow: "shadow-[0_0_25px_rgba(45,212,191,0.25)]",
+    textColor: "text-teal-300",
+    badgeBorder: "border-teal-400/50",
+    bgColor: "bg-teal-500/5",
+    activeBg: "bg-teal-500/10",
     description:
       "Perfect for beginners or casual players. Objectives are relaxed, XP penalties are minimal, and you have more time to complete your quests. Focus on building habits without the pressure of hard deadlines.",
     perks: [
@@ -32,13 +32,12 @@ const DIFFICULTIES = [
     id: "medium",
     label: "MEDIUM",
     icon: GiCrossedSwords,
-    color: "yellow",
-    borderColor: "border-yellow-500/40",
-    activeBorder: "border-yellow-500",
-    glow: "shadow-[0_0_20px_rgba(234,179,8,0.25)]",
-    textColor: "text-yellow-400",
-    bgColor: "bg-yellow-500/10",
-    activeBg: "bg-yellow-500/20",
+    accentKey: "gold",
+    glow: "shadow-[0_0_25px_rgba(252,185,19,0.25)]",
+    textColor: "text-yellow-300",
+    badgeBorder: "border-yellow-400/60",
+    bgColor: "bg-yellow-500/5",
+    activeBg: "bg-yellow-500/10",
     description:
       "The balanced experience. Standard quest timers, moderate XP rewards, and a fair challenge that keeps you engaged without overwhelming you. Recommended for most players.",
     perks: [
@@ -51,13 +50,12 @@ const DIFFICULTIES = [
     id: "hard",
     label: "HARD",
     icon: GiDragonHead,
-    color: "red",
-    borderColor: "border-red-500/40",
-    activeBorder: "border-red-500",
-    glow: "shadow-[0_0_20px_rgba(239,68,68,0.25)]",
+    accentKey: "crimson",
+    glow: "shadow-[0_0_25px_rgba(217,26,23,0.25)]",
     textColor: "text-red-400",
-    bgColor: "bg-red-500/10",
-    activeBg: "bg-red-500/20",
+    badgeBorder: "border-red-400/60",
+    bgColor: "bg-red-500/5",
+    activeBg: "bg-red-500/10",
     description:
       "For the elite. Strict deadlines, XP bonuses for early completion, but harsh penalties for failure. Every objective counts. Only take on Hard mode if you are truly committed to your goals.",
     perks: [
@@ -71,7 +69,7 @@ const DIFFICULTIES = [
 export default function DifficultySettingsPage() {
   const dispatch = useDispatch();
   const [current, setCurrent] = useState(null);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState("easy");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -80,7 +78,7 @@ export default function DifficultySettingsPage() {
       .then((d) => {
         const diff = d.difficulty ?? null;
         setCurrent(diff);
-        setSelected(diff);
+        setSelected(diff ?? "easy");
       })
       .catch(() => {});
   }, []);
@@ -129,18 +127,22 @@ export default function DifficultySettingsPage() {
               <button
                 type="button"
                 onClick={() => setSelected(isSelected ? null : diff.id)}
-                className={`w-full text-left rounded-xl border-2 transition-all duration-300 ${
-                  isSelected
-                    ? `${diff.activeBorder} ${diff.activeBg} ${diff.glow}`
-                    : `${diff.borderColor} ${diff.bgColor} hover:${diff.activeBorder}/60`
+                className={`relative w-full text-left rounded-xl overflow-hidden transition-all duration-300 border border-transparent ${
+                  isSelected ? `${diff.activeBg} ${diff.glow}` : diff.bgColor
                 }`}
               >
-                <div className="flex items-center gap-4 px-5 py-4">
-                  <div
-                    className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center border ${
-                      isSelected ? diff.activeBorder : diff.borderColor
-                    } ${isSelected ? diff.activeBg : "bg-black/40"}`}
-                  >
+                <BorderSvg
+                  strokeWidth={1.4}
+                  radius={12}
+                  color={diff.accentKey}
+                />
+                <div className="relative z-10 flex items-center gap-4 px-5 py-4">
+                  <div className="relative shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-black/40">
+                    <BorderSvg
+                      strokeWidth={1.2}
+                      radius={10}
+                      color={diff.accentKey}
+                    />
                     <Icon
                       size={26}
                       className={isSelected ? diff.textColor : "text-cream/40"}
@@ -157,7 +159,7 @@ export default function DifficultySettingsPage() {
                       </span>
                       {isCurrent && (
                         <span
-                          className={`secondary text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${diff.borderColor} ${diff.textColor}`}
+                          className={`secondary text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${diff.badgeBorder} ${diff.textColor}`}
                         >
                           active
                         </span>

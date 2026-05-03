@@ -5,12 +5,30 @@ import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setXp } from "@/app/[locale]/lib/features/xpSlice";
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
+import { openModal } from "@/app/[locale]/lib/features/modalSlice";
 import { useActiveQuests } from "@/app/[locale]/lib/hooks/useActiveQuests";
 import { ACHIEVEMENTS_PAGE1_KEY } from "@/app/[locale]/lib/hooks/useAchievements";
 import { mutate as globalMutate } from "swr";
 import ObjectivePageWrapper from "../(componets)/ObjectivePageWrapper";
+import { TASK_CATEGORIES } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 
 const REVALIDATE_MODALS = ["editObjective"];
+const CATEGORY_LABELS = new Map(TASK_CATEGORIES.map((c) => [c.id, c.label]));
+
+const buildCategoryCounts = (subtasks = []) => {
+  const counts = new Map();
+  subtasks.forEach((st) => {
+    if (!st || typeof st !== "object") return;
+    const id = Number(st.category_id);
+    if (!Number.isFinite(id)) return;
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  });
+  return [...counts.entries()].map(([id, count]) => ({
+    id,
+    label: CATEGORY_LABELS.get(id) ?? "Category",
+    count,
+  }));
+};
 
 const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
   const dispatch = useDispatch();
@@ -41,6 +59,32 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
       // silently ignore
     }
   }, [dispatch]);
+
+  const triggerCompleteModal = useCallback(
+    (quest, subtasks, xpGained = 0, tokenReward = 0) => {
+      const displayName =
+        currentUser?.display_name ?? currentUser?.first_name ?? "User";
+      const categoryCounts = buildCategoryCounts(subtasks);
+
+      setTimeout(() => {
+        dispatch(
+          openModal({
+            modalType: "completeTask",
+            modalProps: {
+              displayName,
+              taskTitle: quest?.task_title,
+              country: quest?.country,
+              city: quest?.city,
+              categoryCounts,
+              xpGained,
+              tokenReward,
+            },
+          }),
+        );
+      }, 700);
+    },
+    [dispatch, currentUser],
+  );
 
   const handleToggleSubtask = useCallback(
     async (quest, subtaskIndex) => {
@@ -82,6 +126,12 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
           } else {
             await refreshXp();
           }
+          triggerCompleteModal(
+            quest,
+            nextSubtasks,
+            data.xpUpdate?.xpGained ?? 0,
+            data.tokenReward ?? 0,
+          );
           dispatch(
             setToast({
               type: "success",
@@ -108,7 +158,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         );
       }
     },
-    [dispatch, mutate, refreshXp, userId],
+    [dispatch, mutate, refreshXp, triggerCompleteModal, userId],
   );
 
   const handleRemoveSubtask = useCallback(
@@ -191,6 +241,12 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         } else {
           await refreshXp();
         }
+        triggerCompleteModal(
+          quest,
+          subtasks,
+          data.taskXpGained ?? data.xpUpdate?.xpGained ?? 0,
+          data.tokenReward ?? 0,
+        );
         dispatch(
           setToast({ type: "success", msg: "Task completed! Well done." }),
         );
@@ -209,7 +265,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         );
       }
     },
-    [dispatch, mutate, refreshXp, userId],
+    [dispatch, mutate, refreshXp, triggerCompleteModal, userId],
   );
 
   const handleDeleteQuest = useCallback(

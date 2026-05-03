@@ -56,33 +56,9 @@ const FIELDS = [
         placeholder: "City",
       },
       {
-        key: "task_category",
-        label: "Task Category",
-        type: "select",
-        options: [
-          { label: "Select a category…", value: "" },
-          ...CATEGORY_OPTIONS,
-        ],
-      },
-    ],
-  },
-  {
-    cols: 2,
-    fields: [
-      {
         key: "task_deadline",
         label: "Task Deadline (Optional)",
         type: "datetime-local",
-      },
-      {
-        key: "priority",
-        label: "Priority",
-        type: "select",
-        options: [
-          { label: "Low", value: "low" },
-          { label: "Medium", value: "medium" },
-          { label: "High", value: "high" },
-        ],
       },
     ],
   },
@@ -104,12 +80,22 @@ const FIELDS = [
         label: "Subtasks",
         type: "subtasks",
         addLabel: "Add subtask",
+        categoryOptions: CATEGORY_OPTIONS,
       },
     ],
   },
 ];
 
-const EMPTY_SUBTASK = { label: "", completed: false };
+const EMPTY_SUBTASK = { label: "", completed: false, category_id: "" };
+
+const computePriority = (subtasks) => {
+  const count = Array.isArray(subtasks)
+    ? subtasks.filter((st) => typeof st === "object" && st.label?.trim()).length
+    : 0;
+  if (count > 5) return "high";
+  if (count === 4 || count === 5) return "medium";
+  return "low";
+};
 const CREATE_MODAL_TYPE = "createObjective";
 const EDIT_MODAL_TYPE = "editObjective";
 const RECREATE_MODAL_TYPE = "recreateObjective";
@@ -120,8 +106,6 @@ const initialForm = {
   task_description: "",
   country: "",
   city: "",
-  task_category: "",
-  priority: "medium",
   task_deadline: "",
   is_public: false,
   subtasks: [{ ...EMPTY_SUBTASK }],
@@ -151,9 +135,6 @@ const createFormFromObjective = (objective, isRecreate = false) => {
     task_description: objective.task_description || "",
     country: objective.country || "",
     city: objective.city || "",
-    task_category:
-      objective.task_category != null ? String(objective.task_category) : "",
-    priority: objective.priority || "medium",
     // Clear deadline on recreate — user should set their own timeline
     task_deadline: isRecreate
       ? ""
@@ -212,7 +193,10 @@ const CreateTaskModal = () => {
       const endpoint = isEditMode
         ? `/api/user/task/objectives?id=${encodeURIComponent(objective.id)}`
         : "/api/user/task/objectives";
-      const submitData = { ...form };
+      const submitData = {
+        ...form,
+        priority: computePriority(form.subtasks),
+      };
       // Pass originalTaskId so the API can increment recreate_count atomically
       if (isRecreateMode && originalTaskId) {
         submitData.originalTaskId = originalTaskId;

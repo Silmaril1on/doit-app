@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 
 const TABLE_NAME = "objectives";
 const ACHIEVEMENT_LIST_COLUMNS =
-  "id,user_id,task_title,task_description,task_category,subtasks,country,city,priority,is_public,status,created_at,update_at,completed_at,recreate_count";
+  "id,user_id,task_title,task_description,subtasks,country,city,priority,is_public,status,created_at,update_at,completed_at,recreate_count";
 const ALLOWED_STATUS = new Set(["todo", "in_progress", "completed"]);
 const ALLOWED_PRIORITY = new Set(["low", "medium", "high"]);
 
@@ -35,7 +35,14 @@ const normalizeSubtasks = (value) => {
       const label = normalizeText(item?.label);
       const id =
         typeof item?.id === "number" && item.id > 0 ? item.id : index + 1;
-      return label ? { id, label, completed: Boolean(item?.completed) } : null;
+      const subtask = label
+        ? { id, label, completed: Boolean(item?.completed) }
+        : null;
+      if (subtask && item?.category_id != null) {
+        const categoryId = Number(item.category_id);
+        if (Number.isFinite(categoryId)) subtask.category_id = categoryId;
+      }
+      return subtask;
     })
     .filter(Boolean);
 };
@@ -86,8 +93,6 @@ export async function updateAchievement(userId, achievementId, updates) {
     if (!d) throw new Error("task_description cannot be empty");
     updatePayload.task_description = d;
   }
-  if ("task_category" in updates)
-    updatePayload.task_category = normalizeOptionalText(updates.task_category);
   if ("subtasks" in updates)
     updatePayload.subtasks = normalizeSubtasks(updates.subtasks);
   if ("country" in updates)

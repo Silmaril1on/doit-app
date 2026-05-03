@@ -2,6 +2,14 @@
 import { useEffect, useRef, useState } from "react";
 import { MdOutlineAddAPhoto } from "react-icons/md";
 import ImageTag from "../elements/ImageTag";
+const isValidImageSrc = (v) =>
+  typeof v === "string" &&
+  (v.startsWith("http://") ||
+    v.startsWith("https://") ||
+    v.startsWith("/") ||
+    v.startsWith("data:") ||
+    v.startsWith("blob:"));
+
 const UploadImageInput = ({
   value,
   onChange,
@@ -11,11 +19,11 @@ const UploadImageInput = ({
   compressTarget = 200 * 1024,
 }) => {
   const inputRef = useRef(null);
-  const [preview, setPreview] = useState(value || null);
+  const [preview, setPreview] = useState(isValidImageSrc(value) ? value : null);
   const [error, setError] = useState(null);
   const [processing, setProcessing] = useState(false);
   useEffect(() => {
-    setPreview(value || null);
+    setPreview(isValidImageSrc(value) ? value : null);
   }, [value]);
 
   const compressImage = (file) =>

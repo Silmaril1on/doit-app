@@ -8,7 +8,13 @@ import { formatDate } from "@/app/[locale]/lib/utils/utils";
 import ProgressBar from "@/app/[locale]/components/elements/ProgressBar";
 import { TASK_CATEGORIES } from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import { openModal } from "@/app/[locale]/lib/features/modalSlice";
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
 import { useDispatch } from "react-redux";
 import { IoMdClose, IoMdArrowDropright, IoIosCheckmark } from "react-icons/io";
 import { AiFillFire, AiOutlineFire } from "react-icons/ai";
@@ -32,10 +38,65 @@ const statusColorMap = {
 
 const EMPTY_LIST = [];
 
+const CATEGORY_BY_ID = new Map(TASK_CATEGORIES.map((c) => [c.id, c]));
+
+const toFiniteNumber = (value) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
 const formatLabel = (value) =>
   String(value || "")
     .replace(/_/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
+
+const getCategoryLabelsFromSubtasks = (subtasks) => {
+  const ids = new Set();
+  subtasks.forEach((st) => {
+    if (!st || typeof st !== "object") return;
+    const id = Number(st.category_id);
+    if (Number.isFinite(id) && CATEGORY_BY_ID.has(id)) ids.add(id);
+  });
+  return [...ids].map((id) => CATEGORY_BY_ID.get(id)?.label).filter(Boolean);
+};
+
+const groupSubtasksByCategory = (subtasks) => {
+  const groups = new Map();
+  const uncategorized = { label: "Uncategorized", items: [] };
+
+  subtasks.forEach((st, index) => {
+    const label = typeof st === "object" ? st.label : st;
+    if (!label) return;
+    const completed = typeof st === "object" ? Boolean(st.completed) : false;
+    const id = Number(st?.category_id);
+    if (Number.isFinite(id) && CATEGORY_BY_ID.has(id)) {
+      const entry = groups.get(id) || {
+        label: CATEGORY_BY_ID.get(id)?.label ?? "Category",
+        items: [],
+      };
+      entry.items.push({ index, label, completed });
+      groups.set(id, entry);
+      return;
+    }
+    uncategorized.items.push({ index, label, completed });
+  });
+
+  const ordered = TASK_CATEGORIES.map((cat) => ({
+    id: cat.id,
+    label: cat.label,
+    items: groups.get(cat.id)?.items ?? [],
+  })).filter((group) => group.items.length > 0);
+
+  if (uncategorized.items.length > 0) {
+    ordered.push({ id: "uncategorized", ...uncategorized });
+  }
+
+  return ordered;
+};
 
 const ObjectiveCard = ({
   objective,
@@ -52,12 +113,13 @@ const ObjectiveCard = ({
   const dispatch = useDispatch();
   const status = objective.status || "todo";
   const priority = objective.priority || "medium";
-  const categoryData =
-    TASK_CATEGORIES.find((c) => c.id === Number(objective.task_category)) ??
-    null;
   const subtasks = Array.isArray(objective.subtasks)
     ? objective.subtasks
     : EMPTY_LIST;
+  const categoryLabels = useMemo(
+    () => getCategoryLabelsFromSubtasks(subtasks),
+    [subtasks],
+  );
   const countryAndCity = { country: objective.country, city: objective.city };
   const hasLocation = Boolean(objective.country || objective.city);
   const canEdit = !readOnly && typeof onEdit === "function";
@@ -107,12 +169,15 @@ const ObjectiveCard = ({
   }, [dispatch, objective.id, objective.task_title, subtasks]);
 
   // Subtasks that have lat/lng coordinates set (location mode)
-  const locationSubtasks = subtasks.filter(
-    (st) =>
-      typeof st === "object" &&
-      typeof st.lat === "number" &&
-      typeof st.lng === "number",
-  );
+  const locationSubtasks = subtasks
+    .map((st) => {
+      if (!st || typeof st !== "object") return null;
+      const lat = toFiniteNumber(st.lat);
+      const lng = toFiniteNumber(st.lng);
+      if (lat == null || lng == null) return null;
+      return { ...st, lat, lng };
+    })
+    .filter(Boolean);
   const hasLocationSubtasks = locationSubtasks.length > 0;
 
   const handleOpenDirections = useCallback(() => {
@@ -152,7 +217,7 @@ const ObjectiveCard = ({
           readOnly={readOnly}
         />
         <CardCategorySection
-          categoryData={categoryData}
+          categoryLabels={categoryLabels}
           countryAndCity={countryAndCity}
           status={status}
           priority={priority}
@@ -271,29 +336,23 @@ const CardHeader = ({
 };
 
 const CardCategorySection = ({
-  categoryData,
+  categoryLabels,
   countryAndCity,
   status,
   priority,
   hasLocation,
 }) => {
+  const categoriesText =
+    categoryLabels && categoryLabels.length > 0
+      ? categoryLabels.join(", ")
+      : "—";
+
   return (
     <div className=" ">
       <div className="gap-1 flex flex-col items-start mb-4">
-        {categoryData ? (
-          <div>
-            <p className="secondary text-xs uppercase tracking-[0.14em] text-primary">
-              Category: {categoryData.label}
-            </p>
-            <p className="secondary capitalize text-[10px] text-chino">
-              {categoryData.description}
-            </p>
-          </div>
-        ) : (
-          <p className="secondary  text-xs uppercase tracking-[0.14em] text-primary">
-            Category: —
-          </p>
-        )}
+        <p className="secondary text-xs uppercase tracking-[0.14em] text-primary">
+          Categories: {categoriesText}
+        </p>
       </div>
       <div className="flex justify-between items-center">
         {hasLocation && (
@@ -326,6 +385,10 @@ const SubTasksSection = ({
     : subtasks.filter((st) => typeof st === "object" && st.completed).length;
   const showProgress =
     (Boolean(onToggleSubtask) || completedView) && subtasks.length > 0;
+  const groupedSubtasks = useMemo(
+    () => groupSubtasksByCategory(subtasks),
+    [subtasks],
+  );
 
   return (
     <>
@@ -334,64 +397,77 @@ const SubTasksSection = ({
           <p className="secondary text-xs uppercase tracking-[0.14em] text-white/80">
             Subtasks
           </p>
-          <ul className="mt-2 space-y-1 text-xs secondary ">
-            {subtasks.map((subtask, index) => {
-              const label =
-                typeof subtask === "object" ? subtask.label : subtask;
-              const isCompleted =
-                completedView ||
-                (typeof subtask === "object"
-                  ? Boolean(subtask.completed)
-                  : false);
-              return (
-                <div
-                  key={`${objective.id}-subtask-${index}`}
-                  className="group hover:pl-3 flex items-center justify-between gap-2 rounded-md px-1 duration-300"
-                >
-                  {onToggleSubtask ? (
-                    <button
-                      type="button"
-                      onClick={() => onToggleSubtask(objective, index)}
-                      aria-label={`Toggle subtask ${index + 1}`}
-                      className={`flex items-center gap-0.5 text-left font-medium duration-300 ${
-                        isCompleted ? "text-green-500" : "text-chino/85"
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <IoIosCheckmark size={18} className="shrink-0" />
-                      ) : (
-                        <IoMdArrowDropright size={18} className="shrink-0" />
-                      )}
-                      <span className="capitalize">{label}</span>
-                    </button>
-                  ) : (
-                    <span
-                      className={`flex cursor-pointer  items-center gap-0.5 font-medium ${
-                        isCompleted ? "text-green-500" : "text-chino/85"
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <IoIosCheckmark size={18} className="shrink-0" />
-                      ) : (
-                        <IoMdArrowDropright size={16} className="shrink-0" />
-                      )}
-                      <span className="capitalize">{label}</span>
-                    </span>
-                  )}
-                  {onRemoveSubtask ? (
-                    <button
-                      type="button"
-                      onClick={() => onRemoveSubtask?.(objective, index)}
-                      aria-label={`Remove subtask ${index + 1}`}
-                      className="cursor-pointer text-red-500 opacity-0 duration-300 group-hover:opacity-100"
-                    >
-                      <IoMdClose size={16} />
-                    </button>
-                  ) : null}
-                </div>
-              );
-            })}
-          </ul>
+          <div className="mt-2 space-y-3 text-xs secondary">
+            {groupedSubtasks.map((group) => (
+              <div key={`${objective.id}-group-${group.label}`}>
+                <p className="secondary text-[10px] uppercase tracking-[0.14em] text-primary/80">
+                  {group.label}
+                </p>
+                <ul className="mt-1 space-y-1">
+                  {group.items.map((item) => {
+                    const isCompleted = completedView || item.completed;
+                    return (
+                      <div
+                        key={`${objective.id}-subtask-${item.index}`}
+                        className="group hover:pl-3 flex items-center justify-between gap-2 rounded-md px-1 duration-300"
+                      >
+                        {onToggleSubtask ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onToggleSubtask(objective, item.index)
+                            }
+                            aria-label={`Toggle subtask ${item.index + 1}`}
+                            className={`flex items-center gap-0.5 text-left font-medium duration-300 ${
+                              isCompleted ? "text-green-500" : "text-chino/85"
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <IoIosCheckmark size={18} className="shrink-0" />
+                            ) : (
+                              <IoMdArrowDropright
+                                size={18}
+                                className="shrink-0"
+                              />
+                            )}
+                            <span className="capitalize">{item.label}</span>
+                          </button>
+                        ) : (
+                          <span
+                            className={`flex cursor-pointer  items-center gap-0.5 font-medium ${
+                              isCompleted ? "text-green-500" : "text-chino/85"
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <IoIosCheckmark size={18} className="shrink-0" />
+                            ) : (
+                              <IoMdArrowDropright
+                                size={16}
+                                className="shrink-0"
+                              />
+                            )}
+                            <span className="capitalize">{item.label}</span>
+                          </span>
+                        )}
+                        {onRemoveSubtask ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onRemoveSubtask?.(objective, item.index)
+                            }
+                            aria-label={`Remove subtask ${item.index + 1}`}
+                            className="cursor-pointer text-red-500 opacity-0 duration-300 group-hover:opacity-100"
+                          >
+                            <IoMdClose size={16} />
+                          </button>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
           {showProgress && (
             <ProgressBar
               value={completedCount}

@@ -1,5 +1,11 @@
 "use client";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, {
+  useEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   useLoadScript,
@@ -37,6 +43,10 @@ const PIN_KEYFRAMES = `
 const MODAL_TYPE = "objectiveDirections";
 const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 const LIBRARIES = ["places"];
+const PIN_STYLE_ID = "objective-directions-pin-keyframes";
+const ROUTE_DEBOUNCE_MS = 300;
+const STATIC_USER_LOCATION = { lat: 52.5147, lng: 13.2394 };
+const USE_STATIC_USER_LOCATION = true;
 
 const MAP_STYLES = [
   { elementType: "geometry", stylers: [{ color: "#1a1a1a" }] },
@@ -124,6 +134,44 @@ const MAP_OPTIONS = {
   styles: MAP_STYLES,
   disableDefaultUI: true,
   gestureHandling: "greedy",
+  keyboardShortcuts: false,
+  clickableIcons: false,
+};
+
+// Zero-size anchor style — placed exactly at lat/lng; visual content floats above via CSS
+const PIN_ANCHOR_STYLE = {
+  position: "relative",
+  width: 0,
+  height: 0,
+  overflow: "visible",
+};
+const PIN_FLOAT_STYLE = {
+  position: "absolute",
+  bottom: 0,
+  left: "50%",
+  transform: "translateX(-50%)",
+  pointerEvents: "none",
+};
+
+const toPlainLatLng = (value) => {
+  if (!value) return null;
+  if (typeof value.lat === "function" && typeof value.lng === "function") {
+    return { lat: value.lat(), lng: value.lng() };
+  }
+  if (typeof value.lat === "number" && typeof value.lng === "number") {
+    return { lat: value.lat, lng: value.lng };
+  }
+  return null;
+};
+
+const usePinKeyframes = () => {
+  useEffect(() => {
+    if (document.getElementById(PIN_STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = PIN_STYLE_ID;
+    style.textContent = PIN_KEYFRAMES;
+    document.head.appendChild(style);
+  }, []);
 };
 
 // ── MapPin ────────────────────────────────────────────────────────────────────
@@ -132,7 +180,7 @@ const MAP_OPTIONS = {
 const MapPin = ({ isUser, index, name, imageUrl }) => {
   const size = isUser
     ? { outer: 90, ring: "w-12 h-12", img: "w-9 h-9" }
-    : { outer: 110, ring: "w-14 h-14", img: "w-10 h-10" };
+    : { outer: 110, ring: "w-14 h-14", img: "w-8 h-8" };
   const ringBorder = isUser
     ? {
         strong: "border-green-500/70",
@@ -151,7 +199,7 @@ const MapPin = ({ isUser, index, name, imageUrl }) => {
   const pulseCls = isUser ? "user-pulse" : "venue-pulse";
   const ring1Cls = isUser ? "user-ring-1" : "venue-ring-1";
   const ring2Cls = isUser ? "user-ring-2" : "venue-ring-2";
-  const rounded = isUser ? "rounded-full" : "rounded-md";
+  const rounded = isUser ? "rounded-full" : "rounded-sm";
   const label = isUser ? (name ?? "You") : name;
   const fallback = isUser
     ? (name?.[0]?.toUpperCase() ?? "?")
@@ -164,7 +212,6 @@ const MapPin = ({ isUser, index, name, imageUrl }) => {
         width: size.outer,
         height: size.outer,
         pointerEvents: "none",
-        transform: "translate(-50%, -100%)",
       }}
     >
       <div
@@ -177,7 +224,7 @@ const MapPin = ({ isUser, index, name, imageUrl }) => {
         className={`${pulseCls} relative z-10 flex flex-col items-center gap-1`}
       >
         <div
-          className={`${size.img} ${rounded} overflow-hidden border-2 ${ringBorder.img} bg-black/60 flex items-center justify-center`}
+          className={`${size.img} ${rounded} overflow-hidden border-2 ${ringBorder.img} bg-black/60 backdrop-blur-xl flex items-center justify-center`}
           style={{ boxShadow: glow }}
         >
           {imageUrl ? (
@@ -194,7 +241,7 @@ const MapPin = ({ isUser, index, name, imageUrl }) => {
             </span>
           )}
         </div>
-        <span className="secondary text-[9px] font-semibold text-white bg-black/80 px-1.5 py-0.5 rounded whitespace-nowrap max-w-[90px] truncate">
+        <span className="secondary text-[10px] font-semibold text-cream capitalize bg-black/80 px-1.5 py-0.5 rounded whitespace-nowrap max-w-22 truncate">
           {label}
         </span>
       </div>
@@ -207,31 +254,7 @@ const TRAVEL_MODES = [
   { value: "DRIVING", label: "Drive" },
 ];
 
-// ── Directions helper ─────────────────────────────────────────────────────────
-function computeRoute({ origin, destination, waypoints, travelMode }) {
-  return new Promise((resolve, reject) => {
-    const ds = new window.google.maps.DirectionsService();
-    ds.route(
-      {
-        origin: new window.google.maps.LatLng(origin.lat, origin.lng),
-        destination: new window.google.maps.LatLng(
-          destination.lat,
-          destination.lng,
-        ),
-        waypoints: (waypoints ?? []).map((w) => ({
-          location: new window.google.maps.LatLng(w.lat, w.lng),
-          stopover: true,
-        })),
-        travelMode: window.google.maps.TravelMode[travelMode],
-        optimizeWaypoints: false,
-      },
-      (result, status) => {
-        if (status === "OK") resolve(result);
-        else reject(new Error(status));
-      },
-    );
-  });
-}
+const GREEN_ROUTE_COLORS = ["#22c55e", "#8b5cf6", "#06b6d4"];
 
 function legsStats(directions) {
   const legs = directions?.routes?.[0]?.legs ?? [];
@@ -244,42 +267,78 @@ function legsStats(directions) {
   return { dist, dur };
 }
 
-// ── DirectionsMap ─────────────────────────────────────────────────────────────
-const DirectionsMap = ({ locations, currentUser }) => {
+// Empty route state used for both initial value and clears
+const EMPTY_ROUTE_STATE = {
+  goldRoute: null,
+  goldStats: null,
+  greenRoutes: [], // [{ subtaskIdx, directions, stats }]
+  routeError: null,
+};
+
+const useDirections = ({ locations }) => {
   const [travelMode, setTravelMode] = useState("WALKING");
-  const [userLocation, setUserLocation] = useState(null); // { lat, lng }
+  const [userLocation, setUserLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState(null);
-
-  // Selected subtask indices (max 2) and whether user pin is included
   const [selectedSubtasks, setSelectedSubtasks] = useState([]);
   const [userSelected, setUserSelected] = useState(false);
+  const [routeState, setRouteState] = useState(EMPTY_ROUTE_STATE);
 
-  // Computed routes
-  const [goldRoute, setGoldRoute] = useState(null);
-  const [greenRoute, setGreenRoute] = useState(null);
-  const [goldStats, setGoldStats] = useState(null);
-  const [greenStats, setGreenStats] = useState(null);
-  const [routeError, setRouteError] = useState(null);
+  const requestIdRef = useRef(0);
+  const debounceRef = useRef(null);
 
-  const center = useMemo(
-    () =>
-      userLocation
-        ? userLocation
-        : locations.length > 0
-          ? { lat: locations[0].lat, lng: locations[0].lng }
-          : { lat: 48.8566, lng: 2.3522 },
-    [locations, userLocation],
+  // Derive whether each route mode is active — used by both effect and display
+  const hasGold = selectedSubtasks.length === 2 && !userSelected;
+  const hasGreen =
+    userSelected && !!userLocation && selectedSubtasks.length >= 1;
+
+  // Derive the visible routes: return empty when no selection is active
+  // (avoids calling setState synchronously inside an effect)
+  const activeRoutes = useMemo(
+    () => (hasGold || hasGreen ? routeState : EMPTY_ROUTE_STATE),
+    [hasGold, hasGreen, routeState],
   );
 
-  // ── Get user location ────────────────────────────────────────────────────
+  const computeRoute = useCallback(
+    (origin, destination, tm) =>
+      new Promise((resolve, reject) => {
+        const ds = new window.google.maps.DirectionsService();
+        ds.route(
+          {
+            origin: new window.google.maps.LatLng(origin.lat, origin.lng),
+            destination: new window.google.maps.LatLng(
+              destination.lat,
+              destination.lng,
+            ),
+            waypoints: [],
+            travelMode: window.google.maps.TravelMode[tm],
+            optimizeWaypoints: false,
+          },
+          (result, status) => {
+            if (status === "OK") resolve(result);
+            else reject(new Error(status));
+          },
+        );
+      }),
+    [],
+  );
+
   const handleGetLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation not supported by your browser.");
-      return;
-    }
     setLocationLoading(true);
     setLocationError(null);
+
+    if (USE_STATIC_USER_LOCATION) {
+      setUserLocation(STATIC_USER_LOCATION);
+      setLocationLoading(false);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation not supported by your browser.");
+      setLocationLoading(false);
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLocation({
@@ -288,17 +347,18 @@ const DirectionsMap = ({ locations, currentUser }) => {
         });
         setLocationLoading(false);
       },
-      () => {
+      (err) => {
         setLocationError(
-          "Could not get your location. Please allow location access.",
+          err.code === err.PERMISSION_DENIED
+            ? "Permission denied. Enable location access."
+            : "Could not get your location. Please allow location access.",
         );
         setLocationLoading(false);
       },
-      { timeout: 10000 },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   }, []);
 
-  // ── Toggle selection ─────────────────────────────────────────────────────
   const toggleSubtask = useCallback((idx) => {
     setSelectedSubtasks((prev) => {
       if (prev.includes(idx)) return prev.filter((i) => i !== idx);
@@ -307,70 +367,175 @@ const DirectionsMap = ({ locations, currentUser }) => {
     });
   }, []);
 
-  const toggleUser = useCallback(() => {
-    setUserSelected((v) => !v);
+  const toggleUser = useCallback(() => setUserSelected((v) => !v), []);
+
+  const clearSelections = useCallback(() => {
+    setSelectedSubtasks([]);
+    setUserSelected(false);
   }, []);
 
-  // ── Compute routes on selection change ───────────────────────────────────
   useEffect(() => {
-    let cancelled = false;
+    // Gold: 2 subtasks selected, user NOT involved
+    const hasGoldNow = selectedSubtasks.length === 2 && !userSelected;
+    // Green: user selected + at least 1 subtask
+    const hasGreenNow =
+      userSelected && !!userLocation && selectedSubtasks.length >= 1;
 
-    const run = async () => {
-      setGoldRoute(null);
-      setGreenRoute(null);
-      setGoldStats(null);
-      setGreenStats(null);
-      setRouteError(null);
-
-      if (selectedSubtasks.length === 2) {
-        const [a, b] = selectedSubtasks;
-        try {
-          const result = await computeRoute({
-            origin: locations[a],
-            destination: locations[b],
-            waypoints: [],
-            travelMode,
-          });
-          if (!cancelled) {
-            setGoldRoute(result);
-            setGoldStats(legsStats(result));
-          }
-        } catch {
-          if (!cancelled)
-            setRouteError("Could not calculate route between waypoints.");
-        }
-      }
-
-      if (userSelected && userLocation && selectedSubtasks.length >= 1) {
-        const subtaskPoints = selectedSubtasks.map((i) => locations[i]);
-        const destination = subtaskPoints[subtaskPoints.length - 1];
-        const waypoints = subtaskPoints.slice(0, -1);
-        try {
-          const result = await computeRoute({
-            origin: userLocation,
-            destination,
-            waypoints,
-            travelMode,
-          });
-          if (!cancelled) {
-            setGreenRoute(result);
-            setGreenStats(legsStats(result));
-          }
-        } catch {
-          if (!cancelled)
-            setRouteError("Could not calculate route from your location.");
-        }
-      }
-    };
-
-    if (selectedSubtasks.length >= 1 || (userSelected && userLocation)) {
-      run();
+    if (!hasGoldNow && !hasGreenNow) {
+      // Nothing selected — don't call setState here (React Compiler requires
+      // no synchronous setState in effect bodies). Derived `activeRoutes` handles the clear.
+      return;
     }
 
+    requestIdRef.current += 1;
+    const currentId = requestIdRef.current;
+
+    if (debounceRef.current) window.clearTimeout(debounceRef.current);
+
+    debounceRef.current = window.setTimeout(() => {
+      const isLatest = () => currentId === requestIdRef.current;
+
+      const run = async () => {
+        let newGoldRoute = null;
+        let newGoldStats = null;
+        const newGreenRoutes = [];
+        let newRouteError = null;
+
+        if (hasGoldNow) {
+          try {
+            const result = await computeRoute(
+              locations[selectedSubtasks[0]],
+              locations[selectedSubtasks[1]],
+              travelMode,
+            );
+            if (!isLatest()) return;
+            newGoldRoute = result;
+            newGoldStats = legsStats(result);
+          } catch {
+            if (isLatest())
+              newRouteError = "Could not calculate route between waypoints.";
+          }
+        }
+
+        if (hasGreenNow) {
+          for (const idx of selectedSubtasks) {
+            try {
+              const result = await computeRoute(
+                userLocation,
+                locations[idx],
+                travelMode,
+              );
+              if (!isLatest()) return;
+              newGreenRoutes.push({
+                subtaskIdx: idx,
+                directions: result,
+                stats: legsStats(result),
+              });
+            } catch {
+              // skip individual failures
+            }
+          }
+          if (newGreenRoutes.length === 0 && isLatest()) {
+            newRouteError = "Could not calculate route from your location.";
+          }
+        }
+
+        if (isLatest()) {
+          setRouteState({
+            goldRoute: newGoldRoute,
+            goldStats: newGoldStats,
+            greenRoutes: newGreenRoutes,
+            routeError: newRouteError,
+          });
+        }
+      };
+
+      run();
+    }, ROUTE_DEBOUNCE_MS);
+
     return () => {
-      cancelled = true;
+      if (debounceRef.current) window.clearTimeout(debounceRef.current);
     };
-  }, [selectedSubtasks, userSelected, userLocation, travelMode, locations]);
+  }, [
+    selectedSubtasks,
+    userSelected,
+    userLocation,
+    travelMode,
+    locations,
+    computeRoute,
+  ]);
+
+  return {
+    travelMode,
+    setTravelMode,
+    userLocation,
+    locationLoading,
+    locationError,
+    handleGetLocation,
+    selectedSubtasks,
+    userSelected,
+    toggleSubtask,
+    toggleUser,
+    clearSelections,
+    ...activeRoutes,
+  };
+};
+
+// ── DirectionsMap ─────────────────────────────────────────────────────────────
+const DirectionsMap = ({ locations, currentUser }) => {
+  usePinKeyframes();
+  const {
+    travelMode,
+    setTravelMode,
+    userLocation,
+    locationLoading,
+    locationError,
+    handleGetLocation,
+    selectedSubtasks,
+    userSelected,
+    toggleSubtask,
+    toggleUser,
+    clearSelections,
+    goldRoute,
+    goldStats,
+    greenRoutes,
+    routeError,
+  } = useDirections({ locations });
+
+  const snappedLocations = useMemo(() => {
+    const map = new Map();
+
+    if (goldRoute && selectedSubtasks.length === 2) {
+      const leg = goldRoute.routes?.[0]?.legs?.[0];
+      const start = toPlainLatLng(leg?.start_location);
+      const end = toPlainLatLng(leg?.end_location);
+      if (start) map.set(selectedSubtasks[0], start);
+      if (end) map.set(selectedSubtasks[1], end);
+    }
+
+    greenRoutes.forEach((gr) => {
+      const leg = gr.directions?.routes?.[0]?.legs?.[0];
+      const end = toPlainLatLng(leg?.end_location);
+      if (end) map.set(gr.subtaskIdx, end);
+    });
+
+    return map;
+  }, [goldRoute, greenRoutes, selectedSubtasks]);
+
+  const snappedUserLocation = useMemo(() => {
+    const leg = greenRoutes[0]?.directions?.routes?.[0]?.legs?.[0];
+    return toPlainLatLng(leg?.start_location) ?? userLocation;
+  }, [greenRoutes, userLocation]);
+
+  const center = useMemo(
+    () =>
+      snappedUserLocation
+        ? snappedUserLocation
+        : locations.length > 0
+          ? { lat: locations[0].lat, lng: locations[0].lng }
+          : { lat: 48.8566, lng: 2.3522 },
+    [locations, snappedUserLocation],
+  );
 
   const goldOptions = useMemo(
     () => ({
@@ -384,259 +549,274 @@ const DirectionsMap = ({ locations, currentUser }) => {
     [],
   );
 
-  const greenOptions = useMemo(
-    () => ({
-      suppressMarkers: true,
-      polylineOptions: {
-        strokeColor: "#22c55e",
-        strokeOpacity: 0.9,
-        strokeWeight: 4,
-      },
-    }),
-    [],
-  );
-
   const anySelected =
     selectedSubtasks.length > 0 || (userSelected && !!userLocation);
 
   return (
-    <>
-      <style>{PIN_KEYFRAMES}</style>
-      <div className="space-y-4">
-        {/* Controls */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <ToggleButton
-            variant="layout"
-            size="sm"
-            options={TRAVEL_MODES}
-            value={travelMode}
-            onChange={setTravelMode}
-          />
-          <ActionButton
-            color="orange"
-            icon={<MdMyLocation size={14} />}
-            text={
-              locationLoading
-                ? "Locating…"
-                : userLocation
-                  ? "My Location ✓"
-                  : "My Location"
-            }
-            onClick={handleGetLocation}
-            disabled={locationLoading}
-          />
-        </div>
+    <div className="space-y-4">
+      {/* Controls */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <ToggleButton
+          variant="layout"
+          size="sm"
+          options={TRAVEL_MODES}
+          value={travelMode}
+          onChange={setTravelMode}
+        />
+        <ActionButton
+          color="orange"
+          icon={<MdMyLocation size={14} />}
+          text={
+            locationLoading
+              ? "Locating…"
+              : userLocation
+                ? "My Location ✓"
+                : "My Location"
+          }
+          onClick={handleGetLocation}
+          disabled={locationLoading}
+        />
+      </div>
 
-        {locationError && (
-          <p className="secondary text-xs text-red-400">{locationError}</p>
-        )}
+      {locationError && (
+        <p className="secondary text-xs text-red-400">{locationError}</p>
+      )}
 
-        {/* Map */}
-        <div className="relative overflow-hidden w-full max-w-125 h-80 mx-auto border-2 border-primary/30 shadow-[0_0_30px_rgba(200,168,75,0.15)]">
-          <GoogleMap
-            mapContainerStyle={{ width: "100%", height: "100%" }}
-            center={center}
-            zoom={locations.length === 1 ? 14 : 12}
-            options={MAP_OPTIONS}
-          >
-            {goldRoute && (
-              <DirectionsRenderer
-                directions={goldRoute}
-                options={goldOptions}
-              />
-            )}
-            {greenRoute && (
-              <DirectionsRenderer
-                directions={greenRoute}
-                options={greenOptions}
-              />
-            )}
+      {/* Map */}
+      <div className="relative overflow-hidden w-full max-w-125 h-80 mx-auto border-2 border-primary/30 shadow-[0_0_30px_rgba(200,168,75,0.15)]">
+        <GoogleMap
+          mapContainerStyle={{ width: "100%", height: "100%" }}
+          center={center}
+          zoom={locations.length === 1 ? 14 : 12}
+          options={MAP_OPTIONS}
+        >
+          {goldRoute && (
+            <DirectionsRenderer directions={goldRoute} options={goldOptions} />
+          )}
 
-            {locations.map((loc, i) => (
-              <OverlayView
-                key={`pin-${i}`}
-                position={{ lat: loc.lat, lng: loc.lng }}
-                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-              >
-                <MapPin
-                  isUser={false}
-                  index={i}
-                  name={loc.label}
-                  imageUrl={null}
-                />
-              </OverlayView>
-            ))}
+          {greenRoutes.map((gr, i) => (
+            <DirectionsRenderer
+              key={`green-route-${gr.subtaskIdx}`}
+              directions={gr.directions}
+              options={{
+                suppressMarkers: true,
+                polylineOptions: {
+                  strokeColor:
+                    GREEN_ROUTE_COLORS[i % GREEN_ROUTE_COLORS.length],
+                  strokeOpacity: 0.9,
+                  strokeWeight: 4,
+                },
+              }}
+            />
+          ))}
 
-            {userLocation && (
-              <OverlayView
-                position={userLocation}
-                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-              >
-                <MapPin
-                  isUser
-                  index={-1}
-                  name={currentUser?.display_name ?? "You"}
-                  imageUrl={currentUser?.image_url ?? null}
-                />
-              </OverlayView>
-            )}
-          </GoogleMap>
-        </div>
-
-        {/* Route stats */}
-        {(goldStats || greenStats) && (
-          <div className="flex items-stretch justify-center gap-6 flex-wrap">
-            {goldStats && (
-              <div className="flex items-center gap-4 px-4 py-2 bg-black/30 border border-yellow-500/20 rounded-lg">
-                <div className="w-3 h-3 rounded-full bg-yellow-400 shrink-0" />
-                <div className="text-center">
-                  <p className="text-yellow-400 font-mono font-bold">
-                    {goldStats.dist}
-                  </p>
-                  <p className="secondary text-[9px] uppercase text-chino/40">
-                    waypoints
-                  </p>
-                </div>
-                <div className="w-px h-8 bg-primary/20" />
-                <div className="text-center">
-                  <p className="text-yellow-400 font-mono font-bold">
-                    {goldStats.dur}
-                  </p>
-                  <p className="secondary text-[9px] uppercase text-chino/40">
-                    est. time
-                  </p>
+          {/* Venue pins — zero-size anchor so pin tip sits exactly on the coordinate */}
+          {locations.map((loc, i) => (
+            <OverlayView
+              key={`pin-${i}`}
+              position={
+                snappedLocations.get(i) ?? { lat: loc.lat, lng: loc.lng }
+              }
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div style={PIN_ANCHOR_STYLE}>
+                <div style={PIN_FLOAT_STYLE}>
+                  <MapPin
+                    isUser={false}
+                    index={i}
+                    name={loc.label}
+                    imageUrl={null}
+                  />
                 </div>
               </div>
-            )}
-            {greenStats && (
-              <div className="flex items-center gap-4 px-4 py-2 bg-black/30 border border-green-500/20 rounded-lg">
-                <div className="w-3 h-3 rounded-full bg-green-400 shrink-0" />
-                <div className="text-center">
-                  <p className="text-green-400 font-mono font-bold">
-                    {greenStats.dist}
-                  </p>
-                  <p className="secondary text-[9px] uppercase text-chino/40">
-                    from you
-                  </p>
-                </div>
-                <div className="w-px h-8 bg-primary/20" />
-                <div className="text-center">
-                  <p className="text-green-400 font-mono font-bold">
-                    {greenStats.dur}
-                  </p>
-                  <p className="secondary text-[9px] uppercase text-chino/40">
-                    est. time
-                  </p>
+            </OverlayView>
+          ))}
+
+          {/* User pin */}
+          {snappedUserLocation && (
+            <OverlayView
+              position={snappedUserLocation}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div style={PIN_ANCHOR_STYLE}>
+                <div style={PIN_FLOAT_STYLE}>
+                  <MapPin
+                    isUser
+                    index={-1}
+                    name={currentUser?.display_name ?? "You"}
+                    imageUrl={currentUser?.image_url ?? null}
+                  />
                 </div>
               </div>
-            )}
-          </div>
-        )}
+            </OverlayView>
+          )}
+        </GoogleMap>
+      </div>
 
-        {routeError && (
-          <p className="secondary text-xs text-red-400 text-center">
-            {routeError}
-          </p>
-        )}
+      {/* Route stats */}
+      {(goldStats || greenRoutes.length > 0) && (
+        <div className="flex flex-col gap-2">
+          {goldStats && (
+            <div className="flex items-center gap-4 px-4 py-2 bg-black/30 border border-yellow-500/20 rounded-lg">
+              <div className="w-3 h-3 rounded-full bg-yellow-400 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="secondary text-[9px] uppercase text-chino/40">
+                  {locations[selectedSubtasks[0]]?.label} →{" "}
+                  {locations[selectedSubtasks[1]]?.label}
+                </p>
+              </div>
+              <div className="text-center">
+                <p className="text-primary font-mono font-bold">
+                  {goldStats.dist}
+                </p>
+              </div>
+              <div className="w-px h-8 bg-primary/20" />
+              <div className="text-center">
+                <p className="text-primary font-mono font-bold">
+                  {goldStats.dur}
+                </p>
+              </div>
+            </div>
+          )}
 
-        {/* Waypoint selection list */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="secondary text-[10px] uppercase tracking-widest text-primary/60">
-              Waypoints
-              <span className="normal-case text-chino/40">
-                {" "}
-                · Select to calculate distance
-              </span>
-            </p>
-            {anySelected && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedSubtasks([]);
-                  setUserSelected(false);
+          {greenRoutes.map((gr, i) => (
+            <div
+              key={`stat-${gr.subtaskIdx}`}
+              className="flex items-center gap-4 px-4 py-2 bg-black/30 border rounded-lg"
+              style={{
+                borderColor: GREEN_ROUTE_COLORS[i % GREEN_ROUTE_COLORS.length],
+              }}
+            >
+              <div
+                className="w-3 h-3 rounded-full shrink-0"
+                style={{
+                  backgroundColor:
+                    GREEN_ROUTE_COLORS[i % GREEN_ROUTE_COLORS.length],
                 }}
-                className="secondary text-[10px] text-chino/40 hover:text-chino/70 transition-colors"
-              >
-                clear
-              </button>
-            )}
-          </div>
+              />
+              <div className="flex-1 min-w-0">
+                <p className="secondary text-[9px] uppercase text-chino/40 truncate">
+                  You → {locations[gr.subtaskIdx]?.label}
+                </p>
+              </div>
+              <div className="text-center">
+                <p
+                  className="font-mono font-bold"
+                  style={{
+                    color: GREEN_ROUTE_COLORS[i % GREEN_ROUTE_COLORS.length],
+                  }}
+                >
+                  {gr.stats.dist}
+                </p>
+              </div>
+              <div className="w-px h-8 bg-primary/20" />
+              <div className="text-center">
+                <p
+                  className="font-mono font-bold"
+                  style={{
+                    color: GREEN_ROUTE_COLORS[i % GREEN_ROUTE_COLORS.length],
+                  }}
+                >
+                  {gr.stats.dur}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-          <ol className="space-y-1.5">
-            {userLocation && (
+      {routeError && (
+        <p className="secondary text-xs text-red-400 text-center">
+          {routeError}
+        </p>
+      )}
+
+      {/* Waypoint selection list */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="secondary text-[10px] uppercase tracking-widest text-primary/60">
+            Waypoints
+            <span className="normal-case text-chino/40">
+              {" "}
+              · Select to calculate distance
+            </span>
+          </p>
+          {anySelected && (
+            <button
+              type="button"
+              onClick={clearSelections}
+              className="secondary text-[10px] text-chino/40 hover:text-chino/70 transition-colors"
+            >
+              clear
+            </button>
+          )}
+        </div>
+
+        <ol className="space-y-1.5">
+          {userLocation && (
+            <li
+              onClick={toggleUser}
+              className={`flex w-fit items-center gap-3 cursor-pointer rounded-lg px-2 py-1.5 transition-colors duration-150 ${
+                userSelected
+                  ? "bg-green-500/15 ring-1 ring-green-500/30"
+                  : "hover:bg-white/5"
+              }`}
+            >
+              <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-green-500 text-black">
+                ◎
+              </span>
+              <span className="secondary text-sm text-cream/80 flex-1">
+                {currentUser?.display_name ?? "My Location"}
+              </span>
+              {userSelected && (
+                <span className="secondary text-[10px] text-green-400">✓</span>
+              )}
+            </li>
+          )}
+
+          {locations.map((loc, i) => {
+            const isSelected = selectedSubtasks.includes(i);
+            return (
               <li
-                onClick={toggleUser}
+                key={i}
+                onClick={() => toggleSubtask(i)}
                 className={`flex w-fit items-center gap-3 cursor-pointer rounded-lg px-2 py-1.5 transition-colors duration-150 ${
-                  userSelected
-                    ? "bg-green-500/15 ring-1 ring-green-500/30"
+                  isSelected
+                    ? "bg-primary/15 ring-1 ring-primary/30"
                     : "hover:bg-white/5"
                 }`}
               >
-                <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-green-500 text-black">
-                  ◎
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-black text-xs font-bold shrink-0 bg-yellow-400">
+                  {i + 1}
                 </span>
-                <span className="secondary text-sm text-cream/80 flex-1">
-                  {currentUser?.display_name ?? "My Location"}
+                <span className="secondary text-sm text-cream/80 capitalize flex-1">
+                  {loc.label}
                 </span>
-                {userSelected && (
-                  <span className="secondary text-[10px] text-green-400">
+                {isSelected && (
+                  <span className="secondary text-[10px] text-primary/70">
                     ✓
                   </span>
                 )}
               </li>
-            )}
+            );
+          })}
+        </ol>
 
-            {locations.map((loc, i) => {
-              const isSelected = selectedSubtasks.includes(i);
-              return (
-                <li
-                  key={i}
-                  onClick={() => toggleSubtask(i)}
-                  className={`flex w-fit items-center gap-3 cursor-pointer rounded-lg px-2 py-1.5 transition-colors duration-150 ${
-                    isSelected
-                      ? "bg-primary/15 ring-1 ring-primary/30"
-                      : "hover:bg-white/5"
-                  }`}
-                >
-                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-black text-xs font-bold shrink-0 bg-yellow-400">
-                    {i + 1}
-                  </span>
-                  <span className="secondary text-sm text-cream/80 capitalize flex-1">
-                    {loc.label}
-                  </span>
-                  {isSelected && (
-                    <span className="secondary text-[10px] text-primary/70">
-                      ✓
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-
-          {!anySelected && (
-            <p className="secondary text-[10px] text-chino/40 text-center pt-1">
-              Select 2 waypoints for a{" "}
-              <span className="text-yellow-400">gold</span> route, or your
-              location + a waypoint for a{" "}
-              <span className="text-green-400">green</span> route.
-            </p>
-          )}
-          {selectedSubtasks.length === 1 && !userSelected && (
-            <p className="secondary text-[10px] text-chino/40 text-center pt-1">
-              Select one more waypoint to see the route.
-            </p>
-          )}
-        </div>
-
-        {locations.length === 1 && (
-          <p className="secondary text-xs text-chino/40 text-center">
-            Add more location subtasks to enable multi-point routing.
+        {!anySelected && (
+          <p className="secondary text-[10px] text-chino/40 text-center pt-1">
+            Enable <span className="text-green-400">My Location</span> + select
+            stops to see individual distances from you, or select 2 stops for a{" "}
+            <span className="text-yellow-400">gold</span> route between them.
           </p>
         )}
       </div>
-    </>
+
+      {locations.length === 1 && (
+        <p className="secondary text-xs text-chino/40 text-center">
+          Add more location subtasks to enable multi-point routing.
+        </p>
+      )}
+    </div>
   );
 };
 
