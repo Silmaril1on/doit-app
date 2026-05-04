@@ -1,5 +1,4 @@
 export const XP_PER_LEVEL = 250;
-
 export const BADGE_MILESTONE_COUNT = 5;
 export const BADGE_MILESTONE_XP = 50;
 

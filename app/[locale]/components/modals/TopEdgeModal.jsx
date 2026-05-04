@@ -91,7 +91,7 @@ const TopEdgeModal = () => {
         stiffness: 120,
         damping: 18,
       }}
-      className="w-full z-50 bg-black backdrop-blur-sm flex flex-col fixed overflow-hidden rounded-b-3xl"
+      className="w-full z-50 bg-[#0e0d0d] backdrop-blur-sm flex flex-col fixed overflow-hidden rounded-b-3xl"
       style={{ height: "85vh" }}
     >
       {activeView === "friends" && (
@@ -134,8 +134,9 @@ const TopEdgeModal = () => {
 
 const TasksList = () => {
   return (
-    <div className="h-full relative text-teal-500 text-2xl flex items-center justify-center bg-[#031c1a] w-full rounded-bl-3xl shadow-[2px_0_10px_2px_rgba(0,0,0,1)]">
-      <div className="absolute z-0 -bottom-14 right-0 bg-[#031c1a] inverted-left" />
+    <div className="h-full relative text-primary text-2xl flex items-center justify-center bg-primary/15 w-full rounded-bl-3xl shadow-[2px_0_10px_10px_rgba(0,0,0,1)]">
+      <div className="absolute bg-linear-to-t from-primary/9 rounded-bl-3xl to-transparent h-15 w-full bottom-0" />
+      <div className="absolute z-0 -bottom-14 right-0 bg-primary/26 inverted-left" />
       hello tasks list
     </div>
   );

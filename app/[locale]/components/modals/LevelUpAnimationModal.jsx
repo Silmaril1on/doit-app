@@ -57,7 +57,7 @@ const LevelUpAnimationModal = ({ prevLevel, newLevel, onDone }) => {
         <style>{KEYFRAMES}</style>
         {/* Backdrop */}
         <motion.div
-          className="fixed inset-0 z-[999] flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -126,7 +126,7 @@ const LevelUpAnimationModal = ({ prevLevel, newLevel, onDone }) => {
             {/* Animated XP bar (cosmetic — starts full, quickly drains to 0) */}
             <motion.div className="w-full h-2 rounded-full bg-primary/10 border border-primary/20 overflow-hidden">
               <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-primary to-primary/60"
+                className="h-full rounded-full bg-linear-to-r from-primary to-primary/60"
                 initial={{ width: "100%" }}
                 animate={{ width: "0%" }}
                 transition={{ delay: 0.5, duration: 0.7, ease: "easeOut" }}

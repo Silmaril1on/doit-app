@@ -69,7 +69,7 @@ const DIFFICULTIES = [
 export default function DifficultySettingsPage() {
   const dispatch = useDispatch();
   const [current, setCurrent] = useState(null);
-  const [selected, setSelected] = useState("easy");
+  const [selected, setSelected] = useState(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -78,11 +78,10 @@ export default function DifficultySettingsPage() {
       .then((d) => {
         const diff = d.difficulty ?? null;
         setCurrent(diff);
-        setSelected(diff ?? "easy");
+        setSelected(null); // keep closed initially
       })
       .catch(() => {});
   }, []);
-
   const handleSave = async () => {
     if (!selected || selected === current) return;
     setSaving(true);
@@ -109,26 +108,38 @@ export default function DifficultySettingsPage() {
   };
 
   return (
-    <div className="min-h-screen px-4 pb-20 pt-17 bg-black space-y-5">
+    <div className="min-h-screen px-4 pb-20 pt-17 flex flex-col justify-between bg-black space-y-5">
       <SectionHeadline
         title="Game Difficulty"
         subtitle="Choose how challenging your journey will be."
       />
 
-      <div className="space-y-3">
-        {DIFFICULTIES.map((diff) => {
+      <div className="space-y-8">
+        {DIFFICULTIES.map((diff, index) => {
           const Icon = diff.icon;
           const isSelected = selected === diff.id;
           const isCurrent = current === diff.id;
 
           return (
-            <div key={diff.id} className="space-y-0">
+            <motion.div
+              key={diff.id}
+              initial={{ opacity: 0, scale: 0.92, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{
+                delay: index * 0.3,
+                duration: 0.45,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              className="space-y-0"
+            >
               {/* Option button */}
               <button
                 type="button"
                 onClick={() => setSelected(isSelected ? null : diff.id)}
-                className={`relative w-full text-left rounded-xl overflow-hidden transition-all duration-300 border border-transparent ${
-                  isSelected ? `${diff.activeBg} ${diff.glow}` : diff.bgColor
+                className={`relative w-full  text-left rounded-xl overflow-hidden transition-all duration-300 border border-transparent ${
+                  isSelected
+                    ? `${diff.activeBg} ${diff.glow}`
+                    : `${diff.bgColor} `
                 }`}
               >
                 <BorderSvg
@@ -136,7 +147,7 @@ export default function DifficultySettingsPage() {
                   radius={12}
                   color={diff.accentKey}
                 />
-                <div className="relative z-10 flex items-center gap-4 px-5 py-4">
+                <div className="relative z-10 flex flex-col items-center gap-4 px-5 py-4">
                   <div className="relative shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-black/40">
                     <BorderSvg
                       strokeWidth={1.2}
@@ -159,20 +170,13 @@ export default function DifficultySettingsPage() {
                       </span>
                       {isCurrent && (
                         <span
-                          className={`secondary text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${diff.badgeBorder} ${diff.textColor}`}
+                          className={`secondary text-[80px] uppercase tracking-widest px-2 py-0.5 rounded-full border ${diff.badgeBorder} ${diff.textColor}`}
                         >
                           active
                         </span>
                       )}
                     </div>
                   </div>
-                  <motion.div
-                    animate={{ rotate: isSelected ? 180 : 0 }}
-                    transition={{ duration: 0.25 }}
-                    className={`shrink-0 text-lg ${isSelected ? diff.textColor : "text-cream/30"}`}
-                  >
-                    ▾
-                  </motion.div>
                 </div>
               </button>
 
@@ -188,7 +192,7 @@ export default function DifficultySettingsPage() {
                     className="overflow-hidden"
                   >
                     <div
-                      className={`mx-0.5 border-x-2 border-b-2 rounded-b-xl px-5 py-4 space-y-3 ${diff.activeBorder} ${diff.activeBg}`}
+                      className={`mx-0.5 mt-5 flex-col rounded-lg px-5 py-4 space-y-3 ${diff.activeBorder} ${diff.activeBg}`}
                     >
                       <p className="secondary text-sm text-cream/70 leading-relaxed">
                         {diff.description}
@@ -208,7 +212,7 @@ export default function DifficultySettingsPage() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
           );
         })}
       </div>

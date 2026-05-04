@@ -1,12 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
-import {
-  CATEGORY_ACHIEVEMENT_TIERS,
-  resolveCurrentLevel,
-} from "@/app/[locale]/lib/local-bd/categoryTypesData";
 import BadgeGrid from "../components/BadgeGrid";
 
-const BadgesSlot = ({ categories, allProgress, unseenCategoryIds = [] }) => {
+// Resolves the highest earned level from a dynamic tiers array.
+const resolveLevel = (tiers, completedCount) => {
+  let level = 0;
+  for (const tier of tiers) {
+    if (completedCount >= tier.required_count) level = tier.level;
+  }
+  return level;
+};
+
+const BadgesSlot = ({
+  categories,
+  allProgress,
+  unseenCategoryIds = [],
+  tiersMap = {},
+}) => {
   const [activeCategory, setActiveCategory] = useState(categories[0]);
   const [unseenSet] = useState(() => new Set(unseenCategoryIds));
 
@@ -28,12 +38,9 @@ const BadgesSlot = ({ categories, allProgress, unseenCategoryIds = [] }) => {
         day: "numeric",
       })
     : null;
-  const currentLevel = activeCategory
-    ? resolveCurrentLevel(activeCategory.id, completedCount)
-    : 0;
-  const tiers = activeCategory
-    ? (CATEGORY_ACHIEVEMENT_TIERS[activeCategory.id] ?? [])
-    : [];
+
+  const tiers = activeCategory ? (tiersMap[activeCategory.id] ?? []) : [];
+  const currentLevel = activeCategory ? resolveLevel(tiers, completedCount) : 0;
 
   return (
     <BadgeGrid

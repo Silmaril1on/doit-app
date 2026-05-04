@@ -45,8 +45,6 @@ const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 const LIBRARIES = ["places"];
 const PIN_STYLE_ID = "objective-directions-pin-keyframes";
 const ROUTE_DEBOUNCE_MS = 300;
-const STATIC_USER_LOCATION = { lat: 52.5147, lng: 13.2394 };
-const USE_STATIC_USER_LOCATION = true;
 
 const MAP_STYLES = [
   { elementType: "geometry", stylers: [{ color: "#1a1a1a" }] },
@@ -326,12 +324,6 @@ const useDirections = ({ locations }) => {
   const handleGetLocation = useCallback(() => {
     setLocationLoading(true);
     setLocationError(null);
-
-    if (USE_STATIC_USER_LOCATION) {
-      setUserLocation(STATIC_USER_LOCATION);
-      setLocationLoading(false);
-      return;
-    }
 
     if (!navigator.geolocation) {
       setLocationError("Geolocation not supported by your browser.");

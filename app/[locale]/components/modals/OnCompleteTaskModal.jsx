@@ -14,12 +14,30 @@ const MODAL_TYPE = "completeTask";
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.12, delayChildren: 0.05 },
+  },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+  hidden: { opacity: 0, y: 24, scale: 0.97 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const numberVariants = {
+  hidden: { opacity: 0, scale: 0.7, y: 10 },
+  show: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+  },
 };
 
 const OnCompleteTaskModal = () => {
@@ -84,7 +102,7 @@ const OnCompleteTaskModal = () => {
                     {entry.label}
                   </span>
                   <div className="text-sm font-semibold text-primary">
-                    + <MotionCount value={entry.count} />
+                    + {entry.count}
                   </div>
                 </motion.div>
               ))}
@@ -96,22 +114,28 @@ const OnCompleteTaskModal = () => {
           variants={itemVariants}
           className="grid gap-3 sm:grid-cols-2"
         >
-          <div className="rounded-md border border-primary/20 bg-black/30 px-3 py-3">
+          <motion.div
+            variants={numberVariants}
+            className="rounded-md border border-primary/20 bg-black/30 px-3 py-3"
+          >
             <p className="secondary text-xs uppercase tracking-[0.14em] text-primary/80">
               XP gained
             </p>
-            <p className="text-2xl font-bold text-cream">
+            <div className="text-2xl font-bold text-cream">
               <MotionCount value={xpGained} prefix="+" />
-            </p>
-          </div>
-          <div className="rounded-md border border-primary/20 bg-black/30 px-3 py-3">
+            </div>
+          </motion.div>
+          <motion.div
+            variants={numberVariants}
+            className="rounded-md border border-primary/20 bg-black/30 px-3 py-3"
+          >
             <p className="secondary text-xs uppercase tracking-[0.14em] text-primary/80">
               Tokens gained
             </p>
-            <p className="text-2xl font-bold text-cream">
+            <div className="text-2xl font-bold text-cream">
               <MotionCount value={tokenReward} prefix="+" />
-            </p>
-          </div>
+            </div>
+          </motion.div>
         </motion.div>
       </motion.div>
     </GlobalModal>

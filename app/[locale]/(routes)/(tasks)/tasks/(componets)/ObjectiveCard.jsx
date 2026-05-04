@@ -21,7 +21,6 @@ import { AiFillFire, AiOutlineFire } from "react-icons/ai";
 import { MdOutlineReviews, MdReviews } from "react-icons/md";
 import { IoBookmarkOutline, IoBookmark } from "react-icons/io5";
 import { FaRoute } from "react-icons/fa";
-import Image from "next/image";
 import AvatarTag from "@/app/[locale]/components/elements/AvatarTag";
 
 const priorityColorMap = {
@@ -342,17 +341,19 @@ const CardCategorySection = ({
   priority,
   hasLocation,
 }) => {
-  const categoriesText =
-    categoryLabels && categoryLabels.length > 0
-      ? categoryLabels.join(", ")
-      : "—";
-
   return (
     <div className=" ">
       <div className="gap-1 flex flex-col items-start mb-4">
         <p className="secondary text-xs uppercase tracking-[0.14em] text-primary">
-          Categories: {categoriesText}
+          Categories in current Task:
         </p>
+        <div className="flex space-x-3">
+          {categoryLabels.map((label) => (
+            <span key={label} className="text-sm text-cream secondary">
+              {label}
+            </span>
+          ))}
+        </div>
       </div>
       <div className="flex justify-between items-center">
         {hasLocation && (

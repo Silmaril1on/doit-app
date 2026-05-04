@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
@@ -10,6 +9,44 @@ import { mutate as globalMutate } from "swr";
 import ObjectivePageWrapper from "../(componets)/ObjectivePageWrapper";
 
 const REVALIDATE_MODALS = ["createObjective", "editObjective"];
+
+async function getUserGeoLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not supported by your browser."));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(
+            `/api/geocode?lat=${latitude}&lng=${longitude}`,
+          );
+          const data = await res.json();
+          if (!res.ok) {
+            reject(new Error(data.error || "Could not resolve your location."));
+            return;
+          }
+          resolve({ country: data.country, city: data.city });
+        } catch {
+          reject(new Error("Failed to fetch geocoding data."));
+        }
+      },
+      (err) => {
+        reject(
+          new Error(
+            err.code === err.PERMISSION_DENIED
+              ? "Location access denied. Please enable it in your browser."
+              : "Could not get your location.",
+          ),
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  });
+}
 
 const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
   const dispatch = useDispatch();
@@ -33,6 +70,39 @@ const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
 
   const handleStartTask = useCallback(
     async (objective) => {
+      // If the objective has a specific location, verify the user is there.
+      if (objective.country && objective.city) {
+        dispatch(
+          setToast({ type: "loading", msg: "Checking your location..." }),
+        );
+        try {
+          const { country, city } = await getUserGeoLocation();
+          const countryMatch =
+            country.toLowerCase() === objective.country.toLowerCase();
+          const cityMatch = city.toLowerCase() === objective.city.toLowerCase();
+          if (!countryMatch || !cityMatch) {
+            dispatch(
+              setToast({
+                type: "error",
+                msg: `You must be in ${objective.city}, ${objective.country} to start this task.`,
+              }),
+            );
+            return;
+          }
+        } catch (locError) {
+          dispatch(
+            setToast({
+              type: "error",
+              msg:
+                locError instanceof Error
+                  ? locError.message
+                  : "Could not verify your location.",
+            }),
+          );
+          return;
+        }
+      }
+
       setObjectives((prev) => prev.filter((o) => o.id !== objective.id));
       try {
         const response = await fetch(

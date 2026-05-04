@@ -297,10 +297,9 @@ const BadgesCrud = () => {
     setNewTier((prev) => ({ ...prev, category_id: value }));
   }, []);
 
-  const handleSelectedCategoryChange = useCallback((event) => {
-    const { value } = event.target;
-    setSelectedCategoryId(value);
-    setNewTier((prev) => ({ ...prev, category_id: value }));
+  const handleSelectedCategoryChange = useCallback((id) => {
+    setSelectedCategoryId(String(id));
+    setNewTier((prev) => ({ ...prev, category_id: String(id) }));
   }, []);
 
   const handleCategoryListInputChange = useCallback((event) => {
@@ -694,19 +693,24 @@ const BadgesCrud = () => {
             </form>
           </ItemCard>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm text-chino/60 secondary">Category:</span>
-            <StyledSelect
-              value={selectedCategoryId}
-              onChange={handleSelectedCategoryChange}
-              disabled={!categories.length}
-            >
+            <div className="flex gap-1.5 flex-wrap">
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => handleSelectedCategoryChange(cat.id)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-colors duration-150 cursor-pointer ${
+                    String(selectedCategoryId) === String(cat.id)
+                      ? "bg-primary/20 border-primary/60 text-primary"
+                      : "border-primary/20 text-chino/60 hover:text-chino hover:border-primary/40"
+                  }`}
+                >
                   {cat.label}
-                </option>
+                </button>
               ))}
-            </StyledSelect>
+            </div>
           </div>
 
           {loading ? (

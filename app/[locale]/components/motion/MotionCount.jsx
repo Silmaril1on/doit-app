@@ -1,36 +1,53 @@
 "use client";
 import { useEffect, useState } from "react";
-import { animate, useMotionValue, useMotionValueEvent } from "framer-motion";
+import { motion, useMotionValue, animate } from "framer-motion";
 
-const MotionCount = ({
-  value = 0,
-  duration = 0.6,
-  prefix = "",
-  suffix = "",
-  className = "",
-}) => {
-  const [display, setDisplay] = useState(0);
-  const count = useMotionValue(0);
+// Accepts `value` (primary) or legacy `count`, plus optional `prefix` and `text`.
+const MotionCount = ({ value, count, prefix = "", text = "", size = "md" }) => {
+  const numericValue = value ?? count ?? 0;
+  const [displayedCount, setDisplayedCount] = useState(0);
+  const motionValue = useMotionValue(0);
 
-  useMotionValueEvent(count, "change", (latest) => {
-    setDisplay(Math.round(latest));
-  });
+  const sizeClasses = {
+    sm: "text-2xl",
+    md: "text-4xl",
+    lg: "text-6xl",
+  };
+
+  const textSize = sizeClasses[size] || sizeClasses.md;
 
   useEffect(() => {
-    const target = Number.isFinite(Number(value)) ? Number(value) : 0;
-    const controls = animate(count, target, {
-      duration,
+    const controls = animate(motionValue, numericValue, {
+      duration: 1.8,
       ease: "easeOut",
+      onUpdate: (latest) => setDisplayedCount(Math.floor(latest)),
     });
+
     return () => controls.stop();
-  }, [value, duration, count]);
+  }, [numericValue, motionValue]);
 
   return (
-    <span className={className}>
-      {prefix}
-      {display}
-      {suffix}
-    </span>
+    <div className="flex flex-col items-start">
+      <motion.div
+        className={`${textSize} font-extrabold text-primary-gradient`}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+      >
+        {prefix}
+        {displayedCount.toLocaleString("en-US", { useGrouping: false })}
+      </motion.div>
+      {text && (
+        <motion.div
+          className="text-xs sm:text-sm text-gray-600"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          {text}
+        </motion.div>
+      )}
+    </div>
   );
 };
 

@@ -466,7 +466,13 @@ const BadgesSection = ({ badgeProgress = [], xp = {} }) => {
 const SEGMENTS_COUNT = 5;
 
 const GameBar = ({ label, count, total, color }) => {
-  const filled = total > 0 ? Math.round((count / total) * SEGMENTS_COUNT) : 0;
+  const filled =
+    total > 0
+      ? Math.max(
+          Math.round((count / total) * SEGMENTS_COUNT),
+          count > 0 ? 1 : 0,
+        )
+      : 0;
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-baseline">

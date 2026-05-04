@@ -98,6 +98,7 @@ const AccountVerificationModal = () => {
   }, [isOpen]);
 
   const progress = calcProgress(form, emailVerified);
+  const isComplete = progress === 100;
 
   const handleSendVerification = async () => {
     dispatch(clearToast());
@@ -212,10 +213,12 @@ const AccountVerificationModal = () => {
 
           {[
             { num: 1, label: "Email Verification", done: emailVerified },
-            { num: 2, label: "Profile Info", done: false },
+            { num: 2, label: "Profile Info", done: isComplete },
           ].map(({ num, label, done }) => {
             const isActive = step === num;
             const isPast = step > num;
+            const showCheck =
+              isPast || (done && !isActive) || (isActive && done);
             return (
               <div
                 key={num}
@@ -223,14 +226,14 @@ const AccountVerificationModal = () => {
               >
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold transition-colors duration-300 ${
-                    isActive
+                    showCheck
                       ? "border-teal-500 bg-teal-500 text-black"
-                      : isPast || done
-                        ? "border-teal-500/60 bg-teal-500/20 text-teal-400"
+                      : isActive
+                        ? "border-teal-500 bg-teal-500 text-black"
                         : "border-white/15 bg-black/40 text-white/30"
                   }`}
                 >
-                  {isPast || (done && !isActive) ? (
+                  {showCheck ? (
                     <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none">
                       <path
                         d="M3 8l3.5 3.5L13 4"
@@ -248,7 +251,7 @@ const AccountVerificationModal = () => {
                   className={`secondary text-[10px] uppercase tracking-[0.14em] transition-colors duration-300 ${
                     isActive
                       ? "text-teal-400"
-                      : isPast || done
+                      : showCheck
                         ? "text-teal-400/60"
                         : "text-white/25"
                   }`}
@@ -332,13 +335,15 @@ const AccountVerificationModal = () => {
                 <div />
               )}
               <div className="flex items-center gap-3">
-                <button
-                  onClick={close}
-                  disabled={submitting}
-                  className="secondary text-[10px] uppercase tracking-[0.14em] text-white/30 hover:text-white/60 disabled:opacity-40 transition-colors duration-200"
-                >
-                  Skip
-                </button>
+                {!isComplete && (
+                  <button
+                    onClick={close}
+                    disabled={submitting}
+                    className="secondary text-[10px] uppercase tracking-[0.14em] text-white/30 hover:text-white/60 disabled:opacity-40 transition-colors duration-200"
+                  >
+                    Skip
+                  </button>
+                )}
                 <Button
                   text="Save Profile"
                   variant="outline"
