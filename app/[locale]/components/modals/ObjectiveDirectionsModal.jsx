@@ -136,20 +136,9 @@ const MAP_OPTIONS = {
   clickableIcons: false,
 };
 
-// Zero-size anchor style — placed exactly at lat/lng; visual content floats above via CSS
-const PIN_ANCHOR_STYLE = {
-  position: "relative",
-  width: 0,
-  height: 0,
-  overflow: "visible",
-};
-const PIN_FLOAT_STYLE = {
-  position: "absolute",
-  bottom: 0,
-  left: "50%",
-  transform: "translateX(-50%)",
-  pointerEvents: "none",
-};
+// Pixel offset functions for OverlayView — centre the rendered pin div on the coordinate
+const getVenuePinOffset = () => ({ x: -55, y: -55 }); // 110×110 pin
+const getUserPinOffset = () => ({ x: -45, y: -45 }); // 90×90 pin
 
 const toPlainLatLng = (value) => {
   if (!value) return null;
@@ -602,7 +591,7 @@ const DirectionsMap = ({ locations, currentUser }) => {
             />
           ))}
 
-          {/* Venue pins — zero-size anchor so pin tip sits exactly on the coordinate */}
+          {/* Venue pins — getPixelPositionOffset centres the 110×110 pin on the coordinate */}
           {locations.map((loc, i) => (
             <OverlayView
               key={`pin-${i}`}
@@ -610,36 +599,30 @@ const DirectionsMap = ({ locations, currentUser }) => {
                 snappedLocations.get(i) ?? { lat: loc.lat, lng: loc.lng }
               }
               mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+              getPixelPositionOffset={getVenuePinOffset}
             >
-              <div style={PIN_ANCHOR_STYLE}>
-                <div style={PIN_FLOAT_STYLE}>
-                  <MapPin
-                    isUser={false}
-                    index={i}
-                    name={loc.label}
-                    imageUrl={null}
-                  />
-                </div>
-              </div>
+              <MapPin
+                isUser={false}
+                index={i}
+                name={loc.label}
+                imageUrl={null}
+              />
             </OverlayView>
           ))}
 
-          {/* User pin */}
+          {/* User pin — getPixelPositionOffset centres the 90×90 pin on the coordinate */}
           {snappedUserLocation && (
             <OverlayView
               position={snappedUserLocation}
               mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+              getPixelPositionOffset={getUserPinOffset}
             >
-              <div style={PIN_ANCHOR_STYLE}>
-                <div style={PIN_FLOAT_STYLE}>
-                  <MapPin
-                    isUser
-                    index={-1}
-                    name={currentUser?.display_name ?? "You"}
-                    imageUrl={currentUser?.image_url ?? null}
-                  />
-                </div>
-              </div>
+              <MapPin
+                isUser
+                index={-1}
+                name={currentUser?.display_name ?? "You"}
+                imageUrl={currentUser?.image_url ?? null}
+              />
             </OverlayView>
           )}
         </GoogleMap>

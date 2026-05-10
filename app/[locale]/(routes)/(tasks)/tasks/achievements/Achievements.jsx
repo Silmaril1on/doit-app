@@ -1,18 +1,16 @@
 "use client";
-
 import React, { useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { setToast } from "@/app/[locale]/lib/features/toastSlice";
+import { useSelector } from "react-redux";
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { useAchievements } from "@/app/[locale]/lib/hooks/useAchievements";
 import { ACTIVE_QUESTS_PAGE1_KEY } from "@/app/[locale]/lib/hooks/useActiveQuests";
 import { mutate as globalMutate } from "swr";
+import { MdOutlineLocalActivity } from "react-icons/md";
 import ObjectivePageWrapper from "../(componets)/ObjectivePageWrapper";
 
 const REVALIDATE_MODALS = ["editObjective", "uploadGallery"];
 
 const Achievements = ({ initialData = null, userId: userIdProp = null }) => {
-  const dispatch = useDispatch();
   const currentUser = useSelector(selectCurrentUser);
   const userId = userIdProp ?? currentUser?.id ?? null;
   const {
@@ -28,44 +26,6 @@ const Achievements = ({ initialData = null, userId: userIdProp = null }) => {
   useEffect(() => {
     setAchievements(swrAchievements);
   }, [swrAchievements]);
-
-  // Reactivate: move a completed achievement back to Active Quests
-  const handleReactivate = useCallback(
-    async (achievement) => {
-      setAchievements((prev) => prev.filter((a) => a.id !== achievement.id));
-      try {
-        const response = await fetch(
-          `/api/user/task/achievements?id=${encodeURIComponent(achievement.id)}`,
-          {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: "in_progress" }),
-          },
-        );
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || "Failed to reactivate task");
-        }
-        dispatch(
-          setToast({ type: "success", msg: "Task moved to Active Quests" }),
-        );
-        mutate();
-        globalMutate([ACTIVE_QUESTS_PAGE1_KEY, userId]);
-      } catch (error) {
-        mutate();
-        dispatch(
-          setToast({
-            type: "error",
-            msg:
-              error instanceof Error
-                ? error.message
-                : "Failed to reactivate task",
-          }),
-        );
-      }
-    },
-    [dispatch, mutate, userId],
-  );
 
   const handleModalClose = useCallback(() => {
     mutate();
@@ -83,6 +43,8 @@ const Achievements = ({ initialData = null, userId: userIdProp = null }) => {
       subtitle="Completed tasks that you have already finished."
       showCreateButton={false}
       emptyMessage="No achievements yet. Complete a task in Active Quests to see it here."
+      emptyTitle="No Achievements for now"
+      emptyIcon={MdOutlineLocalActivity}
       revalidateOnModalClose={REVALIDATE_MODALS}
       onModalClose={handleModalClose}
       completedView={true}

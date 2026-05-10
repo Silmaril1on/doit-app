@@ -1,25 +1,34 @@
-import React from "react";
-import ItemCard from "./components/container/ItemCard";
+"use client";
+
+import React, { useState } from "react";
 import MotionCount from "./components/motion/MotionCount";
-
-export const metadata = {
-  title: "DoIt — Level Up Your Life",
-  description:
-    "DoIt helps you set objectives, track achievements, and level up through real-life tasks. Join your friends on the journey.",
-};
-
-const fonts = [
-  {
-    name: "Luckiest Guy",
-    family: "'Luckiest Guy', cursive",
-    shadow: "5px 6px 7px rgba(0,0,0,0.9)",
-  },
-];
+import HomePage from "./layout/homepage/HomePage";
 
 export default function GamingFontShowcase() {
+  const [key, setKey] = useState(0);
+  const [show, setShow] = useState(false);
+
+  const handleTrigger = () => {
+    setKey((k) => k + 1); // remount MotionCount so animation + sound replay
+    setShow(true);
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center gap-8 p-10">
-      <MotionCount value={43} prefix="+" />
+    <div className="page-wrapper flex flex-col items-center justify-center gap-8 p-10">
+      {/* <button className="text-primary" onClick={handleTrigger}>
+        Trigger
+      </button>
+
+      {show && (
+        <MotionCount
+          key={key}
+          value={43}
+          prefix="+"
+          sound={true}
+          text="xp earned"
+        />
+      )} */}
+      <HomePage />
     </div>
   );
 }

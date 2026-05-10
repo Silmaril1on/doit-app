@@ -9,7 +9,6 @@ import { useSelector } from "react-redux";
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import ActionButton from "../../../components/buttons/ActionButton";
 import Button from "../../../components/buttons/Button";
-import Link from "next/link";
 import Motion from "../../../components/motion/Motion";
 import useSWR from "swr";
 
@@ -164,6 +163,7 @@ const NotificationsBadge = () => {
                 )}
                 {hasUnread && (
                   <Button
+                    size="sm"
                     text="Read All"
                     variant="outline"
                     onClick={handleReadAll}

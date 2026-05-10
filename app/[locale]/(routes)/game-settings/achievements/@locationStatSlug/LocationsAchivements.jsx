@@ -336,7 +336,12 @@ const itemVariants = {
 const LocationsAchivements = ({ stats }) => {
   const s = DUMMY_STATS ?? stats;
 
-  const subtitle = `${s.countries.visited} ${s.countries.visited === 1 ? "country" : "countries"} · ${s.cities.visited} ${s.cities.visited === 1 ? "city" : "cities"} · ${s.continents.visited} continents unlocked`;
+  // Count continents that are truly unlocked according to the progress array
+  const unlockedContinentCount = s.continents.progress.filter(
+    (c) => c.unlocked,
+  ).length;
+
+  const subtitle = `${s.countries.visited} ${s.countries.visited === 1 ? "country" : "countries"} · ${s.cities.visited} ${s.cities.visited === 1 ? "city" : "cities"} · ${unlockedContinentCount} continents unlocked`;
 
   return (
     <div className="space-y-2">
@@ -371,13 +376,13 @@ const LocationsAchivements = ({ stats }) => {
             />
           </motion.div>
 
-          {/* Continents bar */}
+          {/* Continents bar — based on actually unlocked continents */}
           <motion.div variants={itemVariants}>
             <ImageProgressBar
               src="/continents-wallpaper-bar.png"
               alt="Continents"
-              visited={s.continents.visited}
-              total={s.continents.total}
+              visited={unlockedContinentCount}
+              total={7}
               label="Continents unlocked"
               delay={300}
             />

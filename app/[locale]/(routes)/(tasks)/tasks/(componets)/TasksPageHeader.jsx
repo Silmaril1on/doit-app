@@ -7,7 +7,11 @@ import { selectXp } from "@/app/[locale]/lib/features/xpSlice";
 import { XP_PER_LEVEL } from "@/app/[locale]/lib/services/xp/xpConfig";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import AvatarTag from "@/app/[locale]/components/elements/AvatarTag";
-import LevelUpAnimationModal from "@/app/[locale]/components/modals/LevelUpAnimationModal";
+import {
+  openModal,
+  selectModal,
+  setPendingLevelUp,
+} from "@/app/[locale]/lib/features/modalSlice";
 
 const TasksPageHeader = ({ profile, initialXp }) => {
   const dispatch = useDispatch();
@@ -36,11 +40,12 @@ const TasksPageHeader = ({ profile, initialXp }) => {
 };
 
 const LevelBar = ({ levelReady }) => {
+  const dispatch = useDispatch();
   const { level, currentXp } = useSelector(selectXp);
+  const { modalType } = useSelector(selectModal);
   const pct = Math.min((currentXp / XP_PER_LEVEL) * 100, 100);
   const width = useMotionValue("0%");
   const prev = useRef({ pct: null, level: null });
-  const [levelUpData, setLevelUpData] = useState(null); // { prevLevel, newLevel }
 
   useLayoutEffect(() => {
     const p = prev.current;
@@ -58,11 +63,19 @@ const LevelBar = ({ levelReady }) => {
     p.level = level;
 
     if (levelUp) {
-      // Show level-up modal only after initial hydration is complete
       if (levelReady) {
-        setLevelUpData({ prevLevel: prevLevelSnap, newLevel: level });
+        const levelUpPayload = { prevLevel: prevLevelSnap, newLevel: level };
+        // If the complete-task modal is currently open, queue the level-up
+        // so it fires only after the player closes that modal.
+        if (modalType === "completeTask") {
+          dispatch(setPendingLevelUp(levelUpPayload));
+        } else {
+          dispatch(
+            openModal({ modalType: "levelUp", modalProps: levelUpPayload }),
+          );
+        }
       }
-      // Animate bar: fill → reset → fill new level
+      // Animate bar: fill to 100% → reset → fill new pct
       animate(width, "100%", { duration: 0.35, ease: "easeIn" }).then(() => {
         width.set("0%");
         animate(width, `${pct}%`, {
@@ -73,17 +86,10 @@ const LevelBar = ({ levelReady }) => {
     } else if (prevPct !== pct) {
       animate(width, `${pct}%`, { duration: 0.5, ease: [0.22, 1, 0.36, 1] });
     }
-  }, [pct, level, width, levelReady]);
+  }, [pct, level, width, levelReady, dispatch, modalType]);
 
   return (
     <>
-      {levelUpData && (
-        <LevelUpAnimationModal
-          prevLevel={levelUpData.prevLevel}
-          newLevel={levelUpData.newLevel}
-          onDone={() => setLevelUpData(null)}
-        />
-      )}
       <div className="flex px-1 items-center gap-2 flex-1 w-full">
         <span className="text-[10px] font-bold text-primary secondary shrink-0 leading-none">
           Lv.{level}

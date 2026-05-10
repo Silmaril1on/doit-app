@@ -66,22 +66,25 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         currentUser?.display_name ?? currentUser?.first_name ?? "User";
       const categoryCounts = buildCategoryCounts(subtasks);
 
-      setTimeout(() => {
-        dispatch(
-          openModal({
-            modalType: "completeTask",
-            modalProps: {
-              displayName,
-              taskTitle: quest?.task_title,
-              country: quest?.country,
-              city: quest?.city,
-              categoryCounts,
-              xpGained,
-              tokenReward,
-            },
-          }),
-        );
-      }, 700);
+      // Dispatch synchronously — no setTimeout.
+      // openModal must be in Redux state BEFORE setXp is dispatched so that
+      // LevelBar's useLayoutEffect sees modalType === "completeTask" when it
+      // detects a level-up and correctly queues it as pendingLevelUp instead
+      // of immediately opening the levelUp modal.
+      dispatch(
+        openModal({
+          modalType: "completeTask",
+          modalProps: {
+            displayName,
+            taskTitle: quest?.task_title,
+            country: quest?.country,
+            city: quest?.city,
+            categoryCounts,
+            xpGained,
+            tokenReward,
+          },
+        }),
+      );
     },
     [dispatch, currentUser],
   );
@@ -121,17 +124,18 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
           throw new Error(data.error || "Failed to update subtask");
         if (allDone) {
           setQuests((prev) => prev.filter((q) => q.id !== quest.id));
-          if (data.xpUpdate) {
-            dispatch(setXp(data.xpUpdate));
-          } else {
-            await refreshXp();
-          }
+          // Open completeTask modal BEFORE setXp — same batch fix as handleCompleteQuest.
           triggerCompleteModal(
             quest,
             nextSubtasks,
             data.xpUpdate?.xpGained ?? 0,
             data.tokenReward ?? 0,
           );
+          if (data.xpUpdate) {
+            dispatch(setXp(data.xpUpdate));
+          } else {
+            await refreshXp();
+          }
           dispatch(
             setToast({
               type: "success",
@@ -236,17 +240,21 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
           throw new Error(data.error || "Failed to complete quest");
         }
         console.log("[Client] Task completion xpUpdate:", data.xpUpdate);
-        if (data.xpUpdate) {
-          dispatch(setXp(data.xpUpdate));
-        } else {
-          await refreshXp();
-        }
+        // Open the completeTask modal FIRST so it is in Redux state before setXp
+        // fires. Both dispatches land in the same React 18 batch, so LevelBar
+        // sees modalType === "completeTask" when it detects the level change and
+        // correctly queues levelUp as pendingLevelUp instead of opening it immediately.
         triggerCompleteModal(
           quest,
           subtasks,
           data.taskXpGained ?? data.xpUpdate?.xpGained ?? 0,
           data.tokenReward ?? 0,
         );
+        if (data.xpUpdate) {
+          dispatch(setXp(data.xpUpdate));
+        } else {
+          await refreshXp();
+        }
         dispatch(
           setToast({ type: "success", msg: "Task completed! Well done." }),
         );

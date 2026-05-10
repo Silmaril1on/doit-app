@@ -1,11 +1,15 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import GlobalModal from "@/app/[locale]/components/modals/GlobalModal";
 import {
+  openModal,
   closeModal,
   selectModal,
+  selectPendingLevelUp,
+  clearPendingLevelUp,
 } from "@/app/[locale]/lib/features/modalSlice";
 import { CountryFlags } from "@/app/[locale]/components/elements/CountryFlags";
 import MotionCount from "@/app/[locale]/components/motion/MotionCount";
@@ -43,7 +47,14 @@ const numberVariants = {
 const OnCompleteTaskModal = () => {
   const dispatch = useDispatch();
   const { modalType, modalProps } = useSelector(selectModal);
+  const pendingLevelUp = useSelector(selectPendingLevelUp);
   const isOpen = modalType === MODAL_TYPE;
+
+  // Track whether XP count has finished so we can start the token count.
+  // We use a key derived from isOpen so that when the modal closes+reopens,
+  // the MotionCount remounts fresh (no setState-in-effect needed).
+  const [xpDone, setXpDone] = useState(false);
+  const openKey = isOpen ? "open" : "closed";
 
   const displayName = modalProps?.displayName || "Player";
   const taskTitle = modalProps?.taskTitle || "your objective";
@@ -56,7 +67,18 @@ const OnCompleteTaskModal = () => {
   const tokenReward = Number(modalProps?.tokenReward ?? 0);
 
   const handleClose = () => {
-    dispatch(closeModal());
+    if (pendingLevelUp) {
+      // Chain into level-up modal instead of fully closing
+      dispatch(clearPendingLevelUp());
+      dispatch(
+        openModal({
+          modalType: "levelUp",
+          modalProps: pendingLevelUp,
+        }),
+      );
+    } else {
+      dispatch(closeModal());
+    }
   };
 
   return (
@@ -114,6 +136,7 @@ const OnCompleteTaskModal = () => {
           variants={itemVariants}
           className="grid gap-3 sm:grid-cols-2"
         >
+          {/* XP count — always starts immediately */}
           <motion.div
             variants={numberVariants}
             className="rounded-md border border-primary/20 bg-black/30 px-3 py-3"
@@ -122,9 +145,17 @@ const OnCompleteTaskModal = () => {
               XP gained
             </p>
             <div className="text-2xl text-cream">
-              <MotionCount value={xpGained} prefix="+" />
+              <MotionCount
+                key={openKey}
+                value={xpGained}
+                prefix="+"
+                sound={true}
+                onComplete={() => setXpDone(true)}
+              />
             </div>
           </motion.div>
+
+          {/* Token count — mounts only after XP finishes */}
           <motion.div
             variants={numberVariants}
             className="rounded-md border border-primary/20 bg-black/30 px-3 py-3"
@@ -133,7 +164,9 @@ const OnCompleteTaskModal = () => {
               Tokens gained
             </p>
             <div className="text-2xl text-cream">
-              <MotionCount value={tokenReward} prefix="+" />
+              {xpDone && (
+                <MotionCount value={tokenReward} prefix="+" sound={true} />
+              )}
             </div>
           </motion.div>
         </motion.div>

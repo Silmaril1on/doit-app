@@ -30,6 +30,9 @@ const ObjectiveDirectionsModal = dynamic(
 const OnCompleteTaskModal = dynamic(() => import("./OnCompleteTaskModal"), {
   ssr: false,
 });
+const LevelUpAnimationModal = dynamic(() => import("./LevelUpAnimationModal"), {
+  ssr: false,
+});
 
 // Map every modalType key to its component.
 // CreateTaskModal handles create / edit / recreate flows internally.
@@ -45,6 +48,7 @@ const MODAL_COMPONENTS = {
   showMyId: ShowMyIdModal,
   objectiveDirections: ObjectiveDirectionsModal,
   completeTask: OnCompleteTaskModal,
+  levelUp: LevelUpAnimationModal,
 };
 
 const ModalRoot = () => {

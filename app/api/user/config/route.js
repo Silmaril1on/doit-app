@@ -26,7 +26,7 @@ export async function GET() {
 
     const { data, error } = await supabaseAdmin
       .from(TABLE)
-      .select("color_value")
+      .select("color_value, sound_value")
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -47,11 +47,32 @@ export async function POST(request) {
     if (!userId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { color_value } = await request.json();
+    const body = await request.json();
+    const patch = {};
 
-    if (!VALID_COLORS.has(color_value)) {
+    if ("color_value" in body) {
+      if (!VALID_COLORS.has(body.color_value)) {
+        return NextResponse.json(
+          { error: "Invalid color value" },
+          { status: 400 },
+        );
+      }
+      patch.color_value = body.color_value;
+    }
+
+    if ("sound_value" in body) {
+      if (typeof body.sound_value !== "boolean") {
+        return NextResponse.json(
+          { error: "sound_value must be a boolean" },
+          { status: 400 },
+        );
+      }
+      patch.sound_value = body.sound_value;
+    }
+
+    if (Object.keys(patch).length === 0) {
       return NextResponse.json(
-        { error: "Invalid color value" },
+        { error: "No valid fields provided" },
         { status: 400 },
       );
     }
@@ -60,10 +81,10 @@ export async function POST(request) {
     const { data, error } = await supabaseAdmin
       .from(TABLE)
       .upsert(
-        { user_id: userId, color_value, updated_at: now },
+        { user_id: userId, ...patch, updated_at: now },
         { onConflict: "user_id" },
       )
-      .select("color_value")
+      .select("color_value, sound_value")
       .single();
 
     if (error) throw new Error(error.message);

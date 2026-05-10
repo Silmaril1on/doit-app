@@ -75,7 +75,7 @@ const Section = ({ title, children }) => (
   </div>
 );
 
-const HomePage = () => {
+const QrPage = () => {
   const qrRef = useRef(null);
   const qrInstance = useRef(null);
   const logoFileRef = useRef(null);
@@ -380,4 +380,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default QrPage;

@@ -14,6 +14,7 @@ import {
 } from "@/app/[locale]/lib/features/topEdgeSlice";
 import FriendShipContainer from "../container/FriendShipContainer";
 import IconTag from "../elements/IconTag";
+import { useSound } from "@/app/[locale]/lib/hooks/useSounds";
 
 const FOOTER_H = 56;
 
@@ -41,6 +42,7 @@ const TopEdgeModal = () => {
 
   const [activeView, setActiveView] = useState("friends");
   const containerRef = useRef(null);
+  const { playSound } = useSound();
 
   const requestsSWR = useSWR(
     user ? "/api/add-friend" : null,
@@ -116,7 +118,10 @@ const TopEdgeModal = () => {
           style={{
             transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
           }}
-          onClick={() => dispatch(setTopEdgeCollapsed(!collapsed))}
+          onClick={() => {
+            playSound(collapsed ? "count" : "close");
+            dispatch(setTopEdgeCollapsed(!collapsed));
+          }}
           className="cursor-pointer relative z-3 text-2xl"
         >
           <IconTag icon={<RiArrowUpWideFill />} />

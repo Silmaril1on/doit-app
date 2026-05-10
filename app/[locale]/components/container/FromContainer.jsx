@@ -39,14 +39,16 @@ const FromContainer = ({
       />
       {title && (
         <h1
-          className={`primary mt-3 text-5xl uppercase leading-none text-primary`}
+          className={`mt-3 text-3xl text-center uppercase leading-none text-primary`}
         >
           {title}
         </h1>
       )}
 
       {subtitle ? (
-        <p className="secondary mt-4 text-sm text-chino/75">{subtitle}</p>
+        <p className="secondary mt-4 text-center text-sm text-chino/75">
+          {subtitle}
+        </p>
       ) : null}
 
       <form className="space-y-5 relative z-10" onSubmit={onSubmit} noValidate>

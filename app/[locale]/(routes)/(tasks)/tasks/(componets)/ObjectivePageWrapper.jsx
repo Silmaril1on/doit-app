@@ -20,6 +20,7 @@ import {
   searchItems,
   OBJECTIVE_SEARCH_FIELDS,
 } from "@/app/[locale]/lib/utils/filterConfig";
+import EmptyMsg from "@/app/[locale]/components/container/EmptyMsg";
 
 const ObjectivePageWrapper = ({
   items = [],
@@ -32,6 +33,7 @@ const ObjectivePageWrapper = ({
   showCreateButton = false,
   buttonLabel,
   emptyMessage = "Nothing here yet.",
+  emptyTitle = "No Objectives",
   revalidateOnModalClose = [],
   onModalClose,
   completedView = false,
@@ -146,9 +148,7 @@ const ObjectivePageWrapper = ({
       )}
 
       {!isLoading && items.length === 0 && (
-        <ItemCard className="center">
-          <p className="text-sm text-chino/80">{emptyMessage}</p>
-        </ItemCard>
+        <EmptyMsg msg={emptyMessage} title={emptyTitle} />
       )}
 
       {!isLoading && items.length > 0 && filteredItems.length === 0 && (

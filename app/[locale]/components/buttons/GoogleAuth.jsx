@@ -39,7 +39,7 @@ const GoogleAuth = () => {
         type="button"
         onClick={handleGoogleSignIn}
         disabled={isLoading}
-        className="flex w-full items-center justify-center gap-3 rounded-sm border border-teal-500/25 bg-white/5 px-4 py-2 text-sm font-semibold text-cream transition-colors duration-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-3 rounded-sm border border-primary/25 bg-white/5 px-4 py-2 text-sm tracking-[1px] text-cream transition-colors duration-200 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <FcGoogle size={20} />
         {isLoading ? "Redirecting…" : "Sign in with Google"}
