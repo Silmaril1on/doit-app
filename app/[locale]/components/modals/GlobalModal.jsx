@@ -62,9 +62,9 @@ const GlobalModal = ({
               />
 
               {/* Header */}
-              <div className="flex items-start justify-between gap-2 relative z-10">
+              <div className="flex items-start justify-between space-y-4 relative z-10">
                 <h1
-                  className={`primary text-4xl uppercase leading-none text-primary`}
+                  className={`primary text-3xl uppercase leading-none text-primary text-shadow`}
                 >
                   {title}
                 </h1>

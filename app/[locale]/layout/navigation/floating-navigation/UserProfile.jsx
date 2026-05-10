@@ -183,11 +183,11 @@ const ProfileBody = ({
       {isMenuOpen && (
         <Motion
           animation="right"
-          className="absolute bottom-[calc(100%+15px)] -right-3 z-30 min-w-40 backdrop-blur-2xl overflow-hidden rounded-2xl border border-primary/30 bg-primary/10 backdro-blur-lg"
+          className="absolute bottom-[calc(100%+15px)] -right-3 z-30 min-w-40 backdrop-blur-2xl overflow-hidden rounded-xl border border-primary/30 bg-primary/10 backdro-blur-lg"
         >
-          <div className=" p-2">
-            <div className="mb-3 pb-1 border-b border-teal-500/15">
-              <p className="secondary text-md font-semibold text-cream capitalize leading-none">
+          <div className="p-2">
+            <div className="mb-3 pb-1 border-b border-primary/20">
+              <p className=" text-shadow tracking-[1px] text-md text-cream">
                 {user.display_name}
               </p>
               <p className="secondary text-[10px] text-chino/70">
@@ -223,7 +223,7 @@ const ProfileBody = ({
                 item.type === "link" ? (
                   <Link
                     key={item.label}
-                    className="text-primary/80 hover:text-primary leading-none"
+                    className="text-primary/80 hover:text-primary text-shadow leading-none"
                     href={item.href}
                     onClick={item.onClick}
                   >
@@ -234,7 +234,7 @@ const ProfileBody = ({
                     key={item.label}
                     type="button"
                     onClick={item.onClick}
-                    className="text-primary/80 hover:text-primary leading-none text-left cursor-pointer"
+                    className="text-primary/80 hover:text-primary leading-none text-left cursor-pointer text-shadow"
                   >
                     {item.label}
                   </button>
@@ -244,7 +244,7 @@ const ProfileBody = ({
                 text="Logout"
                 variant="outline"
                 onClick={handleLogout}
-                className="w-full"
+                className="w-full mt-2"
               />
             </div>
           </div>

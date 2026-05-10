@@ -116,7 +116,7 @@ const BadgeGrid = ({
                       transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
                     },
                   }}
-                  className={`flex flex-col items-center gap-4 rounded-xl border p-4 text-center relative ${
+                  className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-center relative ${
                     earned
                       ? "border-primary/40 bg-primary/20"
                       : "opacity-50 border-primary/20 bg-black/40"
@@ -153,7 +153,7 @@ const BadgeGrid = ({
                       }`}
                     >
                       <span
-                        className={`text-xs font-bold ${
+                        className={`text-xs  ${
                           earned ? "text-black" : "text-primary/60"
                         }`}
                       >
@@ -163,7 +163,7 @@ const BadgeGrid = ({
                   )}
 
                   <div>
-                    <p className="font-semibold text-cream leading-tight">
+                    <p className="tracking-[1px] text-shadow  text-cream mb-1">
                       {title}
                     </p>
                     <p className="text-[10px] secondary text-chino/60 leading-tight">

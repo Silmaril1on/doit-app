@@ -78,7 +78,7 @@ const OnCompleteTaskModal = () => {
           <p className="secondary text-sm text-chino/70">
             You have completed your objective
           </p>
-          <h2 className="text-2xl font-bold text-cream">{taskTitle}</h2>
+          <h2 className="text-2xl text-shadow text-cream">{taskTitle}</h2>
           {(country || city) && (
             <div className="pt-1">
               <CountryFlags data={{ country, city }} title={true} size="sm" />
@@ -89,7 +89,7 @@ const OnCompleteTaskModal = () => {
         {categoryCounts.length > 0 && (
           <motion.div variants={itemVariants} className="space-y-2">
             <p className="secondary text-xs uppercase tracking-[0.14em] text-primary/80">
-              Category progress
+              Category progress Completion
             </p>
             <div className="space-y-2">
               {categoryCounts.map((entry) => (
@@ -98,7 +98,7 @@ const OnCompleteTaskModal = () => {
                   variants={itemVariants}
                   className="flex items-center justify-between rounded-md border border-primary/15 bg-black/30 px-3 py-2"
                 >
-                  <span className="secondary text-xs text-chino/80">
+                  <span className=" text-xs text-chino/80 tracking-[0.5px]">
                     {entry.label}
                   </span>
                   <div className="text-sm font-semibold text-primary">
@@ -118,10 +118,10 @@ const OnCompleteTaskModal = () => {
             variants={numberVariants}
             className="rounded-md border border-primary/20 bg-black/30 px-3 py-3"
           >
-            <p className="secondary text-xs uppercase tracking-[0.14em] text-primary/80">
+            <p className="secondary text-xs tracking-[0.14em] text-primary/80">
               XP gained
             </p>
-            <div className="text-2xl font-bold text-cream">
+            <div className="text-2xl text-cream">
               <MotionCount value={xpGained} prefix="+" />
             </div>
           </motion.div>
@@ -129,10 +129,10 @@ const OnCompleteTaskModal = () => {
             variants={numberVariants}
             className="rounded-md border border-primary/20 bg-black/30 px-3 py-3"
           >
-            <p className="secondary text-xs uppercase tracking-[0.14em] text-primary/80">
+            <p className="secondary text-xs tracking-[0.14em] text-primary/80">
               Tokens gained
             </p>
-            <div className="text-2xl font-bold text-cream">
+            <div className="text-2xl text-cream">
               <MotionCount value={tokenReward} prefix="+" />
             </div>
           </motion.div>

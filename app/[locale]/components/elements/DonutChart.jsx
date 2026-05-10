@@ -104,7 +104,7 @@ const DonutChart = ({
         <h1 className="text-cream text-2xl font-bold leading-none">
           {displayCenter}
         </h1>
-        <h1 className="text-cream/70 secondary text-xs capitalize">
+        <h1 className="text-cream text-shadow mt-2 text-xs">
           {centerSubLabel}
         </h1>
       </div>
@@ -124,15 +124,15 @@ const DonutChart = ({
               style={{ background: seg.color }}
             />
             {seg.label && (
-              <span className="secondary text-xs text-chino/70 w-20">
+              <span className="tracking-[1px] text-shadow text-xs text-chino w-20">
                 {seg.label}
               </span>
             )}
-            <span className="secondary text-xs font-semibold text-cream">
+            <span className="tracking-[1px] text-shadow text-xs font-semibold text-cream">
               {seg.value}
             </span>
             {seg.percent != null && (
-              <span className="secondary text-xs text-chino/50">
+              <span className="tracking-[1px] text-shadow text-xs text-chino/50">
                 {seg.percent}%
               </span>
             )}

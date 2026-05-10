@@ -243,7 +243,7 @@ export const CountryFlags = ({
 
   return (
     <span
-      className={`flex w-fit justify-start items-center gap-1 *:leading-none capitalize secondary text-cream ${className}`}
+      className={`flex w-fit justify-start items-center gap-1 *:leading-none tracking-[0.5px] text-cream ${className}`}
     >
       {countryCode && (
         <ReactCountryFlag

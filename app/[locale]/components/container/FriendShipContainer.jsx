@@ -8,6 +8,8 @@ import useSWR from "swr";
 import ToggleButton from "../buttons/ToggleButton";
 import UserSearch from "../forms/UserSearch";
 import TimeNow from "../elements/TimeNow";
+import Spinner from "../elements/Spinner";
+import { FaUsers } from "react-icons/fa";
 
 const fetcher = async (url) => {
   const response = await fetch(url);
@@ -139,13 +141,18 @@ const FriendShipContainer = ({ onUserNavigate }) => {
       );
     if (loading)
       return (
-        <p className="text-teal-500/60 text-sm text-center mt-8">Loading…</p>
+        <p className="text-primary/80 text-sm text-center mt-8">
+          <Spinner />
+        </p>
       );
     if (items.length === 0) {
       const empty =
         tab === "friends" ? "No friends yet." : "No pending requests.";
       return (
-        <p className="text-teal-500/60 text-sm text-center mt-8">{empty}</p>
+        <div className="center flex-col h-full pb-20">
+          <FaUsers className="text-8xl text-primary" />
+          <p className="text-primary/80 text-sm text-center mt-8">{empty}</p>
+        </div>
       );
     }
     return items.map(renderItem);
@@ -165,11 +172,11 @@ const FriendShipContainer = ({ onUserNavigate }) => {
         />
         <UserSearch />
       </div>
-
-      <h1 className="text-chino secondary text-sm text-start pl-4">
-        {headerText}
-      </h1>
-
+      {friendsCount && requestsCount && (
+        <h1 className="text-chino secondary text-sm text-start pl-4">
+          {headerText}
+        </h1>
+      )}
       {/* List */}
       <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2">
         {actionError && (

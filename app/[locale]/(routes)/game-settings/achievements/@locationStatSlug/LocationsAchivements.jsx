@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
 import { CONTINENT_BADGES } from "@/app/[locale]/lib/utils/countryUtils";
+import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 
 const DUMMY_STATS = {
   countries: {
@@ -150,17 +151,16 @@ const ImageProgressBar = ({ src, alt, visited, total, label, delay = 0 }) => {
         </span>
       </div>
 
-      <div className="relative h-28 w-full overflow-hidden rounded-lg border border-primary/20">
+      <div className="relative w-full overflow-hidden">
         {/* Grayscale base */}
         <Image
           src={src}
           alt={alt}
-          fill
-          sizes="(max-width: 640px) 100vw, 600px"
-          className="object-cover grayscale brightness-50"
+          width={400}
+          height={176}
+          className="w-full grayscale brightness-50"
           priority={false}
         />
-
         {/* Colour reveal via clip-path */}
         <div
           className="absolute inset-0 overflow-hidden transition-[clip-path] duration-1400 ease-[cubic-bezier(0.22,1,0.36,1)]"
@@ -175,16 +175,11 @@ const ImageProgressBar = ({ src, alt, visited, total, label, delay = 0 }) => {
             priority={false}
           />
         </div>
-
         {/* Glowing frontier edge */}
         <div
           className="absolute top-0 bottom-0 w-0.5 bg-primary/80 shadow-[0_0_8px_2px_rgba(252,185,19,0.6)] transition-[left] duration-1400 ease-[cubic-bezier(0.22,1,0.36,1)]"
           style={{ left: `${animated}%` }}
         />
-
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
-
         {/* Centred % */}
         <div className="absolute inset-0 flex items-center justify-center">
           <span className="text-3xl font-black text-cream/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
@@ -215,10 +210,10 @@ const ContinentPill = ({ item }) => {
       >
         {/* Icon / Badge */}
         <div
-          className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg border ${
+          className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-lg border ${
             item.unlocked
               ? "border-primary/60 bg-primary/15"
-              : "border-white/10 bg-white/5"
+              : "border-cream/10 bg-cream/5"
           }`}
         >
           {badge?.image_url ? (
@@ -238,8 +233,8 @@ const ContinentPill = ({ item }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <span
-              className={`secondary text-xs uppercase tracking-[0.14em] font-semibold ${
-                item.unlocked ? "text-primary" : "text-cream/60"
+              className={` text-xs tracking-[0.14em] ${
+                item.unlocked ? "text-primary" : "text-cream/80"
               }`}
             >
               {item.continent}
@@ -250,50 +245,18 @@ const ContinentPill = ({ item }) => {
           </div>
 
           {/* Mini bar */}
-          <div className="mt-1.5 h-1 w-full rounded-full bg-white/10 overflow-hidden">
+          <div className="mt-1.5 h-1 w-full rounded-full bg-cream/20 overflow-hidden">
             <div
-              className="h-full rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              className={`h-full rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${item.unlocked ? "bg-primary/80" : "bg-cream/50"}`}
               style={{
                 width: `${displayPct}%`,
-                background: item.unlocked
-                  ? "linear-gradient(90deg, #fcb913, #ffdd57)"
-                  : "rgba(255,255,255,0.25)",
               }}
             />
           </div>
         </div>
-
         {/* Unlock badge or chevron */}
-        <div className="flex-shrink-0 ml-1">
-          {item.unlocked ? (
-            <svg
-              className="h-4 w-4 text-primary"
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <path
-                d="M3 8l3.5 3.5L13 4"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          ) : (
-            <svg
-              className={`h-3.5 w-3.5 text-white/30 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-              viewBox="0 0 16 16"
-              fill="none"
-            >
-              <path
-                d="M4 6l4 4 4-4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )}
+        <div className=" ml-1 text-primary ">
+          {open ? <IoIosArrowUp /> : <IoIosArrowDown />}
         </div>
       </button>
 
@@ -312,7 +275,7 @@ const ContinentPill = ({ item }) => {
               {item.unlocked ? (
                 <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/8 p-3">
                   {/* Badge icon large */}
-                  <div className="flex-shrink-0 w-11 h-11 rounded-full border border-primary/40 bg-primary/15 flex items-center justify-center text-2xl">
+                  <div className="flex w-11 h-11 rounded-full border border-primary/40 bg-primary/15  items-center justify-center text-2xl">
                     {badge?.image_url ? (
                       <Image
                         src={badge.image_url}
@@ -343,7 +306,7 @@ const ContinentPill = ({ item }) => {
                   </span>{" "}
                   {item.remaining === 1 ? "country" : "countries"} left to visit
                   in order to unlock the{" "}
-                  <span className="text-cream/70 font-semibold">
+                  <span className="text-cream/80 primary">
                     {badge?.title ?? item.continent}
                   </span>{" "}
                   badge.
@@ -357,7 +320,6 @@ const ContinentPill = ({ item }) => {
   );
 };
 
-// ── Main component ────────────────────────────────────────────────────────────
 const containerVariants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
@@ -372,11 +334,7 @@ const itemVariants = {
 };
 
 const LocationsAchivements = ({ stats }) => {
-  // ── Swap DUMMY_STATS ↔ stats here ─────────────────────────────────────────
-  // To use real server data: comment out the DUMMY_STATS line below.
   const s = DUMMY_STATS ?? stats;
-  // const s = stats ?? EMPTY_STATS;
-  // ─────────────────────────────────────────────────────────────────────────
 
   const subtitle = `${s.countries.visited} ${s.countries.visited === 1 ? "country" : "countries"} · ${s.cities.visited} ${s.cities.visited === 1 ? "city" : "cities"} · ${s.continents.visited} continents unlocked`;
 
@@ -388,12 +346,11 @@ const LocationsAchivements = ({ stats }) => {
           variants={containerVariants}
           initial="hidden"
           animate="show"
-          className="space-y-7"
         >
           {/* Countries bar */}
           <motion.div variants={itemVariants}>
             <ImageProgressBar
-              src="/countries.webp"
+              src="/cities-wallpaper-bar.png"
               alt="Countries map"
               visited={s.countries.visited}
               total={s.countries.total}
@@ -405,7 +362,7 @@ const LocationsAchivements = ({ stats }) => {
           {/* Cities bar */}
           <motion.div variants={itemVariants}>
             <ImageProgressBar
-              src="/cities.webp"
+              src="/cities-wallpaper-bar.png"
               alt="Cities skyline"
               visited={s.cities.visited}
               total={s.cities.total}
@@ -417,7 +374,7 @@ const LocationsAchivements = ({ stats }) => {
           {/* Continents bar */}
           <motion.div variants={itemVariants}>
             <ImageProgressBar
-              src="/continents.jpg"
+              src="/continents-wallpaper-bar.png"
               alt="Continents"
               visited={s.continents.visited}
               total={s.continents.total}

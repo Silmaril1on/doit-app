@@ -218,25 +218,14 @@ export default function DifficultySettingsPage() {
       </div>
 
       {/* Save button */}
-      <ItemCard className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-cream font-semibold">
-            {selected
-              ? `Selected: ${DIFFICULTIES.find((d) => d.id === selected)?.label}`
-              : "No difficulty selected"}
-          </p>
-          <p className="secondary text-xs text-chino/50 mt-0.5">
-            {selected === current
-              ? "This is your current difficulty."
-              : "Save to apply changes."}
-          </p>
-        </div>
+      <div className="center flex-col gap-4">
         <Button
-          text={saving ? "Saving..." : "Save"}
+          variant="outline"
+          text={saving ? "Saving..." : "Save Difficulty"}
           onClick={handleSave}
           disabled={saving || !selected || selected === current}
         />
-      </ItemCard>
+      </div>
     </div>
   );
 }

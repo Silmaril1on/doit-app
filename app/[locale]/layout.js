@@ -1,6 +1,6 @@
 import "./globals.css";
 import { cookies } from "next/headers";
-import { Teko, Jost } from "next/font/google";
+import { Luckiest_Guy, Jost } from "next/font/google";
 import Footer from "./layout/footer/Footer";
 import FloatingNavigation from "./layout/navigation/floating-navigation/FloatingNavigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
@@ -22,10 +22,10 @@ const josh = Jost({
   weight: ["400", "500", "600", "700"],
 });
 
-const teko = Teko({
+const teko = Luckiest_Guy({
   variable: "--font-teko",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400"],
 });
 
 //444441

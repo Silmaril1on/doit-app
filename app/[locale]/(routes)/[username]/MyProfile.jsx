@@ -143,11 +143,11 @@ const HeaderSection = ({ totalXp, currentLevel, friendsCount, tokens }) => {
           key={label}
           className={`rounded-xl center gap-2 border px-2 border-primary/15 bg-primary/30`}
         >
-          <IconTag icon={icon} />
-          <p className="secondary pt-0.5 text-[10px] text-chino uppercase">
+          <IconTag className="text-sm" icon={icon} />
+          <p className="pt-0.5 text-[10px] text-chino tracking-[1px]">
             {label}
           </p>
-          <p className="text-cream text-md font-semibold pt-1 leading-none">
+          <p className="text-cream text-xs font-semibold leading-none">
             {value}
           </p>
         </div>
@@ -217,7 +217,7 @@ const UserAvatarSection = ({
 
   return (
     <div className="relative h-44 flex items-center justify-start">
-      <div className="absolute top-0 right-0 z-5 flex items-center gap-2">
+      <div className="absolute top-4 right-4 z-5 flex items-center gap-2">
         {isOwner && (
           <>
             <ActionButton
@@ -302,7 +302,10 @@ const UserAvatarSection = ({
           ) : null}
         </ItemCard>
       </div>
-      <ItemCard bg="bg-black/30" className="shadow-2xl">
+      <ItemCard
+        bg="bg-black/30"
+        className="shadow-[5px_4px_10px_rgba(0,0,0,0.7)]"
+      >
         <AvatarTag
           size="xl"
           user={user}
@@ -364,7 +367,9 @@ const ProfileSection = ({ user }) => {
 
   return (
     <ItemCard className="relative">
-      <h2 className="text-cream mb-3 font-bold text-2xl">Basic information</h2>
+      <h2 className="text-cream mb-3 text-shadow text-2xl">
+        Basic information
+      </h2>
       <div className="grid grid-cols-2 gap-3">
         {visibleFields.map(({ key, label }) => (
           <div
@@ -383,7 +388,7 @@ const ProfileSection = ({ user }) => {
               />
             ) : (
               <p
-                className={`text-sm font-medium secondary capitalize ${getValueClass(key)}`}
+                className={`text-sm tracking-[0.5px] text-shadow capitalize ${getValueClass(key)}`}
               >
                 {getValue(key)}
               </p>
@@ -476,10 +481,8 @@ const GameBar = ({ label, count, total, color }) => {
   return (
     <div className="space-y-1">
       <div className="flex justify-between items-baseline">
-        <span className="text-[10px] tracking-widest secondary text-chino font-medium">
-          {label}
-        </span>
-        <span className="text-[10px] text-primary font-mono ">{count}</span>
+        <span className="text-[10px] tracking-[1px] text-chino">{label}</span>
+        <span className="text-[10px] text-primary/80  ">{count}</span>
       </div>
       <div className="flex gap-0.5">
         {Array.from({ length: SEGMENTS_COUNT }, (_, i) => (

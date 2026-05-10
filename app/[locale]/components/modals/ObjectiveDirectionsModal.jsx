@@ -674,41 +674,22 @@ const DirectionsMap = ({ locations, currentUser }) => {
           {greenRoutes.map((gr, i) => (
             <div
               key={`stat-${gr.subtaskIdx}`}
-              className="flex items-center gap-4 px-4 py-2 bg-black/30 border rounded-lg"
-              style={{
-                borderColor: GREEN_ROUTE_COLORS[i % GREEN_ROUTE_COLORS.length],
-              }}
+              className="flex items-center gap-4 px-4 py-2 bg-green-900/20 border border-green-500/50 rounded-lg"
             >
-              <div
-                className="w-3 h-3 rounded-full shrink-0"
-                style={{
-                  backgroundColor:
-                    GREEN_ROUTE_COLORS[i % GREEN_ROUTE_COLORS.length],
-                }}
-              />
+              <div className="w-3 h-3 rounded-full shrink-0 bg-green-500" />
               <div className="flex-1 min-w-0">
-                <p className="secondary text-[9px] uppercase text-chino/40 truncate">
+                <p className=" text-[9px] text-chino truncate tracking-[0.5px]">
                   You → {locations[gr.subtaskIdx]?.label}
                 </p>
               </div>
               <div className="text-center">
-                <p
-                  className="font-mono font-bold"
-                  style={{
-                    color: GREEN_ROUTE_COLORS[i % GREEN_ROUTE_COLORS.length],
-                  }}
-                >
+                <p className="font-mono font-bold text-green-500">
                   {gr.stats.dist}
                 </p>
               </div>
               <div className="w-px h-8 bg-primary/20" />
               <div className="text-center">
-                <p
-                  className="font-mono font-bold"
-                  style={{
-                    color: GREEN_ROUTE_COLORS[i % GREEN_ROUTE_COLORS.length],
-                  }}
-                >
+                <p className="font-mono font-bold text-green-500">
                   {gr.stats.dur}
                 </p>
               </div>
@@ -726,9 +707,9 @@ const DirectionsMap = ({ locations, currentUser }) => {
       {/* Waypoint selection list */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <p className="secondary text-[10px] uppercase tracking-widest text-primary/60">
+          <p className=" text-[10px] uppercase tracking-widest text-primary/60">
             Waypoints
-            <span className="normal-case text-chino/40">
+            <span className="normal-case text-chino/60">
               {" "}
               · Select to calculate distance
             </span>
@@ -744,7 +725,7 @@ const DirectionsMap = ({ locations, currentUser }) => {
           )}
         </div>
 
-        <ol className="space-y-1.5">
+        <ol className="space-y-2 pt-2">
           {userLocation && (
             <li
               onClick={toggleUser}
@@ -754,10 +735,8 @@ const DirectionsMap = ({ locations, currentUser }) => {
                   : "hover:bg-white/5"
               }`}
             >
-              <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 bg-green-500 text-black">
-                ◎
-              </span>
-              <span className="secondary text-sm text-cream/80 flex-1">
+              <span className="w-6 h-6 rounded-full shrink-0 bg-green-500"></span>
+              <span className=" text-sm text-cream/80 tracking-[0.5px]">
                 {currentUser?.display_name ?? "My Location"}
               </span>
               {userSelected && (
@@ -781,7 +760,7 @@ const DirectionsMap = ({ locations, currentUser }) => {
                 <span className="w-6 h-6 rounded-full flex items-center justify-center text-black text-xs font-bold shrink-0 bg-yellow-400">
                   {i + 1}
                 </span>
-                <span className="secondary text-sm text-cream/80 capitalize flex-1">
+                <span className="text-sm text-cream/80 tracking-[0.5px] flex-1">
                   {loc.label}
                 </span>
                 {isSelected && (

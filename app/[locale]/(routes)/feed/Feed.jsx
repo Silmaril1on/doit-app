@@ -6,6 +6,8 @@ import ObjectiveCard from "@/app/[locale]/(routes)/(tasks)/tasks/(componets)/Obj
 import FeedCard from "./FeedCard";
 import Button from "@/app/[locale]/components/buttons/Button";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
+import SectionHeadline from "../../components/elements/SectionHeadline";
+import { FaInfoCircle } from "react-icons/fa";
 
 const PAGE_SIZE = 20;
 
@@ -20,6 +22,8 @@ const FeedItem = React.memo(({ item }) => {
       return <ObjectiveCard objective={item} readOnly />;
   }
 });
+
+FeedItem.displayName = "FeedItem";
 
 const Feed = ({ initialItems = [], total = 0 }) => {
   const {
@@ -45,18 +49,19 @@ const Feed = ({ initialItems = [], total = 0 }) => {
   }, [hasMore, _loadMore, fetchNextPage]);
 
   return (
-    <section className="w-full grow px-3 pb-20 pt-15 flex flex-col gap-3 bg-black ">
+    <section className="w-full grow px-3 pb-20 pt-18 flex flex-col gap-3 bg-black">
       <div className="px-1 ">
-        <h1 className="text-lg font-bold text-cream">Friends Feed</h1>
-        <p className="text-xs secondary text-chino/60">
-          See what your friends are up to.
-        </p>
+        <SectionHeadline
+          title="Friends' Activity"
+          subtitle="See what your friends are up to."
+        />
       </div>
 
       {uniqueItems.length === 0 && (
-        <ItemCard className="p-6 text-center">
-          <p className="secondary text-sm text-chino/80">
-            Nothing in your feed yet — add some friends to get started.
+        <ItemCard className="flex-col center space-y-4 py-20">
+          <FaInfoCircle size={80} className="text-primary" />
+          <p className="text-sm text-chino/80">
+            Nothing in your feed yet - add some friends to get started.
           </p>
         </ItemCard>
       )}

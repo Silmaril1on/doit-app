@@ -148,13 +148,11 @@ const NotificationsBadge = () => {
         {isOpen && (
           <Motion
             animation="right"
-            className="absolute bottom-[calc(100%+24px)] -right-18 w-80 z-50 rounded-2xl border border-primary/20 bg-black/80 backdrop-blur-2xl overflow-hidden"
+            className="absolute bottom-[calc(100%+24px)] -right-18 w-80 z-50 rounded-xl border border-primary/20 bg-black/80 backdrop-blur-2xl overflow-hidden"
           >
             {/* header */}
             <div className="flex items-center justify-between px-3 py-2 border-b border-primary/15">
-              <p className="text-sm font-semibold text-cream tracking-wide">
-                Notifications
-              </p>
+              <p className="text-sm text-cream tracking-[1px]">Notifications</p>
               <div className="flex items-center gap-2">
                 {hasMore && (
                   <Button
@@ -196,7 +194,7 @@ const NotificationsBadge = () => {
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-cream">
+                    <p className="text-xs tracking-[1px] text-cream">
                       {n.status}
                     </p>
                     <p className="secondary text-xs text-chino/75">

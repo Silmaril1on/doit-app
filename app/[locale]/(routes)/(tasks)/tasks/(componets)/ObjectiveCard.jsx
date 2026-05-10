@@ -280,7 +280,7 @@ const CardHeader = ({
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="leading-none mb-5 w-full">
-        <h2 className="text-2xl capitalize font-bold text-cream">
+        <h2 className="text-xl tracking-[1.5px] text-cream text-shadow mb-2">
           {objective.task_title}
         </h2>
         <p className="secondary text-sm leading-4.5 text-chino">
@@ -342,14 +342,14 @@ const CardCategorySection = ({
   hasLocation,
 }) => {
   return (
-    <div className=" ">
+    <div>
       <div className="gap-1 flex flex-col items-start mb-4">
-        <p className="secondary text-xs uppercase tracking-[0.14em] text-primary">
-          Categories in current Task:
+        <p className="secondary uppercase text-xs tracking-[0.14em] text-primary">
+          Categories in current Task
         </p>
         <div className="flex space-x-3">
           {categoryLabels.map((label) => (
-            <span key={label} className="text-sm text-cream secondary">
+            <span key={label} className="text-xs tracking-widest text-cream/90">
               {label}
             </span>
           ))}
@@ -395,7 +395,7 @@ const SubTasksSection = ({
     <>
       {subtasks.length > 0 && (
         <div className="rounded-lg border border-primary/20 bg-black/35 p-3">
-          <p className="secondary text-xs uppercase tracking-[0.14em] text-white/80">
+          <p className="text-xs uppercase tracking-[0.15em] text-cream">
             Subtasks
           </p>
           <div className="mt-2 space-y-3 text-xs secondary">

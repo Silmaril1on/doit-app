@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap");
 @import "tailwindcss";
 @source "../../";
 
@@ -66,6 +67,10 @@
 
 .primary {
   font-family: var(--font-teko);
+}
+
+.text-shadow {
+  text-shadow: 5px 6px 7px rgba(0, 0, 0, 0.9);
 }
 
 .secondary {

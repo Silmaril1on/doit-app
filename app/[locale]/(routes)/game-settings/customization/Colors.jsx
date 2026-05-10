@@ -6,11 +6,8 @@ import {
   setColorValue,
 } from "@/app/[locale]/lib/features/configSlice";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
-import Button from "@/app/[locale]/components/buttons/Button";
-import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
-import ToggleButton from "@/app/[locale]/components/buttons/ToggleButton";
-import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
+import ObjectiveCard from "@/app/[locale]/(routes)/(tasks)/tasks/(componets)/ObjectiveCard";
 
 const COLOR_OPTIONS = [
   { value: "teal", label: "Teal", hex: "#2dd4bf" },
@@ -22,51 +19,48 @@ const COLOR_OPTIONS = [
   { value: "coffee", label: "Coffee", hex: "#d6a461" },
 ];
 
-/* ── Showcase ─────────────────────────────────────────────── */
-const ColorShowcase = () => {
-  const [switchOn, setSwitchOn] = useState(false);
-  const [layoutTab, setLayoutTab] = useState("A");
-
-  return (
-    <div className="space-y-4 rounded-lg bg-black/20 border border-white/5 p-4">
-      <p className="text-[10px] uppercase tracking-widest secondary text-chino/50">
-        Component Preview
-      </p>
-
-      {/* Buttons */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Button variant="fill" text="Fill" size="sm" />
-        <Button variant="outline" text="Outline" size="sm" />
-      </div>
-
-      {/* ActionButtons */}
-      <div className="flex flex-wrap items-center gap-2">
-        <ActionButton variant="edit" />
-        <ActionButton variant="delete" />
-        <ActionButton variant="close" />
-        <ActionButton variant="add" />
-        <ActionButton variant="home" text="Home" />
-      </div>
-
-      {/* ToggleButtons */}
-      <div className="flex flex-wrap items-center gap-4">
-        <ToggleButton checked={switchOn} onChange={setSwitchOn} size="sm" />
-        <ToggleButton checked={true} onChange={() => {}} size="sm" />
-        <ToggleButton
-          variant="layout"
-          options={["A", "B", "C"]}
-          value={layoutTab}
-          onChange={setLayoutTab}
-          size="sm"
-        />
-      </div>
-
-      {/* ItemCard */}
-      <ItemCard className="text-sm text-cream/70 secondary">
-        ItemCard — border &amp; glow follow your theme.
-      </ItemCard>
-    </div>
-  );
+/* Static dummy objective used purely for design preview */
+const DEMO_OBJECTIVE = {
+  id: "demo-preview",
+  task_title: "Summit a Mountain Peak",
+  status: "in_progress",
+  priority: "high",
+  country: "Georgia",
+  city: "Kazbegi",
+  due_date: "2026-08-01",
+  xp_reward: 200,
+  user_id: "demo-user",
+  like_count: 14,
+  is_liked: false,
+  review_count: 4,
+  recreate_count: 7,
+  task_gallery: [],
+  subtasks: [
+    {
+      id: "s1",
+      title: "Research the trail route",
+      completed: true,
+      category_id: 1,
+      lat: null,
+      lng: null,
+    },
+    {
+      id: "s2",
+      title: "Pack all necessary gear",
+      completed: false,
+      category_id: 1,
+      lat: null,
+      lng: null,
+    },
+    {
+      id: "s3",
+      title: "Book a local guide",
+      completed: false,
+      category_id: 2,
+      lat: null,
+      lng: null,
+    },
+  ],
 };
 
 /* ── Main Colors component ────────────────────────────────── */
@@ -139,6 +133,19 @@ const Colors = () => {
         subtitle="Choose your personal accent color."
       />
 
+      {/* ── Design Showcase ── */}
+      <div className="space-y-1.5">
+        <p className="text-[10px] uppercase tracking-widest secondary text-chino/50">
+          Component Preview
+        </p>
+        <ObjectiveCard
+          objective={DEMO_OBJECTIVE}
+          readOnly
+          completedView={false}
+          showDirections={false}
+        />
+      </div>
+
       {/* ── Slider ── */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
@@ -203,16 +210,17 @@ const Colors = () => {
         </p>
       </div>
 
-      {/* ── Showcase ── */}
-      <ColorShowcase />
-
-      {/* ── Save ── */}
-      <Button
-        text="Save Design"
-        variant="fill"
-        loading={saving}
-        onClick={handleSave}
-      />
+      {/* ── Save button ── */}
+      <div className="flex justify-center pt-2">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="relative px-12 py-3 primary font-bold text-sm uppercase tracking-[0.18em] text-black bg-primary rounded-lg shadow-[0_0_22px_4px_var(--color-primary)] hover:shadow-[0_0_36px_10px_var(--color-primary)] hover:scale-[1.04] active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
+        >
+          {saving ? "Saving…" : "Save Design"}
+        </button>
+      </div>
     </div>
   );
 };

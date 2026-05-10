@@ -39,9 +39,6 @@ const AvatarTag = ({
 
   const wrapperClassName = `flex items-start gap-1.5 ${className}`;
   const Wrapper = href ? Link : "div";
-  // When there's an inner Button (text present), only the Button handles the click.
-  // Passing onClick to both the wrapper div and the Button would cause the handler
-  // to fire twice due to event bubbling.
   const wrapperProps = href
     ? {
         href,
@@ -73,11 +70,11 @@ const AvatarTag = ({
         )}
       </div>
       <article className="py-1 ">
-        <h1 className="secondary text-[10px] text-chino">
+        <h1 className="tracking-[1px] text-[10px] text-chino">
           {user?.display_name}
         </h1>
         <h1
-          className={`text-primary capitalize text-lg leading-none font-bold`}
+          className={`text-primary text-shadow mb-2 text-lg leading-none tracking-[1px]`}
         >
           {userName}
         </h1>

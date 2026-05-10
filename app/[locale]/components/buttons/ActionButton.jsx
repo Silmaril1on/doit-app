@@ -30,9 +30,9 @@ const VARIANTS = {
 // Explicit colors (non-theme) stay fixed
 const COLOR_CLASSES = {
   red: "text-red-400 bg-red-500/20 hover:bg-red-500/40",
-  orange: "text-orange-400 bg-orange-500/20 hover:bg-orange-500/30",
-  yellow: "text-yellow-400 bg-yellow-500/20 hover:bg-yellow-500/30",
-  cyan: "text-cyan-400 bg-cyan-500/20 hover:bg-cyan-500/30",
+  orange: "text-orange-400/80 bg-orange-500/20 hover:bg-orange-500/30",
+  yellow: "text-yellow-400/80 bg-yellow-500/20 hover:bg-yellow-500/30",
+  cyan: "text-cyan-400/80 bg-cyan-500/20 hover:bg-cyan-500/30",
   sky: "text-sky-400 bg-sky-500/20 hover:bg-sky-500/30",
 };
 
@@ -85,7 +85,7 @@ const ActionButton = ({
     </>
   );
 
-  const baseClass = `rounded-full relative cursor-pointer duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 secondary ${
+  const baseClass = `rounded-full relative cursor-pointer backdrop-blur-sm duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 tracking-[1px] ${
     hasPill ? "px-2.5 py-1.5 text-xs" : "p-2"
   } ${colorClass}`;
 

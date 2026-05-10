@@ -18,7 +18,7 @@ const Tablet = ({ text, className = "", onClick, color = "sky" }) => {
     <Component
       type={onClick ? "button" : undefined}
       onClick={onClick}
-      className={`secondary inline-flex items-center rounded-full border px-4 py-1 text-[11px] uppercase tracking-[0.14em] transition duration-300 ${colorClass} ${onClick ? "cursor-pointer hover:brightness-110" : ""} ${className}`}
+      className={`inline-flex items-center rounded-full border px-4 py-1 text-[11px] cursor-default tracking-[1.5px] transition duration-300 ${colorClass} ${onClick ? " hover:brightness-110" : ""} ${className}`}
     >
       {text}
     </Component>

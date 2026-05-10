@@ -20,7 +20,6 @@ import {
   searchItems,
   OBJECTIVE_SEARCH_FIELDS,
 } from "@/app/[locale]/lib/utils/filterConfig";
-import { FaHome } from "react-icons/fa";
 
 const ObjectivePageWrapper = ({
   items = [],
@@ -147,8 +146,8 @@ const ObjectivePageWrapper = ({
       )}
 
       {!isLoading && items.length === 0 && (
-        <ItemCard className="rounded-xl  border border-dashed border-teal-500/25 bg-black/35 p-6 text-center">
-          <p className="secondary text-sm text-chino/80">{emptyMessage}</p>
+        <ItemCard className="center">
+          <p className="text-sm text-chino/80">{emptyMessage}</p>
         </ItemCard>
       )}
 
