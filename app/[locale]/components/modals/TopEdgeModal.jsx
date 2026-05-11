@@ -119,7 +119,7 @@ const TopEdgeModal = () => {
             transform: collapsed ? "rotate(180deg)" : "rotate(0deg)",
           }}
           onClick={() => {
-            playSound(collapsed ? "count" : "close");
+            playSound(collapsed ? "open" : "close");
             dispatch(setTopEdgeCollapsed(!collapsed));
           }}
           className="cursor-pointer relative z-3 text-2xl"
@@ -139,9 +139,9 @@ const TopEdgeModal = () => {
 
 const TasksList = () => {
   return (
-    <div className="h-full relative text-primary text-2xl flex items-center justify-center bg-primary/15 w-full rounded-bl-3xl shadow-[2px_0_10px_10px_rgba(0,0,0,1)]">
-      <div className="absolute bg-linear-to-t from-primary/9 rounded-bl-3xl to-transparent h-15 w-full bottom-0" />
-      <div className="absolute z-0 -bottom-14 right-0 bg-primary/26 inverted-left" />
+    <div className="h-full relative text-primary text-2xl flex items-center justify-center bg-primary/20 w-full rounded-bl-3xl shadow-[2px_0_10px_10px_rgba(0,0,0,1)]">
+      <div className="absolute bg-linear-to-t from-primary/10 rounded-bl-3xl to-transparent h-15 w-full bottom-0" />
+      <div className="absolute z-0 -bottom-[55.8px] right-0 bg-primary/30 inverted-left" />
       hello tasks list
     </div>
   );

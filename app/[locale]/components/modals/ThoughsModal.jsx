@@ -170,15 +170,21 @@ const ThoughsModal = () => {
   // Fetch reviews when modal opens
   useEffect(() => {
     if (!isOpen || !taskId) return;
+    const controller = new AbortController();
     setReviews([]);
     setText("");
     setError(null);
     setLoading(true);
-    fetch(`/api/user/task/feed-reviews?taskId=${encodeURIComponent(taskId)}`)
+    fetch(`/api/user/task/feed-reviews?taskId=${encodeURIComponent(taskId)}`, {
+      signal: controller.signal,
+    })
       .then((r) => r.json())
       .then((d) => setReviews(d.reviews ?? []))
-      .catch(() => setError("Failed to load thoughts."))
+      .catch((e) => {
+        if (e.name !== "AbortError") setError("Failed to load thoughts.");
+      })
       .finally(() => setLoading(false));
+    return () => controller.abort();
   }, [isOpen, taskId]);
 
   const handleSend = async () => {

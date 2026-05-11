@@ -1,5 +1,5 @@
 "use client";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import useSWR from "swr";
 import { usePagination } from "./usePagination";
 
@@ -61,8 +61,15 @@ export function useObjectives(initialData = null, userIdOverride = null) {
     if (hasMore) _loadMore(fetchNextPage);
   }, [hasMore, _loadMore, fetchNextPage]);
 
+  // useMemo stabilises the array reference so components that depend on this
+  // value via useEffect won't re-fire on every render when the data hasn't changed.
+  const objectives = useMemo(
+    () => [...firstPage, ...extraItems],
+    [firstPage, extraItems],
+  );
+
   return {
-    objectives: [...firstPage, ...extraItems],
+    objectives,
     total,
     hasMore,
     isLoading,

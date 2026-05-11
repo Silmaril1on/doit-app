@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setXp } from "@/app/[locale]/lib/features/xpSlice";
@@ -34,19 +34,8 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
   const dispatch = useDispatch();
   const currentUser = useSelector(selectCurrentUser);
   const userId = userIdProp ?? currentUser?.id ?? null;
-  const {
-    quests: swrQuests,
-    hasMore,
-    isLoading,
-    isLoadingMore,
-    loadMore,
-    mutate,
-  } = useActiveQuests(initialData, userIdProp);
-
-  const [quests, setQuests] = useState(() => initialData?.quests ?? []);
-  useEffect(() => {
-    setQuests(swrQuests);
-  }, [swrQuests]);
+  const { quests, hasMore, isLoading, isLoadingMore, loadMore, mutate } =
+    useActiveQuests(initialData, userIdProp);
 
   const refreshXp = useCallback(async () => {
     try {
@@ -61,16 +50,11 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
   }, [dispatch]);
 
   const triggerCompleteModal = useCallback(
-    (quest, subtasks, xpGained = 0, tokenReward = 0) => {
+    (quest, subtasks, xpGained = 0, tokenReward = 0, acquiredBadge = null) => {
       const displayName =
         currentUser?.display_name ?? currentUser?.first_name ?? "User";
       const categoryCounts = buildCategoryCounts(subtasks);
 
-      // Dispatch synchronously — no setTimeout.
-      // openModal must be in Redux state BEFORE setXp is dispatched so that
-      // LevelBar's useLayoutEffect sees modalType === "completeTask" when it
-      // detects a level-up and correctly queues it as pendingLevelUp instead
-      // of immediately opening the levelUp modal.
       dispatch(
         openModal({
           modalType: "completeTask",
@@ -82,6 +66,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
             categoryCounts,
             xpGained,
             tokenReward,
+            acquiredBadge,
           },
         }),
       );
@@ -130,6 +115,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
             nextSubtasks,
             data.xpUpdate?.xpGained ?? 0,
             data.tokenReward ?? 0,
+            data.acquiredBadge ?? null,
           );
           if (data.xpUpdate) {
             dispatch(setXp(data.xpUpdate));
@@ -249,6 +235,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
           subtasks,
           data.taskXpGained ?? data.xpUpdate?.xpGained ?? 0,
           data.tokenReward ?? 0,
+          data.acquiredBadge ?? null,
         );
         if (data.xpUpdate) {
           dispatch(setXp(data.xpUpdate));

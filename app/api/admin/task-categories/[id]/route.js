@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/app/[locale]/lib/supabase/supabaseServer";
+import { requireAdmin } from "@/app/api/_lib/authGuard";
 
 const TABLE = "task_categories";
 
 export async function PATCH(request, { params }) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
   try {
     const resolvedParams = await params;
     const id = Number(resolvedParams?.id);
@@ -46,6 +49,8 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
   try {
     const resolvedParams = await params;
     const id = Number(resolvedParams?.id);

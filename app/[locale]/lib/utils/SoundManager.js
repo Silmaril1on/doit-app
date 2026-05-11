@@ -1,23 +1,12 @@
-/**
- * SoundManager — production-grade Howler.js singleton
- *
- * Design goals:
- *  • Zero initialisation on the server (SSR-safe)
- *  • AudioContext unlock on any user gesture so sounds fire immediately,
- *    even on the very first interaction (no "click to hear audio" delay)
- *  • Per-sound anti-spam cooldown to prevent rapid-fire duplicates
- *  • HMR-safe: stored on `window` so hot reloads reuse the same instance
- *  • Persists user mute preference to localStorage
- *  • Unknown sound names warn in dev, silently skip in prod
- */
-
 import { Howl, Howler } from "howler";
 
 // ── Sound registry ────────────────────────────────────────────────────────────
 // Add every new sound here. src is resolved relative to /public.
 const SOUND_DEFS = {
-  count: { src: ["/sounds/count.mp3"], volume: 0.8 },
-  close: { src: ["/sounds/close.mp3"], volume: 0.8 },
+  count: { src: ["/sounds/count.ogg"], volume: 0.8 },
+  close: { src: ["/sounds/close.ogg"], volume: 0.8 },
+  open: { src: ["/sounds/open.ogg"], volume: 0.8 },
+  color: { src: ["/sounds/color.ogg"], volume: 0.8 },
   // future sounds → just add an entry here
 };
 

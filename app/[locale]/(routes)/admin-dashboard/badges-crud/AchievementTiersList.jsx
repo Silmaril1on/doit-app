@@ -3,9 +3,9 @@ import React, { useState, useCallback, useMemo, useRef } from "react";
 import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import Button from "@/app/[locale]/components/buttons/Button";
+import ToggleButton from "@/app/[locale]/components/buttons/ToggleButton";
 import Input from "@/app/[locale]/components/forms/Input";
 import UploadImageInput from "@/app/[locale]/components/forms/UploadImageInput";
-import { FaChevronDown } from "react-icons/fa";
 import BadgeCard from "./BadgeCard";
 import EditItemModal from "./EditItemModal";
 
@@ -35,23 +35,6 @@ const EMPTY_TIER = {
   _iconFile: null,
 };
 
-const StyledSelect = ({ id, value, onChange, disabled, children }) => (
-  <div className="relative">
-    <select
-      id={id}
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-      className="appearance-none pr-9 w-full"
-    >
-      {children}
-    </select>
-    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-cream/80">
-      <FaChevronDown size={10} />
-    </span>
-  </div>
-);
-
 const AchievementTiersList = ({
   categories,
   tiers,
@@ -67,6 +50,11 @@ const AchievementTiersList = ({
   const editTargetRef = useRef(null);
 
   /* Derive the effective selected ID without setState in an effect */
+  const categoryToggleOptions = useMemo(
+    () => categories.map((c) => ({ label: c.label, value: String(c.id) })),
+    [categories],
+  );
+
   const effectiveSelectedId = useMemo(() => {
     if (selectedCategoryId) return selectedCategoryId;
     const exploration = categories.find(
@@ -86,10 +74,6 @@ const AchievementTiersList = ({
   const handleNewInputChange = useCallback((e) => {
     const { name, value } = e.target;
     setNewTier((prev) => ({ ...prev, [name]: value }));
-  }, []);
-
-  const handleNewCategoryChange = useCallback((e) => {
-    setNewTier((prev) => ({ ...prev, category_id: e.target.value }));
   }, []);
 
   const handleNewIconChange = useCallback((file) => {
@@ -148,23 +132,17 @@ const AchievementTiersList = ({
           title="Add Achievement Tier"
           subtitle="Create new achievement tiers linked to a task category."
         />
-        <ItemCard className="space-y-4">
+        <ToggleButton
+          size="sm"
+          variant="layout"
+          options={categoryToggleOptions}
+          value={String(newTier.category_id || effectiveSelectedId)}
+          onChange={(val) =>
+            setNewTier((prev) => ({ ...prev, category_id: val }))
+          }
+        />
+        <ItemCard className="space-y-4 w-full lg:w-2/6">
           <form onSubmit={handleAddSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="new-tier-category">Category</label>
-              <StyledSelect
-                id="new-tier-category"
-                value={newTier.category_id}
-                onChange={handleNewCategoryChange}
-                disabled={isAddingSaving}
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.label}
-                  </option>
-                ))}
-              </StyledSelect>
-            </div>
             <div className="grid gap-3 grid-cols-3">
               {TIER_FIELDS.map((field) => (
                 <Input
@@ -203,25 +181,15 @@ const AchievementTiersList = ({
           subtitle="Browse tiers by category and edit them."
         />
 
-        {/* Category filter tabs */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-chino/60 secondary">Category:</span>
-          <div className="flex gap-1.5 flex-wrap">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategoryId(String(cat.id))}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-md border transition-colors duration-150 cursor-pointer ${
-                  effectiveSelectedId === String(cat.id)
-                    ? "bg-primary/20 border-primary/60 text-primary"
-                    : "border-primary/20 text-chino/60 hover:text-chino hover:border-primary/40"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
+        {/* Category filter — ToggleButton layout variant */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <ToggleButton
+            size="sm"
+            variant="layout"
+            options={categoryToggleOptions}
+            value={effectiveSelectedId}
+            onChange={(val) => setSelectedCategoryId(val)}
+          />
         </div>
 
         {loading ? (
@@ -231,7 +199,7 @@ const AchievementTiersList = ({
             No tiers for this category yet.
           </p>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredTiers.map((tier) => (
               <BadgeCard
                 key={tier.id}

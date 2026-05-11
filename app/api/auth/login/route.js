@@ -44,7 +44,9 @@ export async function POST(request) {
     const supabase = createSupabaseAdminClient();
     const { data: profile, error: profileError } = await supabase
       .from("users")
-      .select("id, display_name, email, first_name, last_name, image_url")
+      .select(
+        "id, display_name, email, first_name, last_name, image_url, is_admin",
+      )
       .eq("id", sessionData.user.id)
       .maybeSingle();
 
@@ -66,6 +68,7 @@ export async function POST(request) {
       first_name: profile?.first_name || null,
       last_name: profile?.last_name || null,
       image_url: profile?.image_url || null,
+      is_admin: profile?.is_admin ?? false,
     };
 
     const response = NextResponse.json(

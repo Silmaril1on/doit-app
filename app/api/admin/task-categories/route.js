@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/app/[locale]/lib/supabase/supabaseServer";
+import { requireAdmin } from "@/app/api/_lib/authGuard";
 
 const TABLE = "task_categories";
 
 export async function GET() {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
   try {
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
@@ -28,6 +31,8 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await request.json();
     const label = String(body?.label || "").trim();

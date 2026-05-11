@@ -1,7 +1,6 @@
 import "./globals.css";
 import { cookies } from "next/headers";
 import { Luckiest_Guy, Jost } from "next/font/google";
-import Footer from "./layout/footer/Footer";
 import FloatingNavigation from "./layout/navigation/floating-navigation/FloatingNavigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
@@ -14,6 +13,7 @@ import Toast from "./components/elements/Toast";
 import NavigationWrapper from "./layout/NavigationWrapper";
 import TopEdgeModal from "./components/modals/TopEdgeModal";
 import ThemeProvider from "./lib/providers/ThemeProvider";
+import AppShellWidgets from "./layout/AppShellWidgets";
 
 const josh = Jost({
   variable: "--font-jost",
@@ -71,10 +71,8 @@ export default async function RootLayout({ children, params }) {
                   {children}
                 </div>
                 <ModalRoot />
-                <FloatingNavigation />
-                <TopEdgeModal />
+                <AppShellWidgets />
                 <Toast />
-                <Footer />
               </ThemeProvider>
             </DarkModeProvider>
           </StoreProvider>

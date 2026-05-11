@@ -27,6 +27,11 @@ const ObjectiveDirectionsModal = dynamic(
   () => import("./ObjectiveDirectionsModal"),
   { ssr: false },
 );
+
+// These two modals are ALWAYS mounted so that the DEV_PREVIEW flag inside them
+// can force-open them for styling. They self-manage visibility via their own
+// isOpen logic (DEV_PREVIEW || modalType === MODAL_TYPE), so they render nothing
+// when closed (GlobalModal's AnimatePresence handles the enter/exit).
 const OnCompleteTaskModal = dynamic(() => import("./OnCompleteTaskModal"), {
   ssr: false,
 });
@@ -36,6 +41,7 @@ const LevelUpAnimationModal = dynamic(() => import("./LevelUpAnimationModal"), {
 
 // Map every modalType key to its component.
 // CreateTaskModal handles create / edit / recreate flows internally.
+// NOTE: completeTask and levelUp are NOT in this map — they are always rendered below.
 const MODAL_COMPONENTS = {
   editProfile: ProfileFormModal,
   createObjective: CreateTaskModal,
@@ -47,14 +53,19 @@ const MODAL_COMPONENTS = {
   thoughts: ThoughsModal,
   showMyId: ShowMyIdModal,
   objectiveDirections: ObjectiveDirectionsModal,
-  completeTask: OnCompleteTaskModal,
-  levelUp: LevelUpAnimationModal,
 };
 
 const ModalRoot = () => {
   const { modalType } = useSelector(selectModal);
   const Modal = modalType ? (MODAL_COMPONENTS[modalType] ?? null) : null;
-  return Modal ? <Modal /> : null;
+  return (
+    <>
+      {Modal && <Modal />}
+      {/* Always mounted — each manages its own isOpen via Redux + DEV_PREVIEW flag */}
+      <OnCompleteTaskModal />
+      <LevelUpAnimationModal />
+    </>
+  );
 };
 
 export default ModalRoot;

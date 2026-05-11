@@ -76,6 +76,8 @@ const UserSearch = () => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const debounceRef = useRef(null);
+  // Generation counter: discard responses from superseded searches
+  const searchGenRef = useRef(0);
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
   const router = useRouter();
@@ -103,15 +105,18 @@ const UserSearch = () => {
     }
 
     debounceRef.current = setTimeout(async () => {
+      const gen = ++searchGenRef.current;
       setIsLoading(true);
       try {
         const data = await searchUsersByDisplayName(query);
+        // Discard if a newer search has already started
+        if (gen !== searchGenRef.current) return;
         setResults(data);
         setIsOpen(true);
       } catch {
-        setResults([]);
+        if (gen === searchGenRef.current) setResults([]);
       } finally {
-        setIsLoading(false);
+        if (gen === searchGenRef.current) setIsLoading(false);
       }
     }, 350);
 

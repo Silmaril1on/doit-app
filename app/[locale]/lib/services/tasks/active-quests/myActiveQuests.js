@@ -290,7 +290,10 @@ export async function updateActiveQuest(userId, questId, updates) {
     }
   }
 
-  return { quest: data, xpUpdate, tokenReward, taskXpGained };
+  // Surface the earned badge (if any) so the client modal can display it.
+  const acquiredBadge = badgeResult?.newTier ?? null;
+
+  return { quest: data, xpUpdate, tokenReward, taskXpGained, acquiredBadge };
 }
 
 export async function deleteActiveQuest(userId, questId) {

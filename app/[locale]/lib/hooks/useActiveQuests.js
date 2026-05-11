@@ -1,5 +1,5 @@
 "use client";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import useSWR from "swr";
 import { usePagination } from "./usePagination";
 
@@ -58,8 +58,13 @@ export function useActiveQuests(initialData = null, userIdOverride = null) {
     if (hasMore) _loadMore(fetchNextPage);
   }, [hasMore, _loadMore, fetchNextPage]);
 
+  const quests = useMemo(
+    () => [...firstPage, ...extraItems],
+    [firstPage, extraItems],
+  );
+
   return {
-    quests: [...firstPage, ...extraItems],
+    quests,
     total,
     hasMore,
     isLoading,

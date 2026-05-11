@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { playSound } from "../../lib/utils/playsound";
 
@@ -18,6 +18,13 @@ const MotionCount = ({
   const [displayedCount, setDisplayedCount] = useState(0);
 
   const motionValue = useMotionValue(0);
+  // Keep a ref to onComplete so we can call the latest version without
+  // adding it to the effect's dependency array (prevents double-animation
+  // when the parent re-renders and passes a new inline arrow function).
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  });
 
   const sizeClasses = {
     sm: "text-2xl",
@@ -38,11 +45,11 @@ const MotionCount = ({
       onUpdate: (latest) => {
         setDisplayedCount(Math.floor(latest));
       },
-      onComplete: () => onComplete?.(),
+      onComplete: () => onCompleteRef.current?.(),
     });
 
     return () => controls.stop();
-  }, [numericValue, motionValue, sound, onComplete]);
+  }, [numericValue, motionValue, sound]);
 
   return (
     <div className="flex flex-col items-start text-cream">

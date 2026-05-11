@@ -54,11 +54,11 @@ export async function PATCH(request) {
     }
 
     const payload = await request.json();
-    const { quest, xpUpdate, tokenReward, taskXpGained } =
+    const { quest, xpUpdate, tokenReward, taskXpGained, acquiredBadge } =
       await updateActiveQuest(userId, questId, payload);
 
     return NextResponse.json(
-      { quest, xpUpdate, tokenReward, taskXpGained },
+      { quest, xpUpdate, tokenReward, taskXpGained, acquiredBadge },
       { status: 200 },
     );
   } catch (err) {

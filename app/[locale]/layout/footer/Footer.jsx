@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { CountryFlags } from "../../components/elements/CountryFlags";
 import { FaInstagram } from "react-icons/fa";
+import Image from "next/image";
 
 const Footer = () => {
   const [location, setLocation] = useState({
@@ -12,7 +13,6 @@ const Footer = () => {
 
   useEffect(() => {
     if (!navigator.geolocation) return;
-
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         try {
@@ -39,10 +39,22 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer className="border-t border-primary/10 bg-stone-900 backdrop-blur-md w-full">
-      <div className=" w-full max-w-[80%] mx-auto px-6 py-10 flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
+    <footer
+      id="footer"
+      className="relative bg-stone-800 backdrop-blur-md w-full h-screen flex items-end"
+    >
+      <div className="w-full bg-black relative px-[5%] py-10 flex flex-col md:flex-row items-start justify-between gap-8">
+        <div className=" w-full absolute left-0 -top-75">
+          <Image
+            width={1000}
+            height={400}
+            src="/foter-1.png"
+            alt="Footer Background"
+            className="w-full transparent h-78 object-[center_22%] object-cover drop-shadow-[2px_2px_15px_rgba(0,0,0,0.5)]"
+          />
+        </div>
         {/* Brand */}
-        <div className="flex flex-col items-center md:items-start gap-2">
+        <div className="flex flex-col items-center md:items-start gap-2 ">
           <span className="primary text-3xl text-primary">DoIt</span>
           {/* Instagram */}
           <div>
@@ -60,7 +72,7 @@ const Footer = () => {
         </div>
 
         {/* Links */}
-        <div className="flex flex-wrap justify-center md:justify-start gap-x-8 gap-y-3">
+        <div className="flex justify-center gap-x-8 ">
           {[
             ["Terms & Conditions", "/terms"],
             ["Privacy Policy", "/privacy"],

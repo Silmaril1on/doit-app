@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
@@ -52,21 +52,8 @@ const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
   const dispatch = useDispatch();
   const currentUser = useSelector(selectCurrentUser);
   const userId = userIdProp ?? currentUser?.id ?? null;
-  const {
-    objectives: swrObjectives,
-    hasMore,
-    isLoading,
-    isLoadingMore,
-    loadMore,
-    mutate,
-  } = useObjectives(initialData, userIdProp);
-
-  const [objectives, setObjectives] = useState(
-    () => initialData?.objectives ?? [],
-  );
-  useEffect(() => {
-    setObjectives(swrObjectives);
-  }, [swrObjectives]);
+  const { objectives, hasMore, isLoading, isLoadingMore, loadMore, mutate } =
+    useObjectives(initialData, userIdProp);
 
   const handleStartTask = useCallback(
     async (objective) => {

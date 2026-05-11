@@ -1,50 +1,121 @@
 "use client";
-import Logo from "@/app/[locale]/components/elements/Logo";
-import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
-import { useDarkMode } from "@/app/[locale]/lib/providers/DarkModeProvider";
-import ToggleButton from "@/app/[locale]/components/buttons/ToggleButton";
+import Image from "next/image";
 import Link from "next/link";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { useParams } from "next/navigation";
-import { FaMoon, FaSun } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import Button from "../../components/buttons/Button";
-import UserSearch from "../../components/forms/UserSearch";
+import Motion from "../../components/motion/Motion";
+
+const NAV_LINKS = [
+  { label: "Home", href: "#hero" },
+  { label: "Features", href: "#features" },
+  { label: "FAQ", href: "#faq" },
+  { label: "Contact Us", href: "#footer" },
+];
 
 const Navigation = () => {
-  const { isDark, toggle } = useDarkMode();
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
   const currentUser = useSelector(selectCurrentUser);
 
   return (
-    <nav className="px-3 py-1 flex w-full items-center justify-between bg-black">
-      <Logo size="sm" />
-      <UserSearch />
-      <DarkModeSection isDark={isDark} toggle={toggle} />
+    <nav className="p-3 flex w-full items-center justify-between bg-transparent fixed top-0 z-50">
+      <NavLinks />
+      {/* <AnimLogo /> */}
       <LoginButtonSection locale={locale} currentUser={currentUser} />
     </nav>
   );
 };
 
-const DarkModeSection = ({ isDark, toggle }) => {
+const NavLinks = () => {
+  const handleClick = (e, href) => {
+    e.preventDefault();
+    const target = document.querySelector(href);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
-    <div className="flex items-center gap-3">
-      <span
-        aria-hidden="true"
-        className="text-pink text-lg flex h-6 w-6 items-center justify-center"
-      >
-        {isDark ? <FaMoon /> : <FaSun />}
-      </span>
-      <ToggleButton checked={isDark} onChange={toggle} size="md" />
+    <div className="flex items-center gap-6 relative z-2">
+      {NAV_LINKS.map(({ label, href }, index) => (
+        <Motion animation="top" stagger delay={index * 0.2} key={href}>
+          <a
+            href={href}
+            onClick={(e) => handleClick(e, href)}
+            className="text-md text-cream/80 hover:text-cream duration-300 cursor-pointer"
+          >
+            {label}
+          </a>
+        </Motion>
+      ))}
     </div>
+  );
+};
+
+const AnimLogo = () => {
+  const { scrollY } = useScroll();
+  const scale = useTransform(scrollY, [0, 150], [2, 1]);
+
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: -80,
+        rotate: -25,
+        scale: 0,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        rotate: 0,
+        scale: 2,
+      }}
+      transition={{
+        delay: 1,
+        duration: 1.2,
+        type: "spring",
+        stiffness: 180,
+        damping: 10,
+      }}
+      style={{ scale }}
+      className="origin-center absolute top-0 left-1/2 -translate-x-1/2"
+    >
+      <motion.div
+        animate={{
+          rotate: [0, 8, -8, 4, -4, 0],
+        }}
+        transition={{
+          delay: 1.2,
+          duration: 1.1,
+          ease: "easeInOut",
+        }}
+      >
+        <Image
+          src="/assets/doit-logo.JPG"
+          alt="DoIt Logo"
+          width={56}
+          height={56}
+          priority
+        />
+      </motion.div>
+    </motion.div>
   );
 };
 
 const LoginButtonSection = ({ locale, currentUser }) => {
   return (
     <>
-      {!currentUser && (
-        <div className="flex space-x-4">
+      {currentUser ? (
+        <div className="relative z-2">
+          <Link href={`/${locale}/${currentUser.display_name}`}>
+            <Button text="My Profile" />
+          </Link>
+        </div>
+      ) : (
+        <div className="flex space-x-4 relative z-2">
           <Link href={`/${locale}/login`}>
             <Button text="login" />
           </Link>

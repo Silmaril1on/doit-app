@@ -1,0 +1,122 @@
+"use client";
+import Button from "@/app/[locale]/components/buttons/Button";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+
+const HomeHero = () => {
+  const params = useParams();
+  const locale = typeof params?.locale === "string" ? params.locale : "en";
+
+  return (
+    <section
+      id="hero"
+      className="relative bg-stone-800 w-full h-screen grid grid-cols-2 pt-12"
+    >
+      <ContentSide locale={locale} />
+      <ActionSide />
+    </section>
+  );
+};
+
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const fadeUpVariants = {
+  hidden: {
+    opacity: 0,
+    y: 32,
+    filter: "blur(4px)",
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.7,
+      ease: [0.25, 0.46, 0.45, 0.94], // easeOutQuart
+    },
+  },
+};
+
+const buttonVariants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+    scale: 0.95,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: [0.34, 1.56, 0.64, 1], // easeOutBack (slight bounce)
+    },
+  },
+};
+
+const ContentSide = ({ locale }) => {
+  return (
+    <motion.div
+      className="border border-white/50 flex items-start justify-center flex-col pl-10"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* h2 */}
+      <motion.h2 className="text-cream mb-3" variants={fadeUpVariants}>
+        some inspiration text in phil
+      </motion.h2>
+
+      {/* h1 */}
+      <motion.h1 className="text-5xl text-primary" variants={fadeUpVariants}>
+        This is a Hook Headline for the users
+      </motion.h1>
+
+      {/* paragraph */}
+      <motion.p
+        className="text-cream/80 secondary mt-4 leading-normal"
+        variants={fadeUpVariants}
+      >
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Beatae
+        molestias aperiam natus distinctio, hic nemo omnis quibusdam eius
+        cupiditate nesciunt blanditiis inventore voluptate et, quidem sapiente
+        ipsum sit. Error odio suscipit asperiores libero vel, nulla quibusdam id
+        beatae accusantium laboriosam, incidunt, dignissimos nihil. Error
+        molestiae nihil, nam reprehenderit placeat perferendis.
+      </motion.p>
+
+      {/* buttons row */}
+      <motion.div
+        className="w-full mt-10 flex space-x-5"
+        variants={containerVariants}
+      >
+        <motion.div variants={buttonVariants}>
+          <Link href={`/register`}>
+            <Button text="GET started" />
+          </Link>
+        </motion.div>
+
+        <motion.div variants={buttonVariants}>
+          <Link href={`/${locale}/login`}>
+            <Button text="Register" variant="outline" />
+          </Link>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const ActionSide = () => {
+  return <div>hello action</div>;
+};
+
+export default HomeHero;

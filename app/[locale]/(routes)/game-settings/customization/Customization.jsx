@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import ToggleButton from "../../../components/buttons/ToggleButton";
 import ItemCard from "../../../components/container/ItemCard";
 import Colors from "./Colors";
+import SoundSettings from "./SoundSettings";
 
 const Sound = () => {
   return (
@@ -25,7 +26,7 @@ const Customization = () => {
         value={tab}
         onChange={setTab}
       />
-      {tab === "COLORS" ? <Colors /> : <Sound />}
+      {tab === "COLORS" ? <Colors /> : <SoundSettings />}
     </div>
   );
 };

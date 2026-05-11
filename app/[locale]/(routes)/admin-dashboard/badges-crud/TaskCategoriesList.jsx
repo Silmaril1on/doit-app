@@ -103,7 +103,7 @@ const TaskCategoriesList = ({
           title="Add Task Category"
           subtitle="Create a new category for organizing tasks and awarding badges."
         />
-        <ItemCard className="space-y-4">
+        <ItemCard className="space-y-4 w-full lg:w-2/6">
           <form onSubmit={handleAddSubmit} className="space-y-4">
             <div className="grid gap-2 grid-cols-1">
               {CAT_FIELDS.map((field) => (
@@ -144,7 +144,7 @@ const TaskCategoriesList = ({
         ) : categories.length === 0 ? (
           <p className="secondary text-sm text-chino/40">No categories yet.</p>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
             {categories.map((cat) => (
               <BadgeCard
                 key={cat.id}

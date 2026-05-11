@@ -19,7 +19,6 @@ import Motion from "../../../components/motion/Motion";
 import { useModalActions } from "@/app/[locale]/lib/hooks/useModal";
 import { ACCOUNT_VERIFICATION_MODAL } from "@/app/[locale]/components/modals/AccountVerificationModal";
 import { SHOW_MY_ID_MODAL } from "@/app/[locale]/components/modals/ShowMyIdModal";
-import { resetHydration } from "@/app/[locale]/lib/store/StoreProvider";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -60,12 +59,14 @@ const UserProfile = () => {
   useEffect(() => {
     if (!user?.id || emailFetched.current) return;
     emailFetched.current = true;
-    fetch("/api/auth/verify-email")
+    const controller = new AbortController();
+    fetch("/api/auth/verify-email", { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d) setEmailVerified(d.email_verified ?? false);
       })
       .catch(() => {});
+    return () => controller.abort();
   }, [user?.id]);
 
   const handleLogout = async () => {
@@ -73,8 +74,6 @@ const UserProfile = () => {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
       setIsMenuOpen(false);
-      // Allow StoreHydrator to re-run on next login without a full page reload
-      resetHydration();
       emailFetched.current = false;
       dispatch(clearUser());
       dispatch(clearColorValue());

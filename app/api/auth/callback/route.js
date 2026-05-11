@@ -64,7 +64,9 @@ export async function GET(request) {
   // Fetch the final profile (may have been customised previously)
   const { data: profile } = await admin
     .from("users")
-    .select("id, display_name, email, first_name, last_name, image_url")
+    .select(
+      "id, display_name, email, first_name, last_name, image_url, is_admin",
+    )
     .eq("id", userId)
     .maybeSingle();
 
@@ -75,6 +77,7 @@ export async function GET(request) {
     first_name: profile?.first_name || null,
     last_name: profile?.last_name || null,
     image_url: profile?.image_url || googleAvatar,
+    is_admin: profile?.is_admin ?? false,
   };
 
   const isProduction = process.env.NODE_ENV === "production";

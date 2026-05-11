@@ -73,6 +73,10 @@
   text-shadow: 5px 6px 7px rgba(0, 0, 0, 0.9);
 }
 
+.text-shadow-white {
+  text-shadow: 5px 6px 7px rgba(243, 240, 231, 0.507);
+}
+
 .secondary {
   font-family: var(--font-jost);
 }

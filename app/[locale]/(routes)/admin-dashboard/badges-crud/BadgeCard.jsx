@@ -4,16 +4,6 @@ import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
 import ImageTag from "@/app/[locale]/components/elements/ImageTag";
 
-/**
- * Reusable display card for both TaskCategories and AchievementTiers.
- *
- * Props:
- *  image    – URL string for the badge/icon image
- *  title    – main label
- *  subtitle – secondary text (description for categories, title for tiers)
- *  meta     – array of { label, value } pairs shown as small tags
- *  onEdit   – callback to open the edit modal
- */
 const BadgeCard = ({ image, title, subtitle, meta, onEdit }) => {
   return (
     <ItemCard className="flex items-center gap-4">
@@ -36,9 +26,7 @@ const BadgeCard = ({ image, title, subtitle, meta, onEdit }) => {
 
       {/* text */}
       <div className="flex-1 min-w-0 space-y-0.5">
-        <p className="primary text-cream font-semibold text-sm truncate">
-          {title}
-        </p>
+        <p className="primary text-cream text-shadow ">{title}</p>
         {subtitle && (
           <p className="secondary text-chino/60 text-xs line-clamp-2">
             {subtitle}

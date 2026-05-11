@@ -1,7 +1,7 @@
 import Link from "next/link";
 import React from "react";
 
-const page = () => {
+const AdminDashboard = () => {
   return (
     <div className=" bg-black text-cream page-wrapper">
       <div className="border-b border-primary/20 bg-black/60">
@@ -26,4 +26,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default AdminDashboard;

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
+import Image from "next/image";
 import GlobalModal from "@/app/[locale]/components/modals/GlobalModal";
 import {
   openModal,
@@ -13,6 +14,29 @@ import {
 } from "@/app/[locale]/lib/features/modalSlice";
 import { CountryFlags } from "@/app/[locale]/components/elements/CountryFlags";
 import MotionCount from "@/app/[locale]/components/motion/MotionCount";
+import { playSound } from "@/app/[locale]/lib/utils/playsound";
+
+// ─── DEV PREVIEW FLAG ────────────────────────────────────────────────────────
+// Set to `true` to force the modal open with dummy data while styling.
+const DEV_PREVIEW = false;
+const DEV_DUMMY = {
+  displayName: "Alex",
+  taskTitle: "Conquer the Ancient Ruins",
+  country: "Japan",
+  city: "Kyoto",
+  categoryCounts: [
+    { label: "Food", count: 3 },
+    { label: "Travel", count: 1 },
+  ],
+  xpGained: 120,
+  tokenReward: 45,
+  acquiredBadge: {
+    title: "Adventurer",
+    level: 3,
+    icon: null, // swap with a real URL to test the image path
+  },
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 const MODAL_TYPE = "completeTask";
 
@@ -44,17 +68,31 @@ const numberVariants = {
   },
 };
 
+const badgeVariants = {
+  hidden: { opacity: 0, scale: 0.6, y: 20 },
+  show: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.1 },
+  },
+};
+
 const OnCompleteTaskModal = () => {
   const dispatch = useDispatch();
-  const { modalType, modalProps } = useSelector(selectModal);
+  const { modalType, modalProps: reduxProps } = useSelector(selectModal);
   const pendingLevelUp = useSelector(selectPendingLevelUp);
-  const isOpen = modalType === MODAL_TYPE;
 
-  // Track whether XP count has finished so we can start the token count.
-  // We use a key derived from isOpen so that when the modal closes+reopens,
-  // the MotionCount remounts fresh (no setState-in-effect needed).
-  const [xpDone, setXpDone] = useState(false);
+  const isOpen = DEV_PREVIEW || modalType === MODAL_TYPE;
+  const modalProps = DEV_PREVIEW ? DEV_DUMMY : reduxProps;
+
+  // openKey resets MotionCount when modal re-opens (GlobalModal unmounts children on close,
+  // so useState resets automatically — no cleanup effect needed)
   const openKey = isOpen ? "open" : "closed";
+  const [xpDone, setXpDone] = useState(false);
+  // useRef instead of useState so the effect below only triggers a side-effect
+  // without calling setState (avoids React Compiler cascading-render warning)
+  const badgeSoundFired = useRef(false);
 
   const displayName = modalProps?.displayName || "Player";
   const taskTitle = modalProps?.taskTitle || "your objective";
@@ -65,10 +103,18 @@ const OnCompleteTaskModal = () => {
     : [];
   const xpGained = Number(modalProps?.xpGained ?? 0);
   const tokenReward = Number(modalProps?.tokenReward ?? 0);
+  const acquiredBadge = modalProps?.acquiredBadge ?? null;
+
+  // Play badge sound once — only mutates a ref, no setState → RC compliant
+  useEffect(() => {
+    if (!xpDone || !acquiredBadge || badgeSoundFired.current) return;
+    badgeSoundFired.current = true;
+    playSound("close");
+  }, [xpDone, acquiredBadge]);
 
   const handleClose = () => {
+    if (DEV_PREVIEW) return; // prevent closing in dev preview mode
     if (pendingLevelUp) {
-      // Chain into level-up modal instead of fully closing
       dispatch(clearPendingLevelUp());
       dispatch(
         openModal({
@@ -170,6 +216,71 @@ const OnCompleteTaskModal = () => {
             </div>
           </motion.div>
         </motion.div>
+
+        {/* Badge acquisition — shown only when a new badge was earned */}
+        <AnimatePresence>
+          {xpDone && acquiredBadge && (
+            <motion.div
+              variants={badgeVariants}
+              initial="hidden"
+              animate="show"
+              exit="hidden"
+              className="rounded-md border border-primary/40 bg-primary/10 px-4 py-4 space-y-3"
+            >
+              <p className="secondary text-xs uppercase tracking-[0.14em] text-primary/80">
+                🏅 New Badge Unlocked!
+              </p>
+              <div className="flex items-center gap-4">
+                {/* Badge icon */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{
+                    delay: 0.2,
+                    type: "spring",
+                    stiffness: 280,
+                    damping: 18,
+                  }}
+                  className="shrink-0 h-16 w-16 rounded-xl border-2 border-primary/60 bg-black/40 overflow-hidden flex items-center justify-center shadow-lg shadow-primary/20"
+                >
+                  {acquiredBadge.icon ? (
+                    <Image
+                      src={acquiredBadge.icon}
+                      alt={acquiredBadge.title ?? "Badge"}
+                      width={64}
+                      height={64}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl font-black text-primary">
+                      {acquiredBadge.level ?? "?"}
+                    </span>
+                  )}
+                </motion.div>
+
+                {/* Badge info */}
+                <div className="flex flex-col gap-1">
+                  <motion.p
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3, duration: 0.35 }}
+                    className="text-lg text-cream text-shadow"
+                  >
+                    {acquiredBadge.title ?? "Badge"}
+                  </motion.p>
+                  <motion.p
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4, duration: 0.35 }}
+                    className="secondary text-xs text-primary/70"
+                  >
+                    Level {acquiredBadge.level} badge acquired
+                  </motion.p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </GlobalModal>
   );

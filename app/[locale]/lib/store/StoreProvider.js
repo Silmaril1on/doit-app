@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Provider, useDispatch } from "react-redux";
 import { makeStore } from "./store";
 import { clearUser, setUser } from "@/app/[locale]/lib/features/userSlice";
@@ -8,15 +8,6 @@ import {
   setColorValue,
   clearColorValue,
 } from "@/app/[locale]/lib/features/configSlice";
-
-// --- module-level hydration guard ---
-// Using a module-level flag (instead of useRef) lets resetHydration() be
-// called from outside the component (e.g. after logout in UserProfile).
-let hydrationDone = false;
-
-export const resetHydration = () => {
-  hydrationDone = false;
-};
 
 // --- utils ---
 const getCookieValue = (name) => {
@@ -32,24 +23,23 @@ const getCookieValue = (name) => {
 // --- hydrator ---
 const StoreHydrator = ({ children }) => {
   const dispatch = useDispatch();
+  const hydrationDone = useRef(false);
 
   useEffect(() => {
-    if (hydrationDone) return;
-    hydrationDone = true;
+    if (hydrationDone.current) return;
+    hydrationDone.current = true;
 
     const controller = new AbortController();
 
     const hydrate = async () => {
       const serializedUser = getCookieValue("doit-user");
 
-      // No cookie → reset state
       if (!serializedUser) {
         dispatch(clearUser());
         dispatch(clearColorValue());
         return;
       }
 
-      // Parse user
       try {
         const user = JSON.parse(serializedUser);
         dispatch(setUser(user));
@@ -58,7 +48,6 @@ const StoreHydrator = ({ children }) => {
         return;
       }
 
-      // Fetch additional data (non-blocking)
       try {
         const [xpRes, configRes] = await Promise.all([
           fetch("/api/user/xp", { signal: controller.signal }),
@@ -72,7 +61,6 @@ const StoreHydrator = ({ children }) => {
 
         if (configRes.ok) {
           const configData = await configRes.json();
-
           if (configData?.config?.color_value) {
             dispatch(setColorValue(configData.config.color_value));
           } else {

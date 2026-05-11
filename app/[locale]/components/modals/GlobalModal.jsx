@@ -41,7 +41,7 @@ const GlobalModal = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4"
         >
           <motion.div
             key="modal-content"
@@ -54,7 +54,7 @@ const GlobalModal = ({
           >
             {/* Card */}
             <div
-              className={`relative bg-primary/10 backdrop-blur-lg overflow-hidden rounded-lg border border-primary/20 p-6`}
+              className={`relative bg-primary/15 backdrop-blur-lg overflow-hidden rounded-lg border border-primary/20 p-6`}
             >
               <BorderSvg strokeWidth={1} fadeAt={0.7} />
               <div

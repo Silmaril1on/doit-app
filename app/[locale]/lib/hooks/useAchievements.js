@@ -1,5 +1,5 @@
 "use client";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import useSWR from "swr";
 import { usePagination } from "./usePagination";
 
@@ -58,8 +58,13 @@ export function useAchievements(initialData = null, userIdOverride = null) {
     if (hasMore) _loadMore(fetchNextPage);
   }, [hasMore, _loadMore, fetchNextPage]);
 
+  const achievements = useMemo(
+    () => [...firstPage, ...extraItems],
+    [firstPage, extraItems],
+  );
+
   return {
-    achievements: [...firstPage, ...extraItems],
+    achievements,
     total,
     hasMore,
     isLoading,

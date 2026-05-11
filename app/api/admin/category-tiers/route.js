@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/app/[locale]/lib/supabase/supabaseServer";
+import { requireAdmin } from "@/app/api/_lib/authGuard";
 
 const TABLE = "category_achievement_tiers";
 
 export async function GET(request) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
   try {
     const categoryId = request.nextUrl.searchParams.get("categoryId");
     const supabase = createSupabaseAdminClient();
@@ -34,6 +37,8 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const auth = await requireAdmin();
+  if (auth instanceof NextResponse) return auth;
   try {
     const body = await request.json();
     const categoryId = Number(body?.category_id);

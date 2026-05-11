@@ -8,6 +8,12 @@ import {
   selectModal,
 } from "@/app/[locale]/lib/features/modalSlice";
 
+// ─── DEV PREVIEW FLAG ────────────────────────────────────────────────────────
+// Set to `true` to force the modal open with dummy data while styling.
+const DEV_PREVIEW = false;
+const DEV_DUMMY = { prevLevel: 4, newLevel: 5 };
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Particle dot — positioned randomly around the burst origin
 const Particle = ({ angle, dist, color }) => {
   const x = Math.cos(angle) * dist;
@@ -53,13 +59,17 @@ const KEYFRAMES = `
 
 const LevelUpAnimationModal = () => {
   const dispatch = useDispatch();
-  const { modalType, modalProps } = useSelector(selectModal);
-  const isOpen = modalType === "levelUp";
+  const { modalType, modalProps: reduxProps } = useSelector(selectModal);
+  const isOpen = DEV_PREVIEW || modalType === "levelUp";
+  const modalProps = DEV_PREVIEW ? DEV_DUMMY : reduxProps;
 
   const prevLevel = modalProps?.prevLevel;
   const newLevel = modalProps?.newLevel;
 
-  const handleDone = useCallback(() => dispatch(closeModal()), [dispatch]);
+  const handleDone = useCallback(() => {
+    if (DEV_PREVIEW) return;
+    dispatch(closeModal());
+  }, [dispatch]);
 
   return (
     <GlobalModal

@@ -63,15 +63,20 @@ const AccountVerificationModal = () => {
 
   useEffect(() => {
     if (!isOpen) return;
+    const controller = new AbortController();
+    let isAlive = true;
 
     const load = async () => {
       setLoading(true);
       setEmailSent(false);
       try {
         const [profileRes, verifyRes] = await Promise.all([
-          fetch("/api/user/profile/single-profile"),
-          fetch("/api/auth/verify-email"),
+          fetch("/api/user/profile/single-profile", {
+            signal: controller.signal,
+          }),
+          fetch("/api/auth/verify-email", { signal: controller.signal }),
         ]);
+        if (!isAlive) return;
         const profileData = profileRes.ok ? await profileRes.json() : {};
         const verifyData = verifyRes.ok ? await verifyRes.json() : {};
 
@@ -90,11 +95,15 @@ const AccountVerificationModal = () => {
       } catch {
         // silent — GlobalModal will stay in non-error state
       } finally {
-        setLoading(false);
+        if (isAlive) setLoading(false);
       }
     };
 
     load();
+    return () => {
+      isAlive = false;
+      controller.abort();
+    };
   }, [isOpen]);
 
   const progress = calcProgress(form, emailVerified);

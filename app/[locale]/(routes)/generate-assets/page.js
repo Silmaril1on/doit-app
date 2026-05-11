@@ -115,7 +115,7 @@ export default function GenerateAssetsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-cream pb-28">
+    <div className="min-h-screen bg-black text-cream pt-30">
       <div className="max-w-6xl bg-teal-700/40 mx-auto p-5 rounded-lg flex  space-x-5">
         <div className="space-y-4 w-2/4">
           <SectionHeadline

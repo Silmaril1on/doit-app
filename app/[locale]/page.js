@@ -9,12 +9,12 @@ export default function GamingFontShowcase() {
   const [show, setShow] = useState(false);
 
   const handleTrigger = () => {
-    setKey((k) => k + 1); // remount MotionCount so animation + sound replay
+    setKey((k) => k + 1);
     setShow(true);
   };
 
   return (
-    <div className="page-wrapper flex flex-col items-center justify-center gap-8 p-10">
+    <div className="">
       {/* <button className="text-primary" onClick={handleTrigger}>
         Trigger
       </button>

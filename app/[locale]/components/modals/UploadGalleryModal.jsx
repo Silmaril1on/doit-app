@@ -170,7 +170,7 @@ const UploadGalleryModal = () => {
 
       {/* Upload progress pills */}
       <div className="mt-1">
-        <div className="flex gap-2">
+        <div className="grid grid-cols-4 gap-2 ">
           {displaySlots.map((st) => {
             const uploaded = hasImage(st.id);
             return (
@@ -197,8 +197,8 @@ const UploadGalleryModal = () => {
                   )}
                 </span>
                 <span
-                  className={`secondary text-[9px] capitalize truncate w-full text-center px-1 transition-colors duration-300 ${
-                    uploaded ? "text-green-400" : "text-chino/30"
+                  className={` text-[9px] capitalize truncate w-full text-center px-1 transition-colors duration-300 ${
+                    uploaded ? "text-green-400" : "text-chino/50"
                   }`}
                 >
                   {truncateString(st.label, 20)}
@@ -229,10 +229,10 @@ const UploadGalleryModal = () => {
       <div className="mt-4 space-y-4">
         {/* Subtask / slot selection */}
         <div>
-          <p className="secondary text-[10px] uppercase tracking-widest text-chino/50 mb-2">
+          <p className=" text-[10px] uppercase tracking-widest text-chino/70 mb-2">
             {hasSubtasks ? "Select subtask to upload for" : "Select photo slot"}
           </p>
-          <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-3">
             {displaySlots.map((st) => {
               const id = st.id;
               const label =

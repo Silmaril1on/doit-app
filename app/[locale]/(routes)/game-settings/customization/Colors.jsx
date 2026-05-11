@@ -8,6 +8,7 @@ import {
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
 import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
 import ObjectiveCard from "@/app/[locale]/(routes)/(tasks)/tasks/(componets)/ObjectiveCard";
+import { useSound } from "@/app/[locale]/lib/hooks/useSounds";
 
 const COLOR_OPTIONS = [
   { value: "teal", label: "Teal", hex: "#2dd4bf" },
@@ -68,7 +69,7 @@ const Colors = () => {
   const dispatch = useDispatch();
   const currentColor = useSelector(selectColorValue) ?? "teal";
   const [saving, setSaving] = useState(false);
-
+  const { playSound } = useSound();
   const barRef = useRef(null);
   const isDragging = useRef(false);
 
@@ -152,7 +153,10 @@ const Colors = () => {
           {/* Left arrow */}
           <button
             type="button"
-            onClick={() => selectByIndex(activeIndex - 1)}
+            onClick={() => {
+              selectByIndex(activeIndex - 1);
+              playSound("color");
+            }}
             disabled={activeIndex === 0}
             className="w-8 h-10 flex items-center justify-center text-2xl primary text-cream/70 hover:text-cream disabled:opacity-25 disabled:cursor-not-allowed transition-colors duration-150 shrink-0"
           >
@@ -161,6 +165,7 @@ const Colors = () => {
 
           {/* Bar */}
           <div
+            onClick={() => playSound("color")}
             ref={barRef}
             className="relative flex-1 h-3 rounded-sm cursor-pointer select-none overflow-visible"
             onPointerDown={handlePointerDown}
@@ -196,7 +201,10 @@ const Colors = () => {
           {/* Right arrow */}
           <button
             type="button"
-            onClick={() => selectByIndex(activeIndex + 1)}
+            onClick={() => {
+              selectByIndex(activeIndex + 1);
+              playSound("color");
+            }}
             disabled={activeIndex === COLOR_OPTIONS.length - 1}
             className="w-8 h-10 flex items-center justify-center text-2xl primary text-cream/70 hover:text-cream disabled:opacity-25 disabled:cursor-not-allowed transition-colors duration-150 shrink-0"
           >

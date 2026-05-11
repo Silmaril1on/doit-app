@@ -55,9 +55,7 @@ const SoundSettings = () => {
               {enabled ? <HiVolumeUp /> : <HiVolumeOff />}
             </div>
             <div>
-              <p className="secondary text-sm font-semibold text-cream">
-                Sound Effects
-              </p>
+              <p className=" text-sm text-cream">Sound Effects</p>
               <p className="secondary text-[11px] text-cream/40">
                 {enabled ? "Sound is on" : "Sound is off"}
                 {saving && (
