@@ -102,7 +102,7 @@ const LoginPage = () => {
 
   return (
     <main className="min-h-screen bg-black px-4 center flex-col space-y-10 pb-20">
-      <Logo size="large" />
+      <Logo size="sm" />
       <FromContainer
         title="Login"
         onSubmit={handleSubmit}

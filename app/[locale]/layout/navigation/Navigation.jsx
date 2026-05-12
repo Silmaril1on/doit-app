@@ -21,9 +21,12 @@ const Navigation = () => {
   const currentUser = useSelector(selectCurrentUser);
 
   return (
-    <nav className="p-3 flex w-full items-center justify-between bg-transparent fixed top-0 z-50">
+    <nav className=" p-3 flex w-full items-center justify-between fixed top-0 z-50">
+      <div className="flex items-center space-x-5">
+        <LanguageSwitcher currentLocale={locale} />
+        {/* <AnimLogo /> */}
+      </div>
       <NavLinks />
-      {/* <AnimLogo /> */}
       <LoginButtonSection locale={locale} currentUser={currentUser} />
     </nav>
   );
@@ -39,7 +42,7 @@ const NavLinks = () => {
   };
 
   return (
-    <div className="flex items-center gap-6 relative z-2">
+    <div className="items-center gap-6 relative z-2 hidden md:flex">
       {NAV_LINKS.map(({ label, href }, index) => (
         <Motion animation="top" stagger delay={index * 0.2} key={href}>
           <a
@@ -81,7 +84,7 @@ const AnimLogo = () => {
         damping: 10,
       }}
       style={{ scale }}
-      className="origin-center absolute top-0 left-1/2 -translate-x-1/2"
+      className="origin-center "
     >
       <motion.div
         animate={{
@@ -111,7 +114,7 @@ const LoginButtonSection = ({ locale, currentUser }) => {
       {currentUser ? (
         <div className="relative z-2">
           <Link href={`/${locale}/${currentUser.display_name}`}>
-            <Button text="My Profile" />
+            <Button variant="outline" text="My Profile" />
           </Link>
         </div>
       ) : (
@@ -125,6 +128,18 @@ const LoginButtonSection = ({ locale, currentUser }) => {
         </div>
       )}
     </>
+  );
+};
+
+const LanguageSwitcher = ({ currentLocale }) => {
+  const otherLocale = currentLocale === "en" ? "es" : "en";
+  return (
+    <Link
+      href={`/${otherLocale}`}
+      className="text-sm text-cream/80 hover:text-cream duration-300"
+    >
+      {otherLocale.toUpperCase()}
+    </Link>
   );
 };
 

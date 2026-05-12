@@ -67,7 +67,7 @@ export default async function RootLayout({ children, params }) {
             <DarkModeProvider>
               <ThemeProvider>
                 <NavigationWrapper />
-                <div className="center w-full flex-col *:w-full grow *:grow ">
+                <div className="center w-full flex-col *:w-full grow *:grow">
                   {children}
                 </div>
                 <ModalRoot />

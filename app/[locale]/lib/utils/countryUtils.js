@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// CONTINENT_MAP — source of truth.
-// Each continent has its countries nested inside.
-// All derived helpers are built from this single object.
-// ─────────────────────────────────────────────────────────────────────────────
 export const CONTINENT_MAP = {
   Africa: {
     countries: [
@@ -250,48 +245,41 @@ export const CONTINENT_BADGES = {
     title: "African Lion",
     description:
       "You are a true African Lion — explorer of the world's most diverse continent.",
-    image_url: null, // replace with real image path when available
-    icon: "🦁",
+    image_url: "/assets/badges/africa.jpg",
   },
   Antarctica: {
     title: "Polar Pioneer",
     description: "You braved the ice — a rare Polar Pioneer among explorers.",
-    image_url: null,
-    icon: "🧊",
+    image_url: "/assets/badges/antarctica.jpg",
   },
   Asia: {
     title: "Dragon of the East",
     description:
       "From the Himalayas to the Pacific — you are the Dragon of the East.",
-    image_url: null,
-    icon: "🐉",
+    image_url: "/assets/badges/asia.jpg",
   },
   Europe: {
     title: "European Knight",
     description:
       "History, culture, and cobblestone streets — you are a true European Knight.",
-    image_url: null,
-    icon: "⚔️",
+    image_url: "/assets/badges/europe.jpg",
   },
   "North America": {
     title: "New World Ranger",
     description:
       "Frontiers and metropolises alike — you are the New World Ranger.",
-    image_url: null,
-    icon: "🦅",
+    image_url: "/assets/badges/north-america.jpg",
   },
   Oceania: {
     title: "Pacific Voyager",
     description: "Coral reefs and ancient skies — you are a Pacific Voyager.",
-    image_url: null,
-    icon: "🐚",
+    image_url: "/assets/badges/oceania.jpg",
   },
   "South America": {
     title: "Amazon Wanderer",
     description:
       "Rain forests, peaks, and carnivals — you are the Amazon Wanderer.",
-    image_url: null,
-    icon: "🌿",
+    image_url: "/assets/badges/south-america.jpg",
   },
 };
 

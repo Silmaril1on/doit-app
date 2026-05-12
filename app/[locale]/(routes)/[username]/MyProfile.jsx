@@ -147,9 +147,7 @@ const HeaderSection = ({ totalXp, currentLevel, friendsCount, tokens }) => {
           <p className="pt-0.5 text-[10px] text-chino tracking-[1px]">
             {label}
           </p>
-          <p className="text-cream text-xs font-semibold leading-none">
-            {value}
-          </p>
+          <p className="text-cream text-xs leading-none">{value}</p>
         </div>
       ))}
     </div>

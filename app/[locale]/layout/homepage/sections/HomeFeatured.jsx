@@ -64,7 +64,7 @@ const FeatureCard = ({ icon, title, desc, delay = 0 }) => (
 
 const HomeFeatured = () => {
   return (
-    <section id="features" className="px-6 py-16 max-w-5xl mx-auto w-full">
+    <section id="features" className="px-3 py-16 bg-black w-full lg:px-[15%]">
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}

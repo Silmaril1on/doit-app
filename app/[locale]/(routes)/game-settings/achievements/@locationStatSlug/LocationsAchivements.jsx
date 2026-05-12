@@ -216,17 +216,13 @@ const ContinentPill = ({ item }) => {
               : "border-cream/10 bg-cream/5"
           }`}
         >
-          {badge?.image_url ? (
-            <Image
-              src={badge.image_url}
-              alt={item.continent}
-              width={28}
-              height={28}
-              className="rounded-full object-cover"
-            />
-          ) : (
-            <span>{badge?.icon ?? "🌍"}</span>
-          )}
+          <Image
+            src={badge.image_url}
+            alt={item.continent}
+            width={28}
+            height={28}
+            className="rounded-full object-cover"
+          />
         </div>
 
         {/* Name + fraction */}

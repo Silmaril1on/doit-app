@@ -5,7 +5,7 @@ import Footer from "../footer/Footer";
 
 const HomePage = () => {
   return (
-    <div className="min-h-screen w-full flex flex-col bg-stone-900">
+    <div className="min-h-screen w-full flex flex-col bg-black ">
       <HomeHero />
       <HomeFeatured />
       <HomeQa />

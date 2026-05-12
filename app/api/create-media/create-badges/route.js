@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const MODEL = "seedream-4-0-250828";
+const MODEL = "seedream-4-5-251128";
 const API_URL = `${process.env.BYTEPLUS_BASE_URL}/images/generations`;
 
 export async function POST(request) {

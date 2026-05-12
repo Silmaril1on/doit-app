@@ -55,7 +55,7 @@ const SettingsPage = () => {
           >
             <Link
               href={href}
-              className="text-6xl text-primary/80 hover:text-primary duration-200 block text-shadow-white]"
+              className="text-4xl lg:text-6xl text-primary/80 hover:text-primary duration-200 block text-shadow-white]"
             >
               {label}
             </Link>
