@@ -2,5 +2,14 @@
   "HomePage": {
     "title": "Welcome to DoIt",
     "subtitle": "Track your tasks and level up"
+  },
+  "Navigation": {
+    "home": "Home",
+    "features": "Features",
+    "faq": "FAQ",
+    "contactUs": "Contact Us",
+    "myProfile": "My Profile",
+    "login": "Login",
+    "register": "Register"
   }
 }

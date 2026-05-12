@@ -4,6 +4,7 @@ import FromContainer from "@/app/[locale]/components/container/FromContainer";
 import Logo from "@/app/[locale]/components/elements/Logo";
 import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { useParams, useRouter } from "next/navigation";
+import { useRouter as useIntlRouter } from "@/i18n/navigation";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -23,7 +24,7 @@ const ResetPasswordPage = () => {
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
   const dispatch = useDispatch();
-  const router = useRouter();
+  const router = useIntlRouter();
   const [form, setForm] = useState({ email: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -64,7 +65,7 @@ const ResetPasswordPage = () => {
           msg: "Check your email for the reset link.",
         }),
       );
-      router.push(`/${locale}/login`);
+      router.push("/login");
     } catch (err) {
       dispatch(
         setToast({

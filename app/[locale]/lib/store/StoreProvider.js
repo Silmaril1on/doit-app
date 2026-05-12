@@ -63,8 +63,11 @@ const StoreHydrator = ({ children }) => {
           const configData = await configRes.json();
           if (configData?.config?.color_value) {
             dispatch(setColorValue(configData.config.color_value));
+            // Persist to cookie so server can apply data-theme on the next SSR pass
+            document.cookie = `doit-theme=${configData.config.color_value}; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
           } else {
             dispatch(clearColorValue());
+            document.cookie = `doit-theme=teal; path=/; max-age=${60 * 60 * 24 * 30}; samesite=lax`;
           }
         }
       } catch {
@@ -81,10 +84,17 @@ const StoreHydrator = ({ children }) => {
 };
 
 // --- provider ---
-export const StoreProvider = ({ children, initialUser = null }) => {
+export const StoreProvider = ({
+  children,
+  initialUser = null,
+  initialColorValue = null,
+}) => {
   const [store] = useState(() =>
     makeStore({
       user: { currentUser: initialUser },
+      ...(initialColorValue
+        ? { config: { colorValue: initialColorValue } }
+        : {}),
     }),
   );
 

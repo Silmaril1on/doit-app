@@ -2,9 +2,17 @@
 import { usePathname } from "next/navigation";
 import Navigation from "./navigation/Navigation";
 
+const LOCALES = new Set(["en", "de", "ka"]);
+
 export default function NavigationWrapper() {
   const pathname = usePathname();
   const segments = (pathname ?? "").split("/").filter(Boolean);
+
+  // Strip leading locale segment so checks work for both /en/login and /login
+  const effectiveSegments = LOCALES.has(segments[0])
+    ? segments.slice(1)
+    : segments;
+
   const staticRoutes = new Set([
     "login",
     "register",
@@ -27,17 +35,13 @@ export default function NavigationWrapper() {
     pathname?.endsWith("/tasks/achievements") ||
     pathname?.endsWith("/reset-password/update-password");
 
+  // A user-profile route is a single non-static segment (e.g. /john or /en/john)
   const isUserProfileRoute =
-    (segments.length === 2 && !staticRoutes.has(segments[1])) ||
-    (segments.length === 1 && !staticRoutes.has(segments[0]));
+    effectiveSegments.length === 1 && !staticRoutes.has(effectiveSegments[0]);
 
   if (isAuthRoute || isUserProfileRoute) {
     return null;
   }
 
-  return (
-    <>
-      <Navigation />
-    </>
-  );
+  return <Navigation />;
 }

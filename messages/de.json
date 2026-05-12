@@ -2,5 +2,14 @@
   "HomePage": {
     "title": "Willkommen bei DoIt",
     "subtitle": "Verfolge deine Aufgaben und werde besser"
+  },
+  "Navigation": {
+    "home": "Startseite",
+    "features": "Funktionen",
+    "faq": "FAQ",
+    "contactUs": "Kontakt",
+    "myProfile": "Mein Profil",
+    "login": "Anmelden",
+    "register": "Registrieren"
   }
 }

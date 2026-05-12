@@ -12,12 +12,7 @@ const Logo = ({ size = "sm", className }) => {
   return (
     <Link href="/">
       <div className={`${className} ${sizeClasses[size]}  `}>
-        <Image
-          src="/assets/doit-logo.jpg"
-          alt="DOIT Logo"
-          width={150}
-          height={150}
-        />
+        <Image src="/web-logo.png" alt="DOIT Logo" width={150} height={150} />
       </div>
     </Link>
   );

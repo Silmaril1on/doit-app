@@ -1,14 +1,17 @@
 "use client";
 import { useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { GiGreatPyramid } from "react-icons/gi";
 import {
   selectColorValue,
   setColorValue,
 } from "@/app/[locale]/lib/features/configSlice";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
 import SectionHeadline from "@/app/[locale]/components/elements/SectionHeadline";
-import ObjectiveCard from "@/app/[locale]/(routes)/(tasks)/tasks/(componets)/ObjectiveCard";
 import { useSound } from "@/app/[locale]/lib/hooks/useSounds";
+import Button from "@/app/[locale]/components/buttons/Button";
+import ItemCard from "@/app/[locale]/components/container/ItemCard";
+import { AnimatePresence, motion } from "framer-motion";
 
 const COLOR_OPTIONS = [
   { value: "teal", label: "Teal", hex: "#2dd4bf" },
@@ -19,50 +22,6 @@ const COLOR_OPTIONS = [
   { value: "violet", label: "Violet", hex: "#9b59ff" },
   { value: "coffee", label: "Coffee", hex: "#d6a461" },
 ];
-
-/* Static dummy objective used purely for design preview */
-const DEMO_OBJECTIVE = {
-  id: "demo-preview",
-  task_title: "Summit a Mountain Peak",
-  status: "in_progress",
-  priority: "high",
-  country: "Georgia",
-  city: "Kazbegi",
-  due_date: "2026-08-01",
-  xp_reward: 200,
-  user_id: "demo-user",
-  like_count: 14,
-  is_liked: false,
-  review_count: 4,
-  recreate_count: 7,
-  task_gallery: [],
-  subtasks: [
-    {
-      id: "s1",
-      title: "Research the trail route",
-      completed: true,
-      category_id: 1,
-      lat: null,
-      lng: null,
-    },
-    {
-      id: "s2",
-      title: "Pack all necessary gear",
-      completed: false,
-      category_id: 1,
-      lat: null,
-      lng: null,
-    },
-    {
-      id: "s3",
-      title: "Book a local guide",
-      completed: false,
-      category_id: 2,
-      lat: null,
-      lng: null,
-    },
-  ],
-};
 
 /* ── Main Colors component ────────────────────────────────── */
 const Colors = () => {
@@ -128,27 +87,37 @@ const Colors = () => {
   const thumbLeft = `${((activeIndex + 0.5) / COLOR_OPTIONS.length) * 100}%`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 flex grow flex-col w-full pb-5">
       <SectionHeadline
         title="Color Theme"
         subtitle="Choose your personal accent color."
       />
 
-      {/* ── Design Showcase ── */}
-      <div className="space-y-1.5">
-        <p className="text-[10px] uppercase tracking-widest secondary text-chino/50">
-          Component Preview
-        </p>
-        <ObjectiveCard
-          objective={DEMO_OBJECTIVE}
-          readOnly
-          completedView={false}
-          showDirections={false}
-        />
-      </div>
-
       {/* ── Slider ── */}
-      <div className="space-y-2">
+      <div className="space-y-2 flex flex-col grow">
+        <ItemCard className="h-135 ">
+          <AnimatePresence mode="wait">
+            <motion.div
+              className="center flex-col h-full"
+              key={currentColor} // remount on every color change
+              initial={{ scale: 0.7, rotate: -8, y: -30, opacity: 0 }}
+              animate={{
+                scale: [0.7, 1.15, 0.95, 1.05, 1],
+                rotate: [-8, 6, -4, 2, 0],
+                y: [-30, -12, 4, -4, 0],
+                opacity: [0, 1, 1, 1, 1],
+              }}
+              transition={{
+                duration: 0.55,
+                times: [0, 0.3, 0.55, 0.75, 1],
+                ease: "easeOut",
+              }}
+            >
+              <GiGreatPyramid className="text-[200px] text-primary" />
+              <h1 className="text-primary text-3xl">Welcome to gyza</h1>
+            </motion.div>
+          </AnimatePresence>
+        </ItemCard>
         <div className="flex items-center gap-2">
           {/* Left arrow */}
           <button
@@ -194,7 +163,7 @@ const Colors = () => {
               {/* glow halo */}
               <div className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 w-5 h-14 bg-white/20 rounded-full blur-md" />
               {/* thumb bar */}
-              <div className="relative w-1 h-14 -translate-x-1/2 bg-white rounded-full shadow-[0_0_10px_3px_rgba(255,255,255,0.6)]" />
+              <div className="relative w-1 h-14 -translate-x-1/2 bg-cream rounded-full shadow-[0_0_10px_3px_rgba(255,255,255,0.6)]" />
             </div>
           </div>
 
@@ -219,15 +188,18 @@ const Colors = () => {
       </div>
 
       {/* ── Save button ── */}
-      <div className="flex justify-center pt-2">
-        <button
+      <div className="flex justify-center pt-2 flex-col items-center space-y-3">
+        <Button
+          text={saving ? "Saving…" : "Save Design"}
           type="button"
+          variant="outline"
           onClick={handleSave}
           disabled={saving}
-          className="relative px-12 py-3 primary font-bold text-sm uppercase tracking-[0.18em] text-black bg-primary rounded-lg shadow-[0_0_22px_4px_var(--color-primary)] hover:shadow-[0_0_36px_10px_var(--color-primary)] hover:scale-[1.04] active:scale-95 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none"
-        >
-          {saving ? "Saving…" : "Save Design"}
-        </button>
+        />
+        <ItemCard className="text-chino secondary">
+          <b>NOTE:</b> You can change theme color anytime you want coming back
+          here
+        </ItemCard>
       </div>
     </div>
   );

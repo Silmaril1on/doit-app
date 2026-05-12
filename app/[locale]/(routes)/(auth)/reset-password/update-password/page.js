@@ -4,6 +4,7 @@ import Logo from "@/app/[locale]/components/elements/Logo";
 import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { supabaseClient } from "@/app/[locale]/lib/supabase/supabaseClient";
 import { useParams, useRouter } from "next/navigation";
+import { useRouter as useIntlRouter } from "@/i18n/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -32,7 +33,7 @@ const UpdatePasswordPage = () => {
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
   const dispatch = useDispatch();
-  const router = useRouter();
+  const router = useIntlRouter();
   const [form, setForm] = useState({ password: "", confirmPassword: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sessionVerified, setSessionVerified] = useState(false);
@@ -140,7 +141,7 @@ const UpdatePasswordPage = () => {
           msg: "Password updated successfully. Please log in.",
         }),
       );
-      router.push(`/${locale}/login`);
+      router.push("/login");
     } catch (err) {
       dispatch(
         setToast({

@@ -5,7 +5,8 @@ import Logo from "@/app/[locale]/components/elements/Logo";
 import GoogleAuth from "@/app/[locale]/components/buttons/GoogleAuth";
 import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setUser } from "@/app/[locale]/lib/features/userSlice";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -86,7 +87,7 @@ const LoginPage = () => {
 
       dispatch(setUser(data.user));
 
-      router.push(`/${locale}`);
+      router.push("/");
     } catch (submitError) {
       dispatch(
         setToast({

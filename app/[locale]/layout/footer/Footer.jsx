@@ -9,50 +9,25 @@ import Motion from "../../components/motion/Motion";
 const STORAGE_KEY = "user-location-cache";
 
 const Footer = () => {
-  // Initialize from localStorage immediately
-  const [location, setLocation] = useState(() => {
-    if (typeof window === "undefined") {
-      return {
-        country: null,
-        city: null,
-      };
-    }
+  // Always start with null to match SSR — read cache in a separate effect
+  const [location, setLocation] = useState({ country: null, city: null });
 
+  // Restore from localStorage cache (client-only, runs after hydration)
+  useEffect(() => {
     try {
-      const cached = localStorage.getItem("user-location-cache");
-
-      if (!cached) {
-        return {
-          country: null,
-          city: null,
-        };
-      }
-
+      const cached = localStorage.getItem(STORAGE_KEY);
+      if (!cached) return;
       const parsed = JSON.parse(cached);
-
-      // expire after 24h
       const isExpired = Date.now() - parsed.timestamp > 1000 * 60 * 60 * 24;
-
       if (isExpired) {
-        localStorage.removeItem("user-location-cache");
-
-        return {
-          country: null,
-          city: null,
-        };
+        localStorage.removeItem(STORAGE_KEY);
+        return;
       }
-
-      return {
-        country: parsed.country,
-        city: parsed.city,
-      };
+      setLocation({ country: parsed.country, city: parsed.city });
     } catch {
-      return {
-        country: null,
-        city: null,
-      };
+      // ignore
     }
-  });
+  }, []);
 
   useEffect(() => {
     // already cached

@@ -7,9 +7,8 @@ import {
   closeModal,
   selectModal,
 } from "@/app/[locale]/lib/features/modalSlice";
+import BorderSvg from "../elements/BorderSvg";
 
-// ─── DEV PREVIEW FLAG ────────────────────────────────────────────────────────
-// Set to `true` to force the modal open with dummy data while styling.
 const DEV_PREVIEW = false;
 const DEV_DUMMY = { prevLevel: 4, newLevel: 5 };
 // ─────────────────────────────────────────────────────────────────────────────
@@ -62,8 +61,6 @@ const LevelUpAnimationModal = () => {
   const { modalType, modalProps: reduxProps } = useSelector(selectModal);
   const isOpen = DEV_PREVIEW || modalType === "levelUp";
   const modalProps = DEV_PREVIEW ? DEV_DUMMY : reduxProps;
-
-  const prevLevel = modalProps?.prevLevel;
   const newLevel = modalProps?.newLevel;
 
   const handleDone = useCallback(() => {
@@ -78,7 +75,7 @@ const LevelUpAnimationModal = () => {
       title="LEVEL UP!"
       maxWidth="max-w-sm"
       footerMode="close"
-      submitLabel="Continue →"
+      submitLabel="close"
     >
       <>
         <style>{KEYFRAMES}</style>
@@ -93,45 +90,35 @@ const LevelUpAnimationModal = () => {
         <div className="relative z-10 flex flex-col items-center gap-5 py-4">
           {/* Crown */}
           <motion.div
-            className="text-5xl"
+            className="text-5xl relative w-28 h-28 p-2 shadow-2xl rounded-lg center"
             initial={{ scale: 0, rotate: -30 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.15, type: "spring", stiffness: 250 }}
           >
-            👑
+            <div className="bg-black/30 text-primary rounded-md w-full h-full center">
+              <span>{newLevel}</span>
+            </div>
+            <BorderSvg />
           </motion.div>
 
           {/* LEVEL UP text */}
           <motion.p
-            className="secondary font-black tracking-[0.2em] text-2xl text-primary lvl-glow"
+            className=" tracking-WIDEST text-2xl text-cream lvl-glow"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.4 }}
           >
-            LEVEL UP!
+            CONGRADULATIONS !
           </motion.p>
-
-          {/* Level progression */}
-          <motion.div
-            className="flex items-center gap-4"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.35, duration: 0.4 }}
+          <motion.p
+            className="text-md secondary text-center text-cream/80"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.4 }}
           >
-            <span className="secondary text-3xl font-bold text-cream/50">
-              Lv.{prevLevel}
-            </span>
-            <motion.span
-              className="text-primary text-xl"
-              animate={{ opacity: [0.3, 1, 0.3] }}
-              transition={{ duration: 1.2, repeat: Infinity }}
-            >
-              ▶▶▶
-            </motion.span>
-            <span className="secondary text-3xl font-black text-primary drop-shadow-[0_0_12px_rgba(200,168,75,0.7)]">
-              Lv.{newLevel}
-            </span>
-          </motion.div>
+            You have reached level {newLevel}. Keep up the great work and
+            continue leveling up your productivity!
+          </motion.p>
 
           {/* Cosmetic XP drain bar */}
           <motion.div className="w-full h-2 rounded-full bg-primary/10 border border-primary/20 overflow-hidden">

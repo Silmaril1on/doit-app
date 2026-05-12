@@ -6,7 +6,8 @@ import { useState } from "react";
 import { clearToast, setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setUser } from "@/app/[locale]/lib/features/userSlice";
 import { validateRegistrationForm } from "@/app/[locale]/lib/utils/regValidation";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useDispatch } from "react-redux";
 
 const userFormConfig = [
@@ -108,7 +109,7 @@ const RegistrationPage = () => {
         password: "",
         confirmPassword: "",
       });
-      router.push(`/${locale}/`);
+      router.push("/");
     } catch (submitError) {
       dispatch(
         setToast({

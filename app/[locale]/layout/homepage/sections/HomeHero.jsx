@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import Button from "@/app/[locale]/components/buttons/Button";
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef } from "react";
+import Twinkles from "@/app/[locale]/components/elements/Twinkles";
 
 const HomeHero = () => {
   const params = useParams();
@@ -12,12 +14,10 @@ const HomeHero = () => {
   return (
     <section
       id="hero"
-      className="relative bg-black w-full h-72 lg:min-h-screen flex "
+      className="relative bg-black w-full h-screen lg:min-h-screen flex flex-col"
     >
       <BackgroundSide />
       <ContentSide locale={locale} />
-      {/* <ActionSide /> */}
-      {/* <BackgroundSlider /> */}
     </section>
   );
 };
@@ -69,7 +69,7 @@ const buttonVariants = {
 const ContentSide = ({ locale }) => {
   return (
     <motion.div
-      className="relative z-5 flex  flex-col w-2/5 pl-10 h-full items-start justify-center  "
+      className="w-full lg:w-[50%] h-full relative z-10 flex flex-col items-center lg:items-start px-4 lg:pl-10 justify-center"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -80,13 +80,16 @@ const ContentSide = ({ locale }) => {
       </motion.h2>
 
       {/* h1 */}
-      <motion.h1 className="text-5xl text-primary" variants={fadeUpVariants}>
+      <motion.h1
+        className="text-lg lg:text-5xl text-primary"
+        variants={fadeUpVariants}
+      >
         This is a Hook Headline for the users
       </motion.h1>
 
       {/* paragraph */}
       <motion.p
-        className="text-cream/80 secondary text-sm mt-4 leading-normal"
+        className="text-cream/80 secondary text-xs lg:text-sm mt-4 leading-normal text-center lg:text-start"
         variants={fadeUpVariants}
       >
         Lorem ipsum dolor sit amet, consectetur adipisicing elit. Beatae
@@ -99,7 +102,7 @@ const ContentSide = ({ locale }) => {
 
       {/* buttons row */}
       <motion.div
-        className="w-full mt-10 flex space-x-5"
+        className="w-full mt-10 flex justify-center lg:justify-start  space-x-5"
         variants={containerVariants}
       >
         <motion.div variants={buttonVariants}>
@@ -118,27 +121,30 @@ const ContentSide = ({ locale }) => {
   );
 };
 
-const ActionSide = () => {
-  return <div></div>;
-};
-
-const BackgroundSlider = () => {
-  return (
-    <div className="center absolute inset-0 z-1 bg-black"> hello slider</div>
-  );
-};
-
 const BackgroundSide = () => {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = 0.7;
+    }
+  }, []);
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="absolute inset-0 w-full z-2 overflow-hidden h-72 lg:h-screen"
+      className="relative lg:absolute lg:w-[60%] right-0 z-2 overflow-hidden h-175 w-full lg:h-screen "
     >
+      <Twinkles />
+      <div className="mt-10 relative z-1">
+        <video ref={videoRef} autoPlay muted loop playsInline>
+          <source src="/videos/earth.webm" type="video/webm" />
+        </video>
+      </div>
       {/* Base image */}
       <motion.div
-        className="absolute inset-0 blur-[1px]"
+        className="absolute h-full inset-0 blur-[1px] z-2"
         animate={{
           opacity: [1, 1, 1, 0.92, 1],
         }}
@@ -152,14 +158,14 @@ const BackgroundSide = () => {
           src="/hero-wp.png"
           alt="hero image"
           fill
-          className="object-contain  w-full"
+          className="object-cover  w-full"
           priority
         />
       </motion.div>
 
       {/* Glitch layer */}
       <motion.div
-        className="absolute inset-0 -left-5"
+        className="absolute inset-0 -left-5 z-2"
         initial={{ opacity: 0 }}
         animate={{
           opacity: [0, 1, 0, 0, 1, 0],
@@ -176,27 +182,23 @@ const BackgroundSide = () => {
           src="/glitch-hero-wp.png"
           alt="glitch hero image"
           fill
-          className="object-contain w-full"
+          className="object-cover w-full"
           priority
         />
       </motion.div>
-      <div className="absolute h-20 w-full bottom-0 bg-linear-to-t from-black to-transparent" />
+      <div className="absolute z-3 h-10 w-full bottom-0 bg-linear-to-t from-black to-transparent" />
       <div
-        className="
-          pointer-events-none
-          absolute inset-0
-          z-0
-        "
+        className=" pointer-events-none z-3 absolute inset-0 "
         style={{
           background: `
             radial-gradient(
               circle at center,
               transparent 0%,
-              transparent 43%,
-              rgba(0,0,0,0.15) 47%,
-              rgba(0,0,0,0.45) 52%,
-              rgba(0,0,0,0.75) 57%,
-              rgba(0,0,0,0.95) 65%,
+              transparent 55%,
+              rgba(0,0,0,0.15) 60%,
+              rgba(0,0,0,0.45) 71%,
+              rgba(0,0,0,0.75) 78%,
+              rgba(0,0,0,0.95) 90%,
               #000 100%
             )
           `,

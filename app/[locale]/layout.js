@@ -46,6 +46,20 @@ export default async function RootLayout({ children, params }) {
 
   const cookieStore = await cookies();
   const rawUser = cookieStore.get("doit-user")?.value ?? null;
+  const rawTheme = cookieStore.get("doit-theme")?.value ?? null;
+
+  const VALID_COLORS = new Set([
+    "teal",
+    "gold",
+    "blue",
+    "crimson",
+    "grey",
+    "violet",
+    "coffee",
+  ]);
+  const initialColorValue =
+    rawTheme && VALID_COLORS.has(rawTheme) ? rawTheme : null;
+
   let initialUser = null;
 
   if (rawUser) {
@@ -59,11 +73,15 @@ export default async function RootLayout({ children, params }) {
   return (
     <html
       lang={locale}
+      data-theme={initialColorValue ?? "teal"}
       className={`${josh.variable} ${teko.variable} h-full antialiased primary`}
     >
       <body className="min-h-full flex flex-col items-center relative overflow-x-hidden">
         <NextIntlClientProvider>
-          <StoreProvider initialUser={initialUser}>
+          <StoreProvider
+            initialUser={initialUser}
+            initialColorValue={initialColorValue}
+          >
             <DarkModeProvider>
               <ThemeProvider>
                 <NavigationWrapper />

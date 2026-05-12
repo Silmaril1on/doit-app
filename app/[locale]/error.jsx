@@ -3,13 +3,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { TbAlertCircle } from "react-icons/tb";
+import Button from "./components/buttons/Button";
 
 export default function Error({ error, reset }) {
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-6 text-center">
       <motion.div
         initial={{ opacity: 0, scale: 0.85, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -19,7 +20,7 @@ export default function Error({ error, reset }) {
         <motion.div
           animate={{ rotate: [0, -6, 6, -3, 3, 0] }}
           transition={{ delay: 0.3, duration: 0.8, ease: "easeInOut" }}
-          className="text-red-400"
+          className="text-red-600"
         >
           <TbAlertCircle size={100} />
         </motion.div>
@@ -35,19 +36,8 @@ export default function Error({ error, reset }) {
         </div>
 
         <div className="flex items-center gap-3 flex-wrap justify-center">
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-md bg-primary/20 border border-primary/60 text-primary primary text-sm uppercase tracking-wide hover:bg-primary/30 transition-colors duration-200 cursor-pointer"
-          >
-            Try Again
-          </button>
-          <Link
-            href={`/${locale}`}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-primary/30 text-chino/70 secondary text-sm hover:text-chino hover:border-primary/50 transition-colors duration-200"
-          >
-            ← Home
-          </Link>
+          <Button variant="outline" onClick={reset} text="Try Again" />
+          <Button href={`/${locale}`} text="Go Home" />
         </div>
       </motion.div>
     </div>

@@ -180,7 +180,7 @@ const OnCompleteTaskModal = () => {
 
         <motion.div
           variants={itemVariants}
-          className="grid gap-3 sm:grid-cols-2"
+          className="grid grid-cols-2 gap-3 sm:grid-cols-2"
         >
           {/* XP count — always starts immediately */}
           <motion.div
@@ -228,7 +228,7 @@ const OnCompleteTaskModal = () => {
               className="rounded-md border border-primary/40 bg-primary/10 px-4 py-4 space-y-3"
             >
               <p className="secondary text-xs uppercase tracking-[0.14em] text-primary/80">
-                🏅 New Badge Unlocked!
+                New Badge Unlocked!
               </p>
               <div className="flex items-center gap-4">
                 {/* Badge icon */}
