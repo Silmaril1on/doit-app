@@ -10,6 +10,9 @@ import Image from "next/image";
 
 export const SHOW_MY_ID_MODAL = "showMyId";
 
+// Module-level cache — survives modal close/reopen without a page reload.
+const qrSessionCache = new Map();
+
 const ShowMyIdModal = () => {
   const { modalType } = useSelector(selectModal);
   const isOpen = modalType === SHOW_MY_ID_MODAL;
@@ -25,8 +28,15 @@ const ShowMyIdModal = () => {
   useEffect(() => {
     if (!isOpen || !user?.id) return;
 
-    // Already have a QR for this user — nothing to do
+    // Already have a QR for this user in local state — nothing to do
     if (generatedForRef.current === user.id && qrUrl) return;
+
+    // Hit the module-level cache first — no network request needed
+    if (qrSessionCache.has(user.id)) {
+      setQrUrl(qrSessionCache.get(user.id));
+      generatedForRef.current = user.id;
+      return;
+    }
 
     setError(null);
 
@@ -38,6 +48,7 @@ const ShowMyIdModal = () => {
         if (res.ok) {
           const { profile } = await res.json();
           if (profile?.qr_image) {
+            qrSessionCache.set(user.id, profile.qr_image);
             setQrUrl(profile.qr_image);
             generatedForRef.current = user.id;
             return;
@@ -99,7 +110,11 @@ const ShowMyIdModal = () => {
     if (uploadRes.ok) {
       const { url } = await uploadRes.json();
       URL.revokeObjectURL(localUrl);
+      qrSessionCache.set(user.id, url);
       setQrUrl(url);
+    } else {
+      // Keep the blob URL in cache so subsequent opens are still instant.
+      qrSessionCache.set(user.id, localUrl);
     }
 
     generatedForRef.current = user.id;

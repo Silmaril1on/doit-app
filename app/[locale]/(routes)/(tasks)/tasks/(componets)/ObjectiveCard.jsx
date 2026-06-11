@@ -15,7 +15,8 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { IoMdClose, IoMdArrowDropright, IoIosCheckmark } from "react-icons/io";
 import { AiFillFire, AiOutlineFire } from "react-icons/ai";
 import { MdOutlineReviews, MdReviews } from "react-icons/md";
@@ -160,12 +161,13 @@ const ObjectiveCard = ({
         modalType: "viewGallery",
         modalProps: {
           objectiveId: objective.id,
+          objective,
           subtasks,
           taskTitle: objective.task_title,
         },
       }),
     );
-  }, [dispatch, objective.id, objective.task_title, subtasks]);
+  }, [dispatch, objective, subtasks]);
 
   // Subtasks that have lat/lng coordinates set (location mode)
   const locationSubtasks = subtasks
@@ -410,7 +412,7 @@ const SubTasksSection = ({
                     return (
                       <div
                         key={`${objective.id}-subtask-${item.index}`}
-                        className="group hover:pl-3 flex items-center justify-between gap-2 rounded-md px-1 duration-300"
+                        className="flex items-center gap-2 rounded-md px-1"
                       >
                         {onToggleSubtask ? (
                           <button
@@ -435,7 +437,7 @@ const SubTasksSection = ({
                           </button>
                         ) : (
                           <span
-                            className={`flex cursor-pointer  items-center gap-0.5 font-medium ${
+                            className={`flex cursor-pointer items-center gap-0.5 font-medium ${
                               isCompleted ? "text-green-500" : "text-chino/85"
                             }`}
                           >
@@ -450,18 +452,6 @@ const SubTasksSection = ({
                             <span className="capitalize">{item.label}</span>
                           </span>
                         )}
-                        {onRemoveSubtask ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onRemoveSubtask?.(objective, item.index)
-                            }
-                            aria-label={`Remove subtask ${item.index + 1}`}
-                            className="cursor-pointer text-red-500 opacity-0 duration-300 group-hover:opacity-100"
-                          >
-                            <IoMdClose size={16} />
-                          </button>
-                        ) : null}
                       </div>
                     );
                   })}
@@ -554,6 +544,10 @@ const CardFeedActions = ({
   initialRecreateCount = 0,
 }) => {
   const dispatch = useDispatch();
+  const currentUser = useSelector(selectCurrentUser);
+  // When the current user owns this task, the recreate button is a read-only
+  // counter — it should not open the recreate modal.
+  const isOwner = currentUser?.id && currentUser.id === taskOwnerId;
   const [liked, setLiked] = useState(initialIsLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
   const [likeLoading, setLikeLoading] = useState(false);
@@ -631,6 +625,7 @@ const CardFeedActions = ({
   };
 
   const handleRecreate = () => {
+    if (isOwner) return; // Just a counter for own tasks — no action.
     dispatch(
       openModal({
         modalType: "recreateObjective",
@@ -667,15 +662,16 @@ const CardFeedActions = ({
         onClick={handleOpenThoughts}
       />
 
-      {/* Recreate */}
+      {/* Recreate — counter only when user owns the task */}
       <ActionButton
         color="cyan"
-        active={hasRecreated || recreateCount > 0}
+        active={!isOwner && (hasRecreated || recreateCount > 0)}
         icon={<IoBookmarkOutline size={13} />}
         activeIcon={<IoBookmark size={13} />}
         count={recreateCount}
         text={recreateCount !== 1 ? "Recreates" : "Recreate"}
         onClick={handleRecreate}
+        disabled={isOwner}
       />
     </div>
   );

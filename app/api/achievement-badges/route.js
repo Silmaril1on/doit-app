@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { revalidateTag } from "next/cache";
 import {
   getAllCategoryProgress,
   markAllBadgesSeen,
 } from "@/app/[locale]/lib/services/achievement-badges/categoryProgress";
+import { badgesCacheTag } from "@/app/[locale]/lib/services/achievement-badges/cacheUtils";
 
 async function getUserId() {
   const cookieStore = await cookies();
@@ -35,6 +37,7 @@ export async function PATCH() {
     }
 
     await markAllBadgesSeen(userId);
+    revalidateTag(badgesCacheTag(userId));
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     return NextResponse.json(

@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { GiGreatPyramid } from "react-icons/gi";
 import {
@@ -26,20 +26,39 @@ const COLOR_OPTIONS = [
 /* ── Main Colors component ────────────────────────────────── */
 const Colors = () => {
   const dispatch = useDispatch();
-  const currentColor = useSelector(selectColorValue) ?? "teal";
+  const committedColor = useSelector(selectColorValue) ?? "teal";
+  // Local draft — only applied to Redux on save. Reverted on unmount if not saved.
+  const [draftColor, setDraftColor] = useState(committedColor);
   const [saving, setSaving] = useState(false);
   const { playSound } = useSound();
   const barRef = useRef(null);
   const isDragging = useRef(false);
+  // Track whether the user saved, so the unmount cleanup doesn't revert a fresh save.
+  const savedRef = useRef(false);
+  // Keep a stable ref to the committed color so the cleanup always reads the original.
+  const committedColorRef = useRef(committedColor);
+
+  // Preview the draft color in the app while on this page; revert on leave if not saved.
+  useEffect(() => {
+    dispatch(setColorValue(draftColor));
+  }, [dispatch, draftColor]);
+
+  useEffect(() => {
+    return () => {
+      if (!savedRef.current) {
+        dispatch(setColorValue(committedColorRef.current));
+      }
+    };
+  }, [dispatch]);
 
   const activeIndex = Math.max(
     0,
-    COLOR_OPTIONS.findIndex((o) => o.value === currentColor),
+    COLOR_OPTIONS.findIndex((o) => o.value === draftColor),
   );
 
   const selectByIndex = (idx) => {
     const clamped = Math.max(0, Math.min(idx, COLOR_OPTIONS.length - 1));
-    dispatch(setColorValue(COLOR_OPTIONS[clamped].value));
+    setDraftColor(COLOR_OPTIONS[clamped].value);
   };
 
   const indexFromPointer = (e) => {
@@ -73,9 +92,12 @@ const Colors = () => {
       const res = await fetch("/api/user/config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ color_value: currentColor }),
+        body: JSON.stringify({ color_value: draftColor }),
       });
       if (!res.ok) throw new Error("Failed to save");
+      // Mark saved so unmount cleanup doesn't revert the new color.
+      savedRef.current = true;
+      committedColorRef.current = draftColor;
       dispatch(setToast({ type: "success", msg: "Design saved!" }));
     } catch {
       dispatch(setToast({ type: "error", msg: "Failed to save design." }));
@@ -95,11 +117,11 @@ const Colors = () => {
 
       {/* ── Slider ── */}
       <div className="space-y-2 flex flex-col grow">
-        <ItemCard className="h-135 ">
+        <ItemCard className="h-110 ">
           <AnimatePresence mode="wait">
             <motion.div
               className="center flex-col h-full"
-              key={currentColor} // remount on every color change
+              key={draftColor} // remount on every color change
               initial={{ scale: 0.7, rotate: -8, y: -30, opacity: 0 }}
               animate={{
                 scale: [0.7, 1.15, 0.95, 1.05, 1],
@@ -149,7 +171,7 @@ const Colors = () => {
                   className="flex-1 transition-opacity duration-200"
                   style={{
                     backgroundColor: opt.hex,
-                    opacity: opt.value === currentColor ? 1 : 0.5,
+                    opacity: opt.value === draftColor ? 1 : 0.5,
                   }}
                 />
               ))}

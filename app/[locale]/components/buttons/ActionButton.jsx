@@ -85,7 +85,7 @@ const ActionButton = ({
     </>
   );
 
-  const baseClass = `rounded-full relative cursor-pointer backdrop-blur-sm duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 tracking-[1px] ${
+  const baseClass = `rounded-full relative center cursor-pointer backdrop-blur-sm duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 tracking-[1px] ${
     hasPill ? "px-2.5 py-1.5 text-xs" : "p-2"
   } ${colorClass}`;
 

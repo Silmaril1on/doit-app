@@ -101,9 +101,7 @@ const DonutChart = ({
         {/* center text */}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <h1 className="text-cream text-2xl font-bold leading-none">
-          {displayCenter}
-        </h1>
+        <h1 className="text-cream text-2xl leading-none">{displayCenter}</h1>
         <h1 className="text-cream text-shadow mt-2 text-xs">
           {centerSubLabel}
         </h1>

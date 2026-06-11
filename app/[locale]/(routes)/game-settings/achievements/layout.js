@@ -1,4 +1,8 @@
-import React from "react";
+import React, { Suspense } from "react";
+
+const SlotSkeleton = () => (
+  <div className="rounded-xl border border-primary/10 bg-black/20 p-4 animate-pulse h-40" />
+);
 
 const MyAchievementsLayout = ({
   badgesSlug,
@@ -7,9 +11,9 @@ const MyAchievementsLayout = ({
 }) => {
   return (
     <div className=" page-wrapper space-y-4">
-      {badgesSlug}
-      {locationStatSlug}
-      {levelBadgesSlug}
+      <Suspense fallback={<SlotSkeleton />}>{badgesSlug}</Suspense>
+      <Suspense fallback={<SlotSkeleton />}>{locationStatSlug}</Suspense>
+      <Suspense fallback={<SlotSkeleton />}>{levelBadgesSlug}</Suspense>
     </div>
   );
 };

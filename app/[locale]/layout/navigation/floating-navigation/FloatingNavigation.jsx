@@ -5,24 +5,19 @@ import ActionButton from "../../../components/buttons/ActionButton";
 import ArrowUpDown from "../../../components/elements/ArrowUpDown";
 import UserProfile from "./UserProfile";
 import NotificationsBadge from "./NotificationsBadge";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../lib/features/userSlice";
 
 const FloatingNavigation = () => {
   const [isOpen, setIsOpen] = useState(true);
   const user = useSelector(selectCurrentUser);
-  const [open, setOpen] = useState(false);
   const params = useParams();
   const locale = typeof params?.locale === "string" ? params.locale : "en";
 
   if (!user) {
     return null;
   }
-
-  const handleOpen = () => {
-    setOpen((current) => !current);
-  };
 
   return (
     <motion.div
@@ -39,40 +34,12 @@ const FloatingNavigation = () => {
       />
       {/* <LevelBar /> */}
       <div className="flex gap-2 items-center">
-        <ActionButton onClick={handleOpen} variant="home" text="Listory" />
-        <AnimatePresence>
-          {open && (
-            <div key="listory" className="absolute -top-25 flex flex-col gap-1">
-              <ActionButton
-                variant="home"
-                href={`/${locale}/tasks/objectives`}
-                animation="bottom"
-                delay={0}
-                onClick={() => setOpen(false)}
-              />
-              <ActionButton
-                variant="profile"
-                href={`/${locale}/tasks/active-quests`}
-                animation="bottom"
-                delay={0.08}
-                onClick={() => setOpen(false)}
-              />
-              <ActionButton
-                variant="achievements"
-                href={`/${locale}/tasks/achievements`}
-                animation="bottom"
-                delay={0.16}
-                onClick={() => setOpen(false)}
-              />
-            </div>
-          )}
-        </AnimatePresence>
         <ActionButton
-          // onClick={handleOpen}
           variant="home"
-          text="Feed"
-          href={`/${locale}/feed`}
+          text="Listory"
+          href={`/${locale}/tasks/objectives`}
         />
+        <ActionButton variant="home" text="Feed" href={`/${locale}/feed`} />
       </div>
       <div className="flex items-center gap-2 ">
         <NotificationsBadge />

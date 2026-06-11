@@ -92,8 +92,8 @@ const computePriority = (subtasks) => {
   const count = Array.isArray(subtasks)
     ? subtasks.filter((st) => typeof st === "object" && st.label?.trim()).length
     : 0;
-  if (count > 5) return "high";
-  if (count === 4 || count === 5) return "medium";
+  if (count > 10) return "high";
+  if (count >= 6) return "medium";
   return "low";
 };
 const CREATE_MODAL_TYPE = "createObjective";

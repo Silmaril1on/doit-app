@@ -1,17 +1,18 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getUserByDisplayName } from "@/app/[locale]/lib/services/user/userProfiles";
-import { getUserXp } from "@/app/[locale]/lib/services/xp/xpProgress";
-import { getFriendsCountByUserId } from "@/app/[locale]/lib/services/user/friendships";
-import { getObjectiveStatsByUserId } from "@/app/[locale]/lib/services/tasks/objectives/myObjectives";
-import { getAllCategoryProgress } from "@/app/[locale]/lib/services/achievement-badges/categoryProgress";
+import {
+  getCachedUser,
+  getCachedXp,
+  getCachedFriendsCount,
+} from "./profileCache";
 import MyProfile from "./MyProfile";
+import ProfileAnalytics from "./ProfileAnalytics";
+import { AnalyticsSkeleton } from "./ProfileSkeletons";
 
-export async function generateMetadata({ params }) {
-  const { username } = await params;
-  const displayName = decodeURIComponent(username);
+export async function generateMetadata() {
   return {
-    title: `${displayName} — DoIt`,
-    description: `View ${displayName}'s profile, achievements, and completed objectives on DoIt.`,
+    title: `Profile — Listory`,
+    description: `View user's profile, achievements, and completed objectives.`,
   };
 }
 
@@ -21,31 +22,31 @@ const UsersProfilePage = async ({ params }) => {
 
   let user;
   try {
-    user = await getUserByDisplayName(displayName);
+    user = await getCachedUser(displayName);
   } catch {
     notFound();
   }
+  if (!user) notFound();
 
-  const [xp, friendsCount, objectiveStats, badgeProgress] = await Promise.all([
-    getUserXp(user?.id).catch(() => ({ total_xp: 0, current_level: 1 })),
-    getFriendsCountByUserId(user?.id).catch(() => 0),
-    getObjectiveStatsByUserId(user?.id).catch(() => ({
-      byStatus: {},
-      byPriority: {},
-      total: 0,
-    })),
-    getAllCategoryProgress(user?.id).catch(() => []),
+  const [xp, friendsCount] = await Promise.all([
+    getCachedXp(user.id),
+    getCachedFriendsCount(user.id),
   ]);
+
+  console.log(`[profile] critical path complete — user=${user.id}`);
 
   return (
     <MyProfile
       user={user}
       xp={xp}
       friendsCount={friendsCount}
-      objectiveStats={objectiveStats}
-      badgeProgress={badgeProgress}
       tokens={user?.token ?? 0}
-    />
+    >
+      {/* Analytics streams in after the shell — skeleton prevents layout shift */}
+      <Suspense fallback={<AnalyticsSkeleton />}>
+        <ProfileAnalytics userId={user.id} xp={xp} />
+      </Suspense>
+    </MyProfile>
   );
 };
 

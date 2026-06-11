@@ -18,12 +18,18 @@ const BadgesSlot = ({
   tiersMap = {},
 }) => {
   const [activeCategory, setActiveCategory] = useState(categories[0]);
-  const [unseenSet] = useState(() => new Set(unseenCategoryIds));
+  const [unseenSet, setUnseenSet] = useState(() => new Set(unseenCategoryIds));
+
+  useEffect(() => {
+    setUnseenSet(new Set(unseenCategoryIds));
+  }, [unseenCategoryIds.join("|")]);
 
   // Mark all as seen in DB on first visit — fire and forget
   useEffect(() => {
     if (unseenSet.size === 0) return;
-    fetch("/api/achievement-badges", { method: "PATCH" }).catch(() => {});
+    fetch("/api/achievement-badges", { method: "PATCH" })
+      .then(() => setUnseenSet(new Set()))
+      .catch(() => {});
   }, [unseenSet]);
 
   const progressMap = new Map(allProgress.map((p) => [p.category_id, p]));

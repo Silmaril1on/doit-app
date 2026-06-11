@@ -1,6 +1,7 @@
 "use client";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useSound } from "@/app/[locale]/lib/hooks/useSounds";
 import { useDispatch, useSelector } from "react-redux";
 import GlobalModal from "./GlobalModal";
 import {
@@ -63,6 +64,12 @@ const LevelUpAnimationModal = () => {
   const modalProps = DEV_PREVIEW ? DEV_DUMMY : reduxProps;
   const newLevel = modalProps?.newLevel;
 
+  const { playSound } = useSound();
+
+  useEffect(() => {
+    if (isOpen) playSound("levelUp");
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleDone = useCallback(() => {
     if (DEV_PREVIEW) return;
     dispatch(closeModal());
@@ -124,9 +131,9 @@ const LevelUpAnimationModal = () => {
           <motion.div className="w-full h-2 rounded-full bg-primary/10 border border-primary/20 overflow-hidden">
             <motion.div
               className="h-full rounded-full bg-linear-to-r from-primary to-primary/60"
-              initial={{ width: "100%" }}
-              animate={{ width: "0%" }}
-              transition={{ delay: 0.5, duration: 0.7, ease: "easeOut" }}
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
             />
           </motion.div>
         </div>

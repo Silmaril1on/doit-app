@@ -217,6 +217,41 @@ export async function acceptFriendRequest(friendshipId) {
   return data;
 }
 
+// ─── batch friendship status ─────────────────────────────────────────────────
+// Returns an object mapping targetUserId → "pending_sent" | "pending_received" | "accepted"
+// Only returns entries where a relationship exists; absent keys mean "none".
+
+export async function getFriendshipStatuses(targetUserIds) {
+  if (!Array.isArray(targetUserIds) || targetUserIds.length === 0) return {};
+  const callerId = await getCallerId();
+  if (!callerId) return {};
+
+  const { data, error } = await supabaseAdmin
+    .from("friendships")
+    .select("requester_id, addressee_id, status")
+    .in("status", ["pending", "accepted"])
+    .or(
+      `and(requester_id.eq.${callerId},addressee_id.in.(${targetUserIds.join(",")})),and(requester_id.in.(${targetUserIds.join(",")}),addressee_id.eq.${callerId})`,
+    );
+
+  if (error || !data) return {};
+
+  const result = {};
+  for (const row of data) {
+    const otherId =
+      row.requester_id === callerId ? row.addressee_id : row.requester_id;
+    if (targetUserIds.includes(otherId)) {
+      result[otherId] =
+        row.status === "accepted"
+          ? "accepted"
+          : row.requester_id === callerId
+            ? "pending_sent"
+            : "pending_received";
+    }
+  }
+  return result;
+}
+
 // ─── decline ─────────────────────────────────────────────────────────────────
 
 export async function declineFriendRequest(friendshipId) {

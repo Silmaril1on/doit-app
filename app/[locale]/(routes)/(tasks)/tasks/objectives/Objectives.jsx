@@ -54,6 +54,7 @@ const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
   const userId = userIdProp ?? currentUser?.id ?? null;
   const { objectives, hasMore, isLoading, isLoadingMore, loadMore, mutate } =
     useObjectives(initialData, userIdProp);
+  const showLoading = isLoading && !initialData;
 
   const handleStartTask = useCallback(
     async (objective) => {
@@ -90,7 +91,6 @@ const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
         }
       }
 
-      setObjectives((prev) => prev.filter((o) => o.id !== objective.id));
       try {
         const response = await fetch(
           `/api/user/task/objectives?id=${encodeURIComponent(objective.id)}`,
@@ -125,7 +125,6 @@ const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
 
   const handleDeleteTask = useCallback(
     async (objective) => {
-      setObjectives((prev) => prev.filter((o) => o.id !== objective.id));
       try {
         const response = await fetch(
           `/api/user/task/objectives?id=${encodeURIComponent(objective.id)}`,
@@ -158,11 +157,6 @@ const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
       if (currentSubtasks.length === 0 || subtaskIndex < 0) return;
 
       const nextSubtasks = currentSubtasks.filter((_, i) => i !== subtaskIndex);
-      setObjectives((prev) =>
-        prev.map((item) =>
-          item.id === objective.id ? { ...item, subtasks: nextSubtasks } : item,
-        ),
-      );
 
       try {
         const response = await fetch(
@@ -176,14 +170,8 @@ const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
         const data = await response.json();
         if (!response.ok)
           throw new Error(data.error || "Failed to update subtasks");
+        mutate();
       } catch (error) {
-        setObjectives((prev) =>
-          prev.map((item) =>
-            item.id === objective.id
-              ? { ...item, subtasks: currentSubtasks }
-              : item,
-          ),
-        );
         dispatch(
           setToast({
             type: "error",
@@ -195,14 +183,14 @@ const Objectives = ({ initialData = null, userId: userIdProp = null }) => {
         );
       }
     },
-    [dispatch],
+    [dispatch, mutate],
   );
 
   return (
     <ObjectivePageWrapper
       items={objectives}
       hasMore={hasMore}
-      isLoading={isLoading}
+      isLoading={showLoading}
       isLoadingMore={isLoadingMore}
       loadMore={loadMore}
       title="Objectives"

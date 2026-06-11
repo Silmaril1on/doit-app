@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useParams, usePathname } from "next/navigation";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { setXp } from "@/app/[locale]/lib/features/xpSlice";
 import { selectXp } from "@/app/[locale]/lib/features/xpSlice";
 import { XP_PER_LEVEL } from "@/app/[locale]/lib/services/xp/xpConfig";
 import ItemCard from "@/app/[locale]/components/container/ItemCard";
 import AvatarTag from "@/app/[locale]/components/elements/AvatarTag";
+import ActionButton from "@/app/[locale]/components/buttons/ActionButton";
 import {
   openModal,
   selectModal,
@@ -16,6 +18,9 @@ import {
 const TasksPageHeader = ({ profile, initialXp }) => {
   const dispatch = useDispatch();
   const hasSynced = useRef(false);
+  const params = useParams();
+  const pathname = usePathname();
+  const locale = typeof params?.locale === "string" ? params.locale : "en";
   // levelReady prevents false-positive level-up on initial hydration
   const [levelReady, setLevelReady] = useState(false);
 
@@ -29,13 +34,43 @@ const TasksPageHeader = ({ profile, initialXp }) => {
 
   if (!profile) return null;
 
+  const navItems = [
+    { variant: "home", text: "Objectives", segment: "/tasks/objectives" },
+    {
+      variant: "profile",
+      text: "Active Quests",
+      segment: "/tasks/active-quests",
+    },
+    {
+      variant: "achievements",
+      text: "Achievements",
+      segment: "/tasks/achievements",
+    },
+  ];
+
   return (
-    <ItemCard>
-      <div className="flex flex-col gap-3">
-        <AvatarTag user={profile} size="xl" />
-        <LevelBar levelReady={levelReady} />
+    <div className=" space-y-3">
+      <ItemCard>
+        <div className="flex flex-col gap-3">
+          <AvatarTag user={profile} size="xl" />
+          <LevelBar levelReady={levelReady} />
+        </div>
+      </ItemCard>
+      <div className="grid grid-cols-3 gap-3">
+        {navItems.map(({ variant, text, segment }) => {
+          const isActive = pathname.includes(segment);
+          return (
+            <ActionButton
+              key={segment}
+              variant={variant}
+              text={text}
+              href={`/${locale}${segment}`}
+              className={isActive ? "" : "opacity-60"}
+            />
+          );
+        })}
       </div>
-    </ItemCard>
+    </div>
   );
 };
 

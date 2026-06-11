@@ -459,7 +459,9 @@ const SubmissionForm = ({
                 value={imageField.value}
                 onChange={imageField.onChange}
                 disabled={disabled}
-                label="Profile Picture"
+                label={imageField.label ?? "Profile Picture"}
+                ctaText={imageField.ctaText ?? "Upload profile photo"}
+                changeText={imageField.changeText ?? "Change photo"}
               />
             </div>
           )}
@@ -469,7 +471,9 @@ const SubmissionForm = ({
                 value={wallpaperField.value}
                 onChange={wallpaperField.onChange}
                 disabled={disabled}
-                label="Cover Photo"
+                label={wallpaperField.label ?? "Cover Photo"}
+                ctaText={wallpaperField.ctaText ?? "Upload cover photo"}
+                changeText={wallpaperField.changeText ?? "Change photo"}
               />
             </div>
           )}
@@ -496,7 +500,9 @@ const SubmissionForm = ({
                 value={imageField.value}
                 onChange={imageField.onChange}
                 disabled={disabled}
-                label="Profile Picture"
+                label={imageField.label ?? "Profile Picture"}
+                ctaText={imageField.ctaText ?? "Upload profile photo"}
+                changeText={imageField.changeText ?? "Change photo"}
               />
             </div>
           )}
@@ -506,7 +512,9 @@ const SubmissionForm = ({
                 value={wallpaperField.value}
                 onChange={wallpaperField.onChange}
                 disabled={disabled}
-                label="Cover Photo"
+                label={wallpaperField.label ?? "Cover Photo"}
+                ctaText={wallpaperField.ctaText ?? "Upload cover photo"}
+                changeText={wallpaperField.changeText ?? "Change photo"}
               />
             </div>
           )}

@@ -9,7 +9,7 @@ import {
   selectCurrentUser,
 } from "@/app/[locale]/lib/features/userSlice";
 import { clearColorValue } from "@/app/[locale]/lib/features/configSlice";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { useSelector } from "react-redux";
 import { getUserInitials } from "@/app/[locale]/lib/utils/utils";
@@ -19,6 +19,7 @@ import Motion from "../../../components/motion/Motion";
 import { useModalActions } from "@/app/[locale]/lib/hooks/useModal";
 import { ACCOUNT_VERIFICATION_MODAL } from "@/app/[locale]/components/modals/AccountVerificationModal";
 import { SHOW_MY_ID_MODAL } from "@/app/[locale]/components/modals/ShowMyIdModal";
+import { supabaseClient } from "@/app/[locale]/lib/supabase/supabaseClient";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
@@ -30,7 +31,6 @@ const UserProfile = () => {
   const [emailVerified, setEmailVerified] = useState(null);
   const menuRef = useRef(null);
   const emailFetched = useRef(false);
-  const router = useRouter();
 
   useEffect(() => {
     const handlePointerDown = (event) => {
@@ -71,13 +71,39 @@ const UserProfile = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+      });
     } finally {
+      try {
+        await supabaseClient.auth.signOut();
+      } catch {
+        // ignore client sign-out errors
+      }
+      // Clear client-readable cookies immediately
+      document.cookie = "doit-user=; path=/; max-age=0; SameSite=Lax";
+      document.cookie = "doit-user-id=; path=/; max-age=0; SameSite=Lax";
+      document.cookie
+        .split(";")
+        .map((c) => c.trim().split("=")[0])
+        .filter(
+          (name) =>
+            name.startsWith("sb-") ||
+            name.startsWith("__Secure-sb-") ||
+            name.startsWith("__Host-sb-"),
+        )
+        .forEach((name) => {
+          document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+        });
       setIsMenuOpen(false);
       emailFetched.current = false;
       dispatch(clearUser());
       dispatch(clearColorValue());
-      router.push(`/${locale}/`);
+      // Hard redirect so Next.js router state is fully reset
+      // and locale-prefix middleware redirect dance is avoided
+      window.location.href = "/";
     }
   };
 

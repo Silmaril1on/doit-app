@@ -7,7 +7,9 @@ const SOUND_DEFS = {
   close: { src: ["/sounds/close.ogg"], volume: 0.8 },
   open: { src: ["/sounds/open.ogg"], volume: 0.8 },
   color: { src: ["/sounds/color.ogg"], volume: 0.8 },
-  // future sounds → just add an entry here
+  badge: { src: ["/sounds/badge.ogg"], volume: 0.8 },
+  levelUp: { src: ["/sounds/lvl-up.ogg"], volume: 0.8 },
+  click: { src: ["/sounds/click.ogg"], volume: 0.8 },
 };
 
 const COOLDOWN_MS = 80; // minimum ms between two plays of the same sound

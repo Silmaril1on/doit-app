@@ -21,6 +21,7 @@ const Achievements = ({ initialData = null, userId: userIdProp = null }) => {
     loadMore,
     mutate,
   } = useAchievements(initialData, userIdProp);
+  const showLoading = isLoading && !initialData;
 
   const [achievements, setAchievements] = useState(swrAchievements);
   useEffect(() => {
@@ -36,7 +37,7 @@ const Achievements = ({ initialData = null, userId: userIdProp = null }) => {
     <ObjectivePageWrapper
       items={achievements}
       hasMore={hasMore}
-      isLoading={isLoading}
+      isLoading={showLoading}
       isLoadingMore={isLoadingMore}
       loadMore={loadMore}
       title="Achievements"

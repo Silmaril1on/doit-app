@@ -8,6 +8,7 @@ import {
 } from "@/app/[locale]/lib/services/tasks/objectives/myObjectives";
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 import { insertTaskRecreate } from "@/app/[locale]/lib/services/tasks/feed/taskRecreates";
+import { insertFeedEvent } from "@/app/[locale]/lib/services/tasks/feed/feedEvents";
 
 async function getUserId() {
   const cookieStore = await cookies();
@@ -140,6 +141,19 @@ export async function PATCH(request) {
 
     const payload = await request.json();
     const objective = await updateObjective(userId, objectiveId, payload);
+
+    // Emit feed event when a task is marked as completed
+    if (payload.status === "completed") {
+      try {
+        await insertFeedEvent(userId, "task_completion", {
+          task_id: objectiveId,
+          task_title: objective?.task_title ?? "",
+        });
+      } catch {
+        // Feed event failure must never break the PATCH response
+      }
+    }
+
     return NextResponse.json({ objective }, { status: 200 });
   } catch (err) {
     return NextResponse.json(

@@ -15,10 +15,7 @@ import {
   BADGE_MILESTONE_XP,
   TOKEN_REWARDS,
 } from "@/app/[locale]/lib/services/xp/xpConfig";
-import {
-  badgesCacheTag,
-  VALID_CATEGORY_IDS,
-} from "@/app/[locale]/lib/local-bd/categoryTypesData";
+import { badgesCacheTag } from "@/app/[locale]/lib/services/achievement-badges/cacheUtils";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
 
 const TABLE_NAME = "objectives";
@@ -52,8 +49,7 @@ const normalizeNumber = (value) => {
 const normalizeCategoryId = (value) => {
   if (value === "" || value == null) return null;
   const id = Number(value);
-  if (!Number.isInteger(id) || !VALID_CATEGORY_IDS.has(id)) return null;
-  return id;
+  return Number.isInteger(id) && id > 0 ? id : null;
 };
 const normalizeSubtasks = (value) => {
   if (!Array.isArray(value)) return [];

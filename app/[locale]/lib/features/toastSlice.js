@@ -4,6 +4,8 @@ const initialState = {
   isVisible: false,
   msg: "",
   type: "error",
+  // For type="basic" confirmation toasts — arbitrary serializable payload.
+  confirmData: null,
 };
 
 const toastSlice = createSlice({
@@ -11,21 +13,26 @@ const toastSlice = createSlice({
   initialState,
   reducers: {
     setToast: (state, action) => {
-      const { msg, type } =
-        typeof action.payload === "string"
-          ? { msg: action.payload, type: "error" }
-          : action.payload;
+      const {
+        msg,
+        type,
+        confirmData = null,
+      } = typeof action.payload === "string"
+        ? { msg: action.payload, type: "error" }
+        : action.payload;
 
       const normalizedType = type === "succes" ? "success" : type;
 
       state.msg = msg || "";
       state.type = normalizedType || "error";
       state.isVisible = Boolean(msg);
+      state.confirmData = confirmData;
     },
     clearToast: (state) => {
       state.isVisible = false;
       state.msg = "";
       state.type = "error";
+      state.confirmData = null;
     },
   },
 });

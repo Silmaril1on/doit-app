@@ -375,12 +375,10 @@ const TaskManagerPage = () => {
   };
 
   return (
-    <div className="p-3 lg:p-4 space-y-4 bg-black min-h-screen">
+    <div className="p-3 pt-15 space-y-4 bg-black min-h-screen">
       <div>
-        <h1 className="text-gold text-2xl lg:text-4xl font-bold secondary">
-          Task Manager
-        </h1>
-        <p className="text-chino/80 text-sm">
+        <h1 className="text-gold text-2xl lg:text-4xl">Task Manager</h1>
+        <p className="text-chino/80 text-sm secondary">
           Drag tasks between columns to update status.
         </p>
       </div>
@@ -402,7 +400,7 @@ const TaskManagerPage = () => {
                 setDraggedTaskId(null);
               }
             }}
-            className="border border-gold/30 bg-stone-900 min-h-130"
+            className="border border-gold/30 bg-stone-900 min-h-130 rounded-xl"
           >
             <ColumnHeader
               columnKey={column.key}
@@ -474,7 +472,7 @@ const ColumnHeader = ({
     <header className="border-b border-gold/30 px-3 py-2 flex items-start justify-between relative gap-2 ">
       <div className="flex items-center space-x-5">
         <div className="*:leading-none">
-          <h2 className="text-gold font-bold text-sm lg:text-base secondary">
+          <h2 className="text-gold text-sm lg:text-base">
             {columnKey === "completed" ? "Completed" : label}
           </h2>
           <p className="text-chino text-xs secondary">
@@ -493,7 +491,7 @@ const ColumnHeader = ({
                   onClick={() =>
                     onPriorityOrderChange(isActive ? null : option)
                   }
-                  className={`border px-2 py-0.5 text-[10px] font-bold uppercase duration-200 cursor-pointer ${
+                  className={`border rounded-full px-2 py-0.5 text-[10px] uppercase duration-200 cursor-pointer ${
                     isActive
                       ? "border-gold bg-gold/20 text-gold"
                       : "border-gold/30 text-chino hover:border-gold/60 hover:text-gold"
@@ -523,7 +521,7 @@ const ColumnHeader = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}
-                className="absolute right-2 top-10 z-20 bg-black border border-gold/30 min-w-37.5"
+                className="absolute rounded-full right-2 top-10 z-20 bg-black border border-gold/30 min-w-37.5"
               >
                 <button
                   type="button"
@@ -565,7 +563,7 @@ const TaskCard = ({
     <article
       draggable
       onDragStart={onDragStart}
-      className="border border-gold/25 bg-black p-2 flex flex-col items-center gap-2 relative"
+      className="border border-gold/25 bg-black p-2 flex flex-col items-center gap-2 relative rounded-xl"
     >
       {/* action buttons for card */}
       <div className="gap-1 w-full flex justify-between items-center">
@@ -590,7 +588,7 @@ const TaskCard = ({
       {/* Card Body */}
       <div className="w-full">
         <div className="flex items-start justify-between gap-2 w-full">
-          <h3 className="text-gold font-bold uppercase text-md leading-tight pl-2">
+          <h3 className="text-gold  uppercase text-md leading-tight pl-2">
             {task.title}
           </h3>
         </div>
@@ -630,9 +628,7 @@ const TaskCard = ({
                           )}
                         </span>
                         <span
-                          className={
-                            isDone ? "text-green-500 font-bold" : "text-chino"
-                          }
+                          className={isDone ? "text-green-500 " : "text-chino"}
                         >
                           {subtask.title}
                         </span>
@@ -671,7 +667,7 @@ const TaskCard = ({
         {/*  Prioority Badge */}
         <div className="flex items-center justify-between mt-2">
           <span
-            className={`text-xs font-bold uppercase border px-1.5 py-0.5 ${priorityClassMap[task.priority] || priorityClassMap.medium}`}
+            className={`text-xs uppercase border px-3 py-0.5 rounded-full ${priorityClassMap[task.priority] || priorityClassMap.medium}`}
           >
             {task.priority}
           </span>
@@ -680,7 +676,7 @@ const TaskCard = ({
             <button
               type="button"
               onClick={onStart}
-              className="border border-gold/40 bg-gold/10 px-2 py-1 text-[10px] font-bold uppercase text-gold hover:bg-gold/20 duration-200 cursor-pointer"
+              className="border rounded-full border-gold/40 bg-gold/10 px-2 py-1 text-[10px]  uppercase text-gold hover:bg-gold/20 duration-200 cursor-pointer"
             >
               Start Task
             </button>
@@ -689,7 +685,7 @@ const TaskCard = ({
             <button
               type="button"
               onClick={onComplete}
-              className="border border-green-500/40 bg-green-500/10 px-2 py-1 text-[10px] font-bold uppercase text-green-500 hover:bg-green-500/20 duration-200 cursor-pointer"
+              className="border rounded-full border-green-500/40 bg-green-500/10 px-2 py-1 text-[10px]  uppercase text-green-500 hover:bg-green-500/20 duration-200 cursor-pointer"
             >
               Complete Task
             </button>
@@ -785,7 +781,7 @@ const CreateTaskModal = ({
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.2 }}
             onClick={(event) => event.stopPropagation()}
-            className="w-full max-w-xl border border-gold/30 bg-stone-900 p-4 space-y-3"
+            className="w-full max-w-xl border border-gold/30 bg-stone-900 p-4 space-y-3 rounded-xl"
           >
             {/* modal header */}
             <div className="flex items-center justify-between">
@@ -917,14 +913,14 @@ const CreateTaskModal = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="border border-gold/30 px-3 py-2 text-xs text-chino hover:text-gold duration-200"
+                  className="border rounded-full border-gold/30 px-3 py-2 text-xs text-chino hover:text-gold duration-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="border border-gold bg-gold/20 px-3 py-2 text-xs text-gold hover:bg-gold/30 duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="border border-gold rounded-full bg-gold/20 px-3 py-2 text-xs text-gold hover:bg-gold/30 duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {submitting
                     ? mode === "edit"

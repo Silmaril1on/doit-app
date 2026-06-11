@@ -15,6 +15,8 @@ const UploadImageInput = ({
   onChange,
   disabled = false,
   label = "Profile Picture",
+  ctaText = "Upload photo",
+  changeText = "Change photo",
   maxSizeBytes = 1 * 1024 * 1024,
   compressTarget = 200 * 1024,
 }) => {
@@ -121,14 +123,14 @@ const UploadImageInput = ({
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 duration-200 flex flex-col items-center justify-center gap-1">
               <MdOutlineAddAPhoto size={24} className="text-cream" />
-              <span className="secondary text-xs text-cream">Change photo</span>
+              <span className="secondary text-xs text-cream">{changeText}</span>
             </div>
           </>
         ) : (
           <>
             <MdOutlineAddAPhoto size={26} className="text-primary/50" />
             <span className="secondary text-xs text-chino/60">
-              {processing ? "Processing…" : "Upload cover photo"}
+              {processing ? "Processing…" : ctaText}
             </span>
             <span className="secondary text-[10px] text-chino/40">
               Max {Math.round(maxSizeBytes / (1024 * 1024))}MB · Auto-compressed

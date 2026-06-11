@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { selectCurrentUser } from "@/app/[locale]/lib/features/userSlice";
 import { useSelector } from "react-redux";
 import { useTranslations, useLocale } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import ReactCountryFlag from "react-country-flag";
 import Button from "../../components/buttons/Button";
 import Motion from "../../components/motion/Motion";
@@ -143,23 +143,26 @@ const LanguageSwitcher = () => {
 // ─── LoginButtonSection ──────────────────────────────────────────────────────
 const LoginButtonSection = ({ currentUser }) => {
   const t = useTranslations("Navigation");
+  const router = useRouter();
 
   return (
     <>
       {currentUser ? (
         <div className="relative z-2">
-          <Link href={`/${currentUser.display_name}`}>
-            <Button variant="outline" text={t("myProfile")} />
-          </Link>
+          <Button
+            variant="outline"
+            text={t("myProfile")}
+            onClick={() => router.push(`/${currentUser.display_name}`)}
+          />
         </div>
       ) : (
-        <div className="flex space-x-4 relative z-2">
-          <Link href="/login">
-            <Button text={t("login")} />
-          </Link>
-          <Link href="/register">
-            <Button text={t("register")} variant="outline" />
-          </Link>
+        <div className="flex space-x-4 relative z-2 z-50">
+          <Button text={t("login")} onClick={() => router.push("/login")} />
+          <Button
+            text={t("register")}
+            variant="outline"
+            onClick={() => router.push("/register")}
+          />
         </div>
       )}
     </>

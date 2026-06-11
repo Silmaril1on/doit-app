@@ -27,6 +27,7 @@ const ObjectiveDirectionsModal = dynamic(
   () => import("./ObjectiveDirectionsModal"),
   { ssr: false },
 );
+const FeedbackModal = dynamic(() => import("./FeedbackModal"), { ssr: false });
 
 // These two modals are ALWAYS mounted so that the DEV_PREVIEW flag inside them
 // can force-open them for styling. They self-manage visibility via their own
@@ -53,6 +54,7 @@ const MODAL_COMPONENTS = {
   thoughts: ThoughsModal,
   showMyId: ShowMyIdModal,
   objectiveDirections: ObjectiveDirectionsModal,
+  feedback: FeedbackModal,
 };
 
 const ModalRoot = () => {

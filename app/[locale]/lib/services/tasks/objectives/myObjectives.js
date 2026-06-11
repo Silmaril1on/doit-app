@@ -1,8 +1,6 @@
 "use server";
 
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
-import { VALID_CATEGORY_IDS } from "@/app/[locale]/lib/local-bd/categoryTypesData";
-
 const TABLE_NAME = "objectives";
 const ALLOWED_STATUS = new Set(["todo", "in_progress", "completed"]);
 const ALLOWED_PRIORITY = new Set(["low", "medium", "high"]);
@@ -32,10 +30,8 @@ const normalizeBoolean = (value, fallback = false) => {
 const normalizeSubtaskCategoryId = (value) => {
   if (value === "" || value == null) return null;
   const id = Number(value);
-  if (!Number.isInteger(id) || !VALID_CATEGORY_IDS.has(id)) {
-    throw new Error(
-      `subtask.category_id must be one of: ${[...VALID_CATEGORY_IDS].join(", ")}`,
-    );
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error(`subtask.category_id must be a positive integer`);
   }
   return id;
 };

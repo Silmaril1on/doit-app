@@ -16,6 +16,7 @@ const FeedItem = React.memo(({ item }) => {
     case "levelup":
     case "badge":
     case "friendship":
+    case "task_completion":
       return <FeedCard item={item} />;
     case "task":
     default:

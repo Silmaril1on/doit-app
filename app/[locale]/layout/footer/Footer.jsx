@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { openModal } from "@/app/[locale]/lib/features/modalSlice";
 import { CountryFlags } from "../../components/elements/CountryFlags";
 import { FaInstagram } from "react-icons/fa";
 import Image from "next/image";
@@ -9,6 +11,7 @@ import Motion from "../../components/motion/Motion";
 const STORAGE_KEY = "user-location-cache";
 
 const Footer = () => {
+  const dispatch = useDispatch();
   // Always start with null to match SSR — read cache in a separate effect
   const [location, setLocation] = useState({ country: null, city: null });
 
@@ -104,20 +107,44 @@ const Footer = () => {
           </div>
         </Motion>
 
-        <div className="flex flex-col lg:flex-row items-center justify-center gap-x-8">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-x-6 gap-y-2 flex-wrap">
           {[
-            ["Terms & Conditions", "/terms"],
-            ["Privacy Policy", "/privacy"],
-            ["Contact Us", "/contact"],
-            ["Help Center", "/help"],
+            ["Terms & Conditions", "/support/terms-and-conditions"],
+            ["Privacy Policy", "/support/privacy-policy"],
+            ["Help Center", "/support/help-center"],
+            ["FAQ", "/support/faq"],
+            ["Cookies", "/support/cookies"],
+            ["About Us", "/support/about"],
           ].map(([label, href], index) => (
-            <Motion animation="fade" delay={index * 0.2} key={label}>
+            <Motion animation="fade" delay={index * 0.1} key={label}>
               <a
                 href={href}
-                className="text-xl text-cream hover:text-primary transition-colors duration-300"
+                className="text-sm text-cream hover:text-primary transition-colors duration-300"
               >
                 {label}
               </a>
+            </Motion>
+          ))}
+          {[
+            ["Contact Us", "contact"],
+            ["Report a Bug", "report"],
+            ["Send Feedback", "feedback"],
+          ].map(([label, feedbackType], index) => (
+            <Motion animation="fade" delay={(6 + index) * 0.1} key={label}>
+              <button
+                type="button"
+                onClick={() =>
+                  dispatch(
+                    openModal({
+                      modalType: "feedback",
+                      modalProps: { feedbackType },
+                    }),
+                  )
+                }
+                className="text-sm text-cream hover:text-primary transition-colors duration-300 cursor-pointer"
+              >
+                {label}
+              </button>
             </Motion>
           ))}
         </div>

@@ -8,29 +8,16 @@ export async function getFriendFeedEvents(
 ) {
   if (!friendIds?.length) return [];
 
-  const [byUser, byFriend] = await Promise.all([
-    supabaseAdmin
-      .from("feed_events")
-      .select("id, user_id, event_type, payload, occurred_at")
-      .in("user_id", friendIds)
-      .order("occurred_at", { ascending: false })
-      .limit(limit),
-    supabaseAdmin
-      .from("feed_events")
-      .select("id, user_id, event_type, payload, occurred_at")
-      .in("payload->>friend_id", friendIds)
-      .order("occurred_at", { ascending: false })
-      .limit(limit),
-  ]);
+  const { data, error: byUserError } = await supabaseAdmin
+    .from("feed_events")
+    .select("id, user_id, event_type, payload, occurred_at")
+    .in("user_id", friendIds)
+    .order("occurred_at", { ascending: false })
+    .limit(limit);
 
-  if (byUser.error) throw new Error(byUser.error.message);
-  if (byFriend.error) throw new Error(byFriend.error.message);
+  if (byUserError) throw new Error(byUserError.message);
 
-  const mergedEvents = [...(byUser.data ?? []), ...(byFriend.data ?? [])];
-  if (!mergedEvents.length) return [];
-
-  const byId = new Map(mergedEvents.map((e) => [e.id, e]));
-  const events = [...byId.values()];
+  const events = data ?? [];
 
   const viewerFiltered = viewerId
     ? events.filter(
@@ -47,6 +34,34 @@ export async function getFriendFeedEvents(
     seenFriendships.add(key);
     return true;
   });
+
+  // Enrich badge events with badge image/icon when missing
+  const badgeEvents = dedupedEvents.filter(
+    (e) => e.event_type === "badge" && e.payload?.category_id,
+  );
+  const badgeCategoryIds = Array.from(
+    new Set(
+      badgeEvents
+        .map((e) => Number(e.payload?.category_id))
+        .filter((id) => Number.isFinite(id)),
+    ),
+  );
+  const badgeIconByKey = new Map();
+
+  if (badgeCategoryIds.length > 0) {
+    const { data: tierRows, error: tierError } = await supabaseAdmin
+      .from("category_achievement_tiers")
+      .select("category_id, level, icon")
+      .in("category_id", badgeCategoryIds);
+
+    if (tierError) throw new Error(tierError.message);
+
+    for (const row of tierRows ?? []) {
+      if (!row) continue;
+      const key = `${row.category_id}:${row.level}`;
+      badgeIconByKey.set(key, row.icon ?? null);
+    }
+  }
 
   // Collect all user IDs we need to enrich
   const actorIds = [...new Set(dedupedEvents.map((e) => e.user_id))];
@@ -68,13 +83,30 @@ export async function getFriendFeedEvents(
 
   const userMap = Object.fromEntries((users ?? []).map((u) => [u.id, u]));
 
-  return dedupedEvents.map((e) => ({
-    ...e,
-    _type: e.event_type,
-    _sortTime: e.occurred_at,
-    user: userMap[e.user_id] ?? null,
-    ...(e.event_type === "friendship" && {
-      friend: userMap[e.payload?.friend_id] ?? null,
-    }),
-  }));
+  return dedupedEvents.map((e) => {
+    let payload = e.payload ?? null;
+
+    if (e.event_type === "badge" && payload) {
+      const categoryId = Number(payload.category_id);
+      const level = Number(payload.badge_level);
+      if (Number.isFinite(categoryId) && Number.isFinite(level)) {
+        const key = `${categoryId}:${level}`;
+        const badgeIcon = badgeIconByKey.get(key);
+        if (badgeIcon && !payload.badge_image_url) {
+          payload = { ...payload, badge_image_url: badgeIcon };
+        }
+      }
+    }
+
+    return {
+      ...e,
+      payload,
+      _type: e.event_type,
+      _sortTime: e.occurred_at,
+      user: userMap[e.user_id] ?? null,
+      ...(e.event_type === "friendship" && {
+        friend: userMap[e.payload?.friend_id] ?? null,
+      }),
+    };
+  });
 }

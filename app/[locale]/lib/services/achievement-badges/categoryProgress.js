@@ -2,14 +2,8 @@
 
 import { supabaseAdmin } from "@/app/[locale]/lib/supabase/supabaseServer";
 import { unstable_cache } from "next/cache";
-import {
-  TASK_CATEGORIES,
-  VALID_CATEGORY_IDS,
-  CATEGORY_ACHIEVEMENT_TIERS,
-  resolveCurrentLevel,
-  getTierByLevel,
-  badgesCacheTag,
-} from "@/app/[locale]/lib/local-bd/categoryTypesData";
+import { TASK_CATEGORIES } from "@/app/[locale]/lib/local-bd/categoryTypesData";
+import { badgesCacheTag } from "@/app/[locale]/lib/services/achievement-badges/cacheUtils";
 import { getUserById } from "@/app/[locale]/lib/services/user/userProfiles";
 import { insertFeedEvent } from "@/app/[locale]/lib/services/tasks/feed/feedEvents";
 import { grantTokens } from "@/app/[locale]/lib/services/xp/xpProgress";
@@ -21,8 +15,30 @@ const PROGRESS_TABLE = "user_category_progress";
 
 const parseCategoryId = (raw) => {
   const id = Number(raw);
-  if (!Number.isInteger(id) || !VALID_CATEGORY_IDS.has(id)) return null;
+  if (!Number.isInteger(id) || id <= 0) return null;
   return id;
+};
+
+const fetchTiersByCategory = async (categoryId) => {
+  const { data } = await supabaseAdmin
+    .from("category_achievement_tiers")
+    .select("*")
+    .eq("category_id", categoryId)
+    .order("required_count", { ascending: true });
+  return data ?? [];
+};
+
+const fetchAllTiers = async () => {
+  const { data } = await supabaseAdmin
+    .from("category_achievement_tiers")
+    .select("*")
+    .order("required_count", { ascending: true });
+  const map = new Map();
+  for (const tier of data ?? []) {
+    if (!map.has(tier.category_id)) map.set(tier.category_id, []);
+    map.get(tier.category_id).push(tier);
+  }
+  return map;
 };
 
 export async function getAllCategoryProgress(userId) {
@@ -39,14 +55,20 @@ export async function getAllCategoryProgress(userId) {
     (data ?? []).map((row) => [row.category_id, row]),
   );
 
+  const tiersByCategory = await fetchAllTiers();
+
   return TASK_CATEGORIES.map((category) => {
     const row = progressMap.get(category.id);
     const completedCount = row?.completed_count ?? 0;
     const currentLevel = row?.current_level ?? 0;
+    const tiers = tiersByCategory.get(category.id) ?? [];
     const nextTier =
-      (CATEGORY_ACHIEVEMENT_TIERS[category.id] ?? []).find(
-        (t) => t.required_count > completedCount,
-      ) ?? null;
+      tiers.find((t) => t.required_count > completedCount) ?? null;
+    const currentTier =
+      currentLevel > 0
+        ? (tiers.find((t) => t.level === currentLevel) ?? null)
+        : null;
+    const earnedTiers = tiers.filter((t) => t.level <= currentLevel);
 
     return {
       category_id: category.id,
@@ -55,9 +77,9 @@ export async function getAllCategoryProgress(userId) {
       completed_count: completedCount,
       current_level: currentLevel,
       has_seen: row?.has_seen ?? true,
-      current_tier:
-        currentLevel > 0 ? getTierByLevel(category.id, currentLevel) : null,
+      current_tier: currentTier,
       next_tier: nextTier,
+      earned_tiers: earnedTiers,
       created_at: row?.created_at ?? null,
     };
   });
@@ -82,9 +104,16 @@ export async function recordCategoryCompletion(userId, rawCategoryId) {
   const prevCount = existing?.completed_count ?? 0;
   const prevLevel = existing?.current_level ?? 0;
   const newCount = prevCount + 1;
-  const newLevel = resolveCurrentLevel(categoryId, newCount);
+
+  const tiers = await fetchTiersByCategory(categoryId);
+  let newLevel = 0;
+  for (const tier of tiers) {
+    if (newCount >= tier.required_count) newLevel = tier.level;
+  }
   const tierEarned =
-    newLevel > prevLevel ? getTierByLevel(categoryId, newLevel) : null;
+    newLevel > prevLevel
+      ? (tiers.find((t) => t.level === newLevel) ?? null)
+      : null;
 
   const now = new Date().toISOString();
 
@@ -139,6 +168,7 @@ export async function recordCategoryCompletion(userId, rawCategoryId) {
     insertFeedEvent(userId, "badge", {
       badge_title: tierEarned.title,
       badge_level: tierEarned.level,
+      badge_image_url: tierEarned.icon ?? tierEarned.badge_image ?? null,
       category_id: categoryId,
       category_label: category?.label ?? "Unknown",
     });
@@ -209,7 +239,12 @@ export async function revokeCategoryCompletion(userId, rawCategoryId) {
   if (!existing || existing.completed_count <= 0) return null;
 
   const newCount = existing.completed_count - 1;
-  const newLevel = resolveCurrentLevel(categoryId, newCount);
+
+  const tiers = await fetchTiersByCategory(categoryId);
+  let newLevel = 0;
+  for (const tier of tiers) {
+    if (newCount >= tier.required_count) newLevel = tier.level;
+  }
 
   const { data: updated, error: updateError } = await supabaseAdmin
     .from(PROGRESS_TABLE)

@@ -37,7 +37,7 @@ const LoadingSpinner = () => (
 
 const Toast = () => {
   const dispatch = useDispatch();
-  const { isVisible, msg, type } = useSelector(selectToast);
+  const { isVisible, msg, type, confirmData } = useSelector(selectToast);
 
   const styleByType = {
     success: {
@@ -51,10 +51,16 @@ const Toast = () => {
       title: "Please wait",
     },
     error: ERROR_STYLE,
+    basic: {
+      wrapper: "border-primary/30 bg-primary/10 text-cream/80",
+      dot: "bg-primary/60",
+      title: "Confirm",
+    },
   };
 
+  // Auto-dismiss only for non-basic types
   useEffect(() => {
-    if (!isVisible) {
+    if (!isVisible || type === "basic") {
       return;
     }
 
@@ -63,13 +69,25 @@ const Toast = () => {
     }, 4000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [dispatch, isVisible, msg]);
+  }, [dispatch, isVisible, msg, type]);
 
   if (!isVisible || !msg) {
     return null;
   }
 
   const variant = styleByType[type] || styleByType.error;
+  const isBasic = type === "basic";
+
+  const handleConfirmYes = () => {
+    dispatch(clearToast());
+    window.dispatchEvent(
+      new CustomEvent("toastConfirmYes", { detail: { confirmData } }),
+    );
+  };
+
+  const handleConfirmNo = () => {
+    dispatch(clearToast());
+  };
 
   return (
     <div className="pointer-events-none fixed right-4 top-4 z-100 w-[calc(100%-2rem)] max-w-sm">
@@ -95,14 +113,34 @@ const Toast = () => {
               {variant.title}
             </p>
             <p className="secondary mt-1 wrap-break-word text-sm">{msg}</p>
+            {isBasic && (
+              <div className="flex gap-2 mt-3">
+                <button
+                  type="button"
+                  onClick={handleConfirmYes}
+                  className="px-4 py-1.5 rounded-lg text-xs primary uppercase tracking-widest bg-primary/20 border border-primary/40 text-cream hover:bg-primary/35 transition"
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmNo}
+                  className="px-4 py-1.5 rounded-lg text-xs secondary uppercase tracking-widest bg-white/5 border border-white/10 text-cream/60 hover:bg-white/10 transition"
+                >
+                  No
+                </button>
+              </div>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={() => dispatch(clearToast())}
-            className="secondary rounded-md px-2 py-1 text-xs text-white/75 transition hover:bg-white/10 hover:text-white"
-          >
-            Close
-          </button>
+          {!isBasic && (
+            <button
+              type="button"
+              onClick={() => dispatch(clearToast())}
+              className="secondary rounded-md px-2 py-1 text-xs text-white/75 transition hover:bg-white/10 hover:text-white"
+            >
+              Close
+            </button>
+          )}
         </div>
       </div>
     </div>

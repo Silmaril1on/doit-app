@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setXp } from "@/app/[locale]/lib/features/xpSlice";
@@ -36,6 +36,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
   const userId = userIdProp ?? currentUser?.id ?? null;
   const { quests, hasMore, isLoading, isLoadingMore, loadMore, mutate } =
     useActiveQuests(initialData, userIdProp);
+  const showLoading = isLoading && !initialData;
 
   const refreshXp = useCallback(async () => {
     try {
@@ -86,10 +87,15 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         nextSubtasks.length > 0 &&
         nextSubtasks.every((st) => typeof st === "object" && st.completed);
 
-      setQuests((prev) =>
-        prev.map((q) =>
-          q.id === quest.id ? { ...q, subtasks: nextSubtasks } : q,
-        ),
+      // Optimistic update via SWR mutate
+      mutate(
+        (cur) => ({
+          ...cur,
+          quests: (cur?.quests ?? []).map((q) =>
+            q.id === quest.id ? { ...q, subtasks: nextSubtasks } : q,
+          ),
+        }),
+        { revalidate: false },
       );
 
       try {
@@ -108,7 +114,14 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         if (!response.ok)
           throw new Error(data.error || "Failed to update subtask");
         if (allDone) {
-          setQuests((prev) => prev.filter((q) => q.id !== quest.id));
+          mutate(
+            (cur) => ({
+              ...cur,
+              quests: (cur?.quests ?? []).filter((q) => q.id !== quest.id),
+              total: Math.max(0, (cur?.total ?? 1) - 1),
+            }),
+            { revalidate: false },
+          );
           // Open completeTask modal BEFORE setXp — same batch fix as handleCompleteQuest.
           triggerCompleteModal(
             quest,
@@ -132,10 +145,15 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
           globalMutate([ACHIEVEMENTS_PAGE1_KEY, userId]);
         }
       } catch (error) {
-        setQuests((prev) =>
-          prev.map((q) =>
-            q.id === quest.id ? { ...q, subtasks: currentSubtasks } : q,
-          ),
+        // Rollback optimistic update
+        mutate(
+          (cur) => ({
+            ...cur,
+            quests: (cur?.quests ?? []).map((q) =>
+              q.id === quest.id ? { ...q, subtasks: currentSubtasks } : q,
+            ),
+          }),
+          { revalidate: false },
         );
         dispatch(
           setToast({
@@ -159,10 +177,15 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
       if (currentSubtasks.length === 0 || subtaskIndex < 0) return;
 
       const nextSubtasks = currentSubtasks.filter((_, i) => i !== subtaskIndex);
-      setQuests((prev) =>
-        prev.map((q) =>
-          q.id === quest.id ? { ...q, subtasks: nextSubtasks } : q,
-        ),
+      // Optimistic update
+      mutate(
+        (cur) => ({
+          ...cur,
+          quests: (cur?.quests ?? []).map((q) =>
+            q.id === quest.id ? { ...q, subtasks: nextSubtasks } : q,
+          ),
+        }),
+        { revalidate: false },
       );
 
       try {
@@ -178,10 +201,15 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         if (!response.ok)
           throw new Error(data.error || "Failed to update subtasks");
       } catch (error) {
-        setQuests((prev) =>
-          prev.map((q) =>
-            q.id === quest.id ? { ...q, subtasks: currentSubtasks } : q,
-          ),
+        // Rollback
+        mutate(
+          (cur) => ({
+            ...cur,
+            quests: (cur?.quests ?? []).map((q) =>
+              q.id === quest.id ? { ...q, subtasks: currentSubtasks } : q,
+            ),
+          }),
+          { revalidate: false },
         );
         dispatch(
           setToast({
@@ -194,8 +222,83 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
         );
       }
     },
-    [dispatch],
+    [dispatch, mutate],
   );
+
+  // Force-complete quest: mark all subtasks done, then complete.
+  const forceCompleteQuest = useCallback(
+    async (quest) => {
+      const rawSubtasks = Array.isArray(quest?.subtasks) ? quest.subtasks : [];
+      const allMarkedDone = rawSubtasks.map((st) =>
+        typeof st === "object" ? { ...st, completed: true } : st,
+      );
+
+      // Optimistic remove
+      mutate(
+        (cur) => ({
+          ...cur,
+          quests: (cur?.quests ?? []).filter((q) => q.id !== quest.id),
+          total: Math.max(0, (cur?.total ?? 1) - 1),
+        }),
+        { revalidate: false },
+      );
+      try {
+        const response = await fetch(
+          `/api/user/task/active-quests?id=${encodeURIComponent(quest.id)}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              subtasks: allMarkedDone,
+              status: "completed",
+            }),
+          },
+        );
+        const data = await response.json();
+        if (!response.ok)
+          throw new Error(data.error || "Failed to complete quest");
+        triggerCompleteModal(
+          quest,
+          allMarkedDone,
+          data.taskXpGained ?? data.xpUpdate?.xpGained ?? 0,
+          data.tokenReward ?? 0,
+          data.acquiredBadge ?? null,
+        );
+        if (data.xpUpdate) {
+          dispatch(setXp(data.xpUpdate));
+        } else {
+          await refreshXp();
+        }
+        dispatch(
+          setToast({ type: "success", msg: "Task completed! Well done." }),
+        );
+        mutate();
+        globalMutate([ACHIEVEMENTS_PAGE1_KEY, userId]);
+      } catch (error) {
+        mutate();
+        dispatch(
+          setToast({
+            type: "error",
+            msg:
+              error instanceof Error
+                ? error.message
+                : "Failed to complete quest",
+          }),
+        );
+      }
+    },
+    [dispatch, mutate, refreshXp, triggerCompleteModal, userId],
+  );
+
+  // Listen for YES confirmation from the basic Toast
+  useEffect(() => {
+    const handler = (e) => {
+      const quest = e.detail?.confirmData;
+      if (quest) forceCompleteQuest(quest);
+    };
+    window.addEventListener("toastConfirmYes", handler);
+    return () => window.removeEventListener("toastConfirmYes", handler);
+  }, [forceCompleteQuest]);
 
   const handleCompleteQuest = useCallback(
     async (quest) => {
@@ -206,12 +309,24 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
 
       if (subtasks.length > 0 && !allSubtasksCompleted) {
         dispatch(
-          setToast({ type: "error", msg: "Please, complete all the subtasks" }),
+          setToast({
+            type: "basic",
+            msg: "Are you sure you have completed this objective?",
+            confirmData: quest,
+          }),
         );
         return;
       }
 
-      setQuests((prev) => prev.filter((q) => q.id !== quest.id));
+      // Optimistic remove
+      mutate(
+        (cur) => ({
+          ...cur,
+          quests: (cur?.quests ?? []).filter((q) => q.id !== quest.id),
+          total: Math.max(0, (cur?.total ?? 1) - 1),
+        }),
+        { revalidate: false },
+      );
       try {
         const response = await fetch(
           `/api/user/task/active-quests?id=${encodeURIComponent(quest.id)}`,
@@ -265,7 +380,14 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
 
   const handleDeleteQuest = useCallback(
     async (quest) => {
-      setQuests((prev) => prev.filter((q) => q.id !== quest.id));
+      mutate(
+        (cur) => ({
+          ...cur,
+          quests: (cur?.quests ?? []).filter((q) => q.id !== quest.id),
+          total: Math.max(0, (cur?.total ?? 1) - 1),
+        }),
+        { revalidate: false },
+      );
       try {
         const response = await fetch(
           `/api/user/task/active-quests?id=${encodeURIComponent(quest.id)}`,
@@ -294,7 +416,7 @@ const ActiveQuests = ({ initialData = null, userId: userIdProp = null }) => {
     <ObjectivePageWrapper
       items={quests}
       hasMore={hasMore}
-      isLoading={isLoading}
+      isLoading={showLoading}
       isLoadingMore={isLoadingMore}
       loadMore={loadMore}
       title="Active Quests"

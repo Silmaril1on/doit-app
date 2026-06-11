@@ -113,6 +113,9 @@ const TopEdgeModal = () => {
           className="cursor-pointer relative z-3 text-2xl"
         >
           <IconTag icon={<FaUserFriends />} />
+          {hasRequests && (
+            <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 border border-black pointer-events-none" />
+          )}
         </div>
         <div
           style={{

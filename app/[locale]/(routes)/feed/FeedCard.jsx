@@ -9,6 +9,7 @@ const TYPE_LABELS = {
   levelup: "LEVEL UP",
   badge: "ACHIEVED",
   friendship: "NEW FRIENDSHIP",
+  task_completion: "TASK COMPLETED",
 };
 
 const UserSlot = ({ u, reverse = false }) => {
@@ -24,7 +25,7 @@ const UserSlot = ({ u, reverse = false }) => {
       href={u?.display_name ? `/${u.display_name}` : "#"}
       className={`flex items-center gap-2.5 hover:opacity-75 transition-opacity ${reverse ? "flex-row-reverse" : ""}`}
     >
-      <div className="h-12 w-12 shrink-0 relative overflow-hidden rounded-md border border-teal-500/30 bg-black/40">
+      <div className="h-12 w-12 shrink-0 relative overflow-hidden rounded-md border border-primary/30 bg-primary/20">
         {u?.image_url ? (
           <ImageTag
             src={u.image_url}
@@ -34,17 +35,17 @@ const UserSlot = ({ u, reverse = false }) => {
             className="object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center font-bold text-sm text-teal-400">
+          <div className="flex h-full w-full items-center justify-center font-bold text-sm text-tealprimary">
             {initials}
           </div>
         )}
       </div>
       <div className={`min-w-0 ${reverse ? "text-right" : ""}`}>
-        <p className="text-sm font-bold text-cream leading-tight truncate">
+        <p className="text-sm  text-cream leading-tight truncate">
           {u?.display_name}
         </p>
         {fullName && (
-          <p className="text-xs secondary text-chino/70 mt-0.5 truncate">
+          <p className="text-xs secondary text-chino/70 mt-0.5 capitalize truncate">
             {fullName}
           </p>
         )}
@@ -74,7 +75,7 @@ const FeedCard = ({ item }) => {
   return (
     <ItemCard>
       <div className="leading-none mb-3">
-        <p className="text-cream font-bold tracking-wide">{label}</p>
+        <p className="text-cream tracking-wide text-lg text-shadow">{label}</p>
         <p className="text-[10px] secondary text-chino">
           {timeAgo(occurred_at)}
         </p>
@@ -88,10 +89,10 @@ const FeedCard = ({ item }) => {
         {_type === "friendship" && (
           <div className="flex items-center justify-between">
             <div className="flex flex-col items-center gap-1 shrink-0">
-              <div className="h-9 w-9 rounded-full border border-teal-500/40 bg-teal-500/10 text-teal-300 flex items-center justify-center">
+              <div className="h-9 w-9 rounded-full border border-primary/40 bg-primary/10 text-primary flex items-center justify-center">
                 <FaHandshake size={16} />
               </div>
-              <p className="text-[9px] secondary text-teal-400/70">
+              <p className="text-[10px] secondary text-primary/70">
                 Now friends
               </p>
             </div>
@@ -102,11 +103,11 @@ const FeedCard = ({ item }) => {
         {_type === "badge" && (
           <div className="flex items-center justify-end gap-2">
             <div className="text-right min-w-0">
-              <p className="text-sm font-semibold text-cream leading-tight">
+              <p className="text-sm text-cream leading-tight">
                 Just Earned New badge!
               </p>
               <p className="text-xs secondary text-chino/70 mt-0.5 truncate">
-                <span className="font-semibold text-teal-300">
+                <span className="font-semibold text-primary">
                   {payload?.badge_title}
                 </span>
                 {payload?.category_label ? ` · ${payload.category_label}` : ""}
@@ -141,6 +142,21 @@ const FeedCard = ({ item }) => {
               src={payload?.level_image_url}
               alt={`Level ${payload?.current_level ?? payload?.new_level}`}
             />
+          </div>
+        )}
+
+        {_type === "task_completion" && (
+          <div className="flex items-center justify-end gap-2">
+            <div className="text-right min-w-0">
+              <p className="text-sm font-semibold text-cream leading-tight">
+                Just completed a task!
+              </p>
+              {payload?.task_title && (
+                <p className="text-xs secondary text-teal-300/80 mt-0.5 truncate">
+                  {payload.task_title}
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>

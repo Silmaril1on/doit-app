@@ -33,16 +33,22 @@ export async function getUnifiedFriendsFeed({ offset = 0, limit = 20 } = {}) {
   const fetchCap = Math.min(offset + limit * 3, 100);
 
   // Pass pre-resolved friendIds so feedTasks doesn't query friendships again.
-  const [taskResult, events] = await Promise.all([
+  const [taskResult, eventsResult] = await Promise.allSettled([
     getFriendsFeedTasks({ friendIds, limit: fetchCap }),
     getFriendFeedEvents(friendIds, userId, { limit: fetchCap }),
   ]);
 
-  const taskItems = (taskResult.tasks ?? []).map((t) => ({
-    ...t,
-    _type: "task",
-    _sortTime: t.created_at,
-  }));
+  const taskItems =
+    taskResult.status === "fulfilled"
+      ? (taskResult.value.tasks ?? []).map((t) => ({
+          ...t,
+          _type: "task",
+          _sortTime: t.created_at,
+        }))
+      : [];
+
+  const events =
+    eventsResult.status === "fulfilled" ? (eventsResult.value ?? []) : [];
 
   const merged = [...taskItems, ...events].sort(
     (a, b) => new Date(b._sortTime) - new Date(a._sortTime),

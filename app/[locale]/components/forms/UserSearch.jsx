@@ -7,15 +7,27 @@ import SearchBar from "./SearchBar";
 import ActionButton from "../buttons/ActionButton";
 import AppImage from "../elements/ImageTag";
 import { searchUsersByDisplayName } from "@/app/[locale]/lib/services/user/userProfiles";
-import { sendFriendRequest } from "@/app/[locale]/lib/services/user/friendships";
+import {
+  sendFriendRequest,
+  getFriendshipStatuses,
+} from "@/app/[locale]/lib/services/user/friendships";
 import { setToast } from "@/app/[locale]/lib/features/toastSlice";
 import { setTopEdgeCollapsed } from "@/app/[locale]/lib/features/topEdgeSlice";
 
-const UserCard = ({ user, onAdd, onNavigate }) => {
+const FRIEND_LABEL = {
+  accepted: "in your friendlist",
+  pending_sent: "request sent",
+  pending_received: "wants to add you",
+};
+
+const UserCard = ({ user, onAdd, onNavigate, friendshipStatus }) => {
   const initials = [user.first_name, user.last_name]
     .filter(Boolean)
     .map((n) => n[0])
     .join("");
+
+  const statusLabel = FRIEND_LABEL[friendshipStatus] ?? null;
+  const canAdd = !statusLabel;
 
   return (
     <div
@@ -54,17 +66,24 @@ const UserCard = ({ user, onAdd, onNavigate }) => {
             {user.email}
           </p>
         )}
+        {statusLabel && (
+          <p className="secondary text-[10px] text-green-400/80 mt-0.5">
+            • {statusLabel}
+          </p>
+        )}
       </div>
 
-      {/* Add button */}
-      <ActionButton
-        variant="add"
-        ariaLabel="Send friend request"
-        onClick={(e) => {
-          e.stopPropagation();
-          onAdd(user.id);
-        }}
-      />
+      {/* Add button — only shown when no friendship exists */}
+      {canAdd && (
+        <ActionButton
+          variant="add"
+          ariaLabel="Send friend request"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd(user.id);
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -74,6 +93,7 @@ const UserSearch = () => {
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [friendStatuses, setFriendStatuses] = useState({});
   const containerRef = useRef(null);
   const debounceRef = useRef(null);
   // Generation counter: discard responses from superseded searches
@@ -109,8 +129,21 @@ const UserSearch = () => {
       setIsLoading(true);
       try {
         const data = await searchUsersByDisplayName(query);
-        // Discard if a newer search has already started
         if (gen !== searchGenRef.current) return;
+
+        // Fetch statuses in parallel with results ready — no separate render pass
+        let statuses = {};
+        if (data.length > 0) {
+          try {
+            statuses = await getFriendshipStatuses(data.map((u) => u.id));
+          } catch {
+            // statuses stay empty; users will just see the add button
+          }
+        }
+
+        if (gen !== searchGenRef.current) return;
+
+        setFriendStatuses(statuses);
         setResults(data);
         setIsOpen(true);
       } catch {
@@ -134,6 +167,8 @@ const UserSearch = () => {
     try {
       await sendFriendRequest(addresseeId);
       dispatch(setToast({ msg: "Friend request sent!", type: "success" }));
+      // Update local status immediately so the button flips
+      setFriendStatuses((prev) => ({ ...prev, [addresseeId]: "pending_sent" }));
       setIsOpen(false);
       setQuery("");
     } catch (err) {
@@ -167,6 +202,7 @@ const UserSearch = () => {
                   user={user}
                   onAdd={handleAdd}
                   onNavigate={handleNavigate}
+                  friendshipStatus={friendStatuses[user.id] ?? "none"}
                 />
               ))}
             </div>

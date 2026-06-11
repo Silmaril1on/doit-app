@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import ActionButton from "../buttons/ActionButton";
 import Button from "../buttons/Button";
 import BorderSvg from "../elements/BorderSvg";
+import { playSound } from "@/app/[locale]/lib/utils/playsound";
 
 const Spinner = () => (
   <div className="flex flex-col items-center gap-3 py-16">
@@ -41,7 +42,7 @@ const GlobalModal = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-3"
         >
           <motion.div
             key="modal-content"
@@ -54,7 +55,7 @@ const GlobalModal = ({
           >
             {/* Card */}
             <div
-              className={`relative bg-primary/15 backdrop-blur-lg overflow-hidden rounded-lg border border-primary/20 p-6`}
+              className={`relative bg-primary/15 backdrop-blur-lg overflow-hidden rounded-lg border border-primary/20 p-3`}
             >
               <BorderSvg strokeWidth={1} fadeAt={0.7} />
               <div
@@ -68,7 +69,13 @@ const GlobalModal = ({
                 >
                   {title}
                 </h1>
-                <ActionButton variant="close" onClick={onClose} />
+                <ActionButton
+                  variant="close"
+                  onClick={() => {
+                    playSound("click");
+                    onClose();
+                  }}
+                />
               </div>
 
               {/* Content */}
@@ -95,7 +102,14 @@ const GlobalModal = ({
                     variant="outline"
                     form={isSubmitFooter ? formId : undefined}
                     disabled={isSubmitFooter ? submitDisabled : false}
-                    onClick={isCloseFooter ? onClose : undefined}
+                    onClick={
+                      isCloseFooter
+                        ? () => {
+                            playSound("click");
+                            onClose();
+                          }
+                        : () => playSound("click")
+                    }
                     text={submitLabel}
                   />
                 </div>

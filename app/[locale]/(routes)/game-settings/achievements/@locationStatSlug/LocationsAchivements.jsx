@@ -140,9 +140,9 @@ const ImageProgressBar = ({ src, alt, visited, total, label, delay = 0 }) => {
   }, [pct, delay]);
 
   return (
-    <div ref={ref} className="space-y-2">
+    <div ref={ref} className=" space-y-2 mb-5">
       <div className="flex items-center justify-between">
-        <span className="secondary text-xs uppercase tracking-[0.14em] text-primary/80">
+        <span className=" text-sm uppercase tracking-[0.14em] text-cream text-shadow ml-2">
           {label}
         </span>
         <span className="secondary text-xs font-semibold text-cream/70">
@@ -342,7 +342,7 @@ const LocationsAchivements = ({ stats }) => {
   return (
     <div className="space-y-2">
       <SectionHeadline title="World Explorer" subtitle={subtitle} />
-      <ItemCard className="space-y-7">
+      <ItemCard>
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -351,7 +351,7 @@ const LocationsAchivements = ({ stats }) => {
           {/* Countries bar */}
           <motion.div variants={itemVariants}>
             <ImageProgressBar
-              src="/cities-wallpaper-bar.png"
+              src="/assets/badges/countries-wp.png"
               alt="Countries map"
               visited={s.countries.visited}
               total={s.countries.total}
@@ -363,7 +363,7 @@ const LocationsAchivements = ({ stats }) => {
           {/* Cities bar */}
           <motion.div variants={itemVariants}>
             <ImageProgressBar
-              src="/cities-wallpaper-bar.png"
+              src="/assets/badges/cities-wp.png"
               alt="Cities skyline"
               visited={s.cities.visited}
               total={s.cities.total}
@@ -375,7 +375,7 @@ const LocationsAchivements = ({ stats }) => {
           {/* Continents bar — based on actually unlocked continents */}
           <motion.div variants={itemVariants}>
             <ImageProgressBar
-              src="/continents-wallpaper-bar.png"
+              src="/assets/badges/continents-wp.png"
               alt="Continents"
               visited={unlockedContinentCount}
               total={7}

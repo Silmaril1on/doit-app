@@ -167,7 +167,7 @@ const ObjectivePageWrapper = ({
                 {renderCardBefore(item)}
                 <ObjectiveCard
                   objective={item}
-                  onEdit={handleOpenEdit}
+                  onEdit={completedView ? undefined : handleOpenEdit}
                   onDelete={onDelete}
                   onStart={onStart}
                   onComplete={onComplete}
@@ -182,7 +182,7 @@ const ObjectivePageWrapper = ({
               <ObjectiveCard
                 key={item.id}
                 objective={item}
-                onEdit={handleOpenEdit}
+                onEdit={completedView ? undefined : handleOpenEdit}
                 onDelete={onDelete}
                 onStart={onStart}
                 onComplete={onComplete}

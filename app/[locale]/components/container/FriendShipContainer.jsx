@@ -174,7 +174,7 @@ const FriendShipContainer = ({ onUserNavigate }) => {
         />
         <UserSearch />
       </div>
-      {friendsCount && requestsCount && (
+      {(tab === "friends" ? friendsCount > 0 : requestsCount > 0) && (
         <h1 className="text-chino secondary text-sm text-start pl-4">
           {headerText}
         </h1>

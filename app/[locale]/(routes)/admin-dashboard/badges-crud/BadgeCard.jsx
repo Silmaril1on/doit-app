@@ -15,7 +15,7 @@ const BadgeCard = ({ image, title, subtitle, meta, onEdit }) => {
             alt={title}
             fill
             sizes="64px"
-            className="object-cover"
+            className="object-cover scale-110"
           />
         </div>
       ) : (
